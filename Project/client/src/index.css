@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 👇 Optional: keep this if you want to set default font and background */
+:root {
+  font-family: 'Open Sans', sans-serif;
+  color: #124734;
+  background-color: #F9FAFB;
+}
+
+/* Remove everything else from the default Vite CSS */
