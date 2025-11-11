@@ -306,7 +306,7 @@ const Scholarship = () => {
                 type="submit"
                 className="bg-[#1E5631] text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
               >
-                🚀 Submit Enrollment
+                 Submit Enrollment
               </button>
             </div>
           </form>
