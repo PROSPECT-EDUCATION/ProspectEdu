@@ -202,6 +202,77 @@ const Scholarship = () => {
           </div>
         </div>
       </div>
+      {/* ---------------- Frequently Asked Questions Section ---------------- */}
+<div className="bg-[#F9FAFB] py-16 px-8">
+  <div className="max-w-4xl mx-auto">
+    <h2 className="text-3xl md:text-4xl font-bold text-[#124734] mb-10 text-center">
+      Frequently Asked Questions
+    </h2>
+
+    {/* FAQ Items */}
+    <div className="space-y-4">
+      {/* FAQ 1 */}
+      <details className="bg-white p-6 rounded-lg shadow-md open:shadow-lg transition">
+        <summary className="text-lg font-semibold cursor-pointer text-[#1E5631]">
+          How many times can I take the Scholarship Test?
+        </summary>
+        <p className="text-gray-600 mt-3">
+          You can attempt the test only once in an academic year. However, if you
+          register but do not appear, you can re-register immediately for the
+          next available slot.
+        </p>
+      </details>
+
+      {/* FAQ 2 */}
+      <details className="bg-white p-6 rounded-lg shadow-md open:shadow-lg transition">
+        <summary className="text-lg font-semibold cursor-pointer text-[#1E5631]">
+          What is the pattern of the Scholarship Test?
+        </summary>
+        <p className="text-gray-600 mt-3">
+          The test consists of multiple-choice questions from logical reasoning,
+          aptitude, and general academics. The total duration is 2 hours.
+        </p>
+      </details>
+
+      {/* FAQ 3 */}
+      <details className="bg-white p-6 rounded-lg shadow-md open:shadow-lg transition">
+        <summary className="text-lg font-semibold cursor-pointer text-[#1E5631]">
+          Who can appear for the Scholarship Test?
+        </summary>
+        <p className="text-gray-600 mt-3">
+          Any student currently enrolled in a recognized college or school can
+          apply for the test. The test is open for both freshers and ongoing
+          students.
+        </p>
+      </details>
+
+      {/* FAQ 4 */}
+      <details className="bg-white p-6 rounded-lg shadow-md open:shadow-lg transition">
+        <summary className="text-lg font-semibold cursor-pointer text-[#1E5631]">
+          What is the test-taking process?
+        </summary>
+        <p className="text-gray-600 mt-3">
+          The test will be conducted online. Students will receive login details
+          via email before the exam. Make sure your camera and internet connection
+          are stable during the test.
+        </p>
+      </details>
+
+      {/* FAQ 5 */}
+      <details className="bg-white p-6 rounded-lg shadow-md open:shadow-lg transition">
+        <summary className="text-lg font-semibold cursor-pointer text-[#1E5631]">
+          When will the scholarship results be announced?
+        </summary>
+        <p className="text-gray-600 mt-3">
+          Results will be announced within 7–10 days after the test on the
+          official website. You’ll also receive an email notification when they
+          are live.
+        </p>
+      </details>
+    </div>
+  </div>
+</div>
+
 
       {/* ---------------- Enroll Now Form Section ---------------- */}
       <div className="bg-white py-16 px-8">
