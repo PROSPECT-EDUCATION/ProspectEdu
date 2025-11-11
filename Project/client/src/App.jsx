@@ -1,11 +1,20 @@
-import React from "react";
-import AskDoubtSection from "./components/AskDoubtSection";
+import { Routes, Route } from "react-router-dom";
+
+import AskDoubtSection from "./pages/AskDoubtSection";
+import ResearchReport from "./pages/ResearchReport";
+import ReportDetails from "./pages/ReportDetails";
+import Scholarship from "./pages/Scholarship";
+
 
 function App() {
   return (
-    <div className="min-h-screen bg-lightBg text-darkGreen font-opensans">
-      <AskDoubtSection />
-    </div>
+    <Routes>
+      <Route path="/ask-doubt" element={<AskDoubtSection />} />
+       <Route path="/research-report" element={<ResearchReport />} />
+       <Route path="/research-report/:id" element={<ReportDetails />} />
+       <Route path="/scholarship" element={<Scholarship />} />
+    </Routes>
+      
   );
 }
 
