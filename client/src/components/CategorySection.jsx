@@ -1,23 +1,27 @@
 import itIcon from "../assets/it.png";
 import lawIcon from "../assets/law.png";
 import electricalIcon from "../assets/electrical.png";
+import { Link } from "react-router-dom";
 
 export default function CategorySection() {
   const categories = [
     {
-      title: "Information Technology",
+      title: "Engineering",
       icon: itIcon,
       description: "Explore programming, networking, and software courses.",
+      path: "/courses/engineering",
     },
     {
       title: "Law",
       icon: lawIcon,
       description: "Understand the principles of law and legal studies.",
+      path: "/courses/law"
     },
     {
-      title: "Electrical",
+      title: "Management",
       icon: electricalIcon,
-      description: "Dive into power systems and electrical engineering.",
+      description: "Dive into power systems and Management.",
+      path: "/courses/management"
     },
   ];
 
@@ -55,9 +59,11 @@ export default function CategorySection() {
                 </p>
 
                 {/* Button */}
-                <button className="mt-5 px-5 py-2 rounded-full border border-[#009846] text-[#009846] text-sm font-medium hover:bg-[#009846] hover:text-white transition">
+                <Link 
+                to= {cat.path}
+                className="mt-5 px-5 py-2 rounded-full border border-[#009846] text-[#009846] text-sm font-medium hover:bg-[#009846] hover:text-white transition">
                   Explore
-                </button>
+                </Link>
               </div>
             </div>
           ))}

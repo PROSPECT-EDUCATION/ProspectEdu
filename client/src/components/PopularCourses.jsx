@@ -3,7 +3,7 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
+import { Link } from "react-router-dom";
 import itCourse1 from "../assets/video.png";
 import itCourse2 from "../assets/video.png";
 import lawCourse from "../assets/video.png";
@@ -95,11 +95,13 @@ export default function PopularCourses() {
         </Swiper>
 
         {/* Button */}
-        <button className="mt-8 px-8 py-3 rounded-full border border-[#009846] text-[#009846] text-lg font-medium hover:bg-[#009846] hover:text-white transition-all duration-300">
-          Explore Courses
-        </button>
+ <Link
+  to="/courses"
+  className="inline-block mt-8 px-8 py-3 rounded-full border border-[#009846] text-[#009846] text-lg font-medium hover:bg-[#009846] hover:text-white transition-all duration-300"
+>
+  Explore Courses
+</Link>
       </div>
-
       {/* Swiper Styling Fixes */}
       <style>{`
         .swiper-button-prev,

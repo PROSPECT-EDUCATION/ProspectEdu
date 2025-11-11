@@ -80,9 +80,14 @@ export default function YouTubeChannels() {
         </div>
 
         {/* Explore Button */}
-        <button className="mt-10 px-8 py-3 rounded-full border border-[#009846] text-[#009846] text-lg font-medium hover:bg-[#009846] hover:text-white transition-all duration-300">
-          Explore YouTube Channel
-        </button>
+       <a
+  href="https://www.youtube.com/channel/UCzRI182_8pdqfArUPYKRhnQ"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mt-10 inline-block px-8 py-3 rounded-full border border-[#009846] text-[#009846] text-lg font-medium hover:bg-[#009846] hover:text-white transition-all duration-300"
+>
+  Explore YouTube Channel
+</a>
       </div>
     </section>
   );

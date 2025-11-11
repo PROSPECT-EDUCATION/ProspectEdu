@@ -1,5 +1,6 @@
 import { Mail, MapPin, Phone } from "lucide-react";
 import logo from "../assets/logo.png.jpeg"; // your logo path
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -8,14 +9,14 @@ export default function Footer() {
 
         {/* Logo + Address */}
         <div>
-          <div className="flex items-center gap-3 mb-4">
+          <Link to="/" className="flex items-center gap-3 mb-4">
             <img src={logo} alt="ProspectEdu Logo" className="h-12 w-auto" />
             <h2 className="text-2xl font-heading font-semibold text-[#A7E1B2]">
               ProspectEdu
             </h2>
-          </div>
+          </Link>
           <p className="text-sm text-[#F9FAFB] leading-relaxed">
-            ProspectEdu Learning Pvt. Ltd. <br />
+            ProspectEdu Learning <br />
             R-52, First Floor, &, Chetak Bridge, <br />
             near Hotel Shree Vatika, Zone-1, <br />
             MP Nagar, Bhopal, Madhya Pradesh 462003
@@ -53,11 +54,9 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-semibold text-[#A7E1B2] mb-3">Popular Courses</h3>
           <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-[#A7E1B2] transition">Information Technology</a></li>
-            <li><a href="#" className="hover:text-[#A7E1B2] transition">Law</a></li>
-            <li><a href="#" className="hover:text-[#A7E1B2] transition">Electrical Engineering</a></li>
-            <li><a href="#" className="hover:text-[#A7E1B2] transition">Project Management</a></li>
-            <li><a href="#" className="hover:text-[#A7E1B2] transition">Quantity Surveying</a></li>
+           <li><Link to="/courses/engineering" className="hover:text-[#A7E1B2] transition">Engineering</Link></li>
+            <li><Link to="/courses/law" className="hover:text-[#A7E1B2] transition">Law</Link></li>
+            <li><Link to="/courses/management" className="hover:text-[#A7E1B2] transition">Management</Link></li>
           </ul>
         </div>
 
