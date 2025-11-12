@@ -31,7 +31,7 @@ const Scholarship = () => {
   return (
     <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
       {/* ---------------- Header ---------------- */}
-      <div className="bg-[#1E5631] text-white w-full py-16">
+      <div className="bg-[#1E5631] text-white w-full py-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-8">
           <div className="w-full md:w-1/2 pr-8">
             <p className="text-sm mb-3 text-gray-200">Home &gt; Scholarship</p>
