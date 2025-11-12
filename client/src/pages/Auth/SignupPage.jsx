@@ -1,16 +1,31 @@
 import { useLocation } from "react-router-dom";
+import SignupForm from "../../components/Signup/SignupForm";
+import SignupIllustration from "../../components/Signup/SignupIllustration";
 
 export default function SignupPage() {
   const location = useLocation();
-  const userRole = location.state?.role || "Learner";
+  const role = location.state?.role || "Learner"; // default
 
   return (
-    <div>
-      <h1 className="text-3xl font-semibold text-[#124734] mb-4">
-        Register as {userRole}
-      </h1>
-      {/* rest of your signup form */}
-    </div>
+    <section className="min-h-screen grid grid-cols-1 md:grid-cols-2">
+      {/* Left Illustration */}
+      <SignupIllustration />
+
+      {/* Right Form */}
+      <div className="flex flex-col justify-center items-center bg-white px-10 py-16">
+        <div className="max-w-md w-full">
+          <img
+            src="/src/assets/logo.png.jpeg"
+            alt="ProspectEdu Logo"
+            className="h-12 mb-4 mx-auto"
+          />
+          <h2 className="text-2xl font-heading text-[#124734] text-center mb-6">
+            Register as {role}
+          </h2>
+          <SignupForm />
+        </div>
+      </div>
+    </section>
   );
 }
 
