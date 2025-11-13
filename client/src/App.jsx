@@ -16,6 +16,7 @@ import StudyMaterials from './pages/Student/StudyMaterials';
 import Practice from './pages/Student/Practice';
 import AllTestSeries from './pages/Student/AllTestSeries';
 import AllCourses from './pages/Student/AllCourses';
+import StorePage from './pages/Store/StorePage';
 function App() {
   return (
     <>
@@ -36,6 +37,7 @@ function App() {
       <Route path="/student/practice" element={<Practice/>}/>
       <Route path="/student/all-test-series" element={<AllTestSeries/>}/>
       <Route path="/student/all-courses" element={<AllCourses/>}/>
+      <Route path="/store" element={<StorePage/>}/>
 
     </Routes>
     </>

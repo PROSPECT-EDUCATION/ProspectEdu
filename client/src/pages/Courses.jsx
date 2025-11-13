@@ -13,7 +13,14 @@ export default function Courses() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((c) => (
             <div key={c.slug} className="bg-white border border-[#A7E1B2] rounded-xl overflow-hidden">
-              <img src={c.img} alt={c.title} className="w-full h-44 object-cover" />
+             <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-[#F0F5F2]">
+  <img
+    src={c.img}
+    alt={c.title}
+    className="h-full w-auto object-contain"
+  />
+</div>
+
               <div className="p-4">
                 <h2 className="font-heading text-lg text-[#124734]">{c.title}</h2>
                 <p className="text-sm text-[#5B7065]">{c.short}</p>

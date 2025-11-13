@@ -74,11 +74,13 @@ export default function PopularCourses() {
             <SwiperSlide key={index}>
               <div className="bg-white border border-[#A7E1B2] rounded-xl shadow-sm hover:shadow-md transition-transform duration-300 hover:scale-[1.03] h-[370px] flex flex-col">
                 {/* Image */}
-                <img
-                  src={course.img}
-                  alt={course.title}
-                  className="rounded-t-xl w-full h-48 object-cover"
-                />
+                <div className="w-full h-40 flex items-center justify-center overflow-hidden rounded-t-xl bg-[#F0F5F2]">
+  <img
+    src={course.img}
+    alt={course.title}
+    className="w-auto h-full object-contain"
+  />
+</div>
 
                 {/* Text */}
                 <div className="p-4 flex flex-col flex-grow text-left">
