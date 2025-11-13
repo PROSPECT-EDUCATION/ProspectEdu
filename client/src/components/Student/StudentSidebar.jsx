@@ -2,9 +2,7 @@ import {
   LayoutDashboard,
   Video,
   BookOpen,
-  FileText,
   Edit3,
-  MonitorPlay,
   Layers,
   Library,
   ArrowLeft,
@@ -27,7 +25,7 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
 
   return (
     <aside
-      className={`bg-[#124734] text-white min-h-screen flex flex-col justify-between shadow-lg transition-all duration-300 ${
+      className={`bg-[#124734] text-white h-screen flex flex-col justify-between shadow-lg transition-all duration-300 ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
@@ -51,7 +49,7 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
         </div>
 
         {/* Menu Items */}
-        <nav className="mt-4 space-y-1">
+        <nav className="mt-4 space-y-1 flex-1 overflow-y-auto">
           {menuItems.map(({ label, icon: Icon, path }) => (
             <Link
               key={label}
@@ -75,9 +73,16 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-2 rounded-full bg-[#009846]/80 hover:bg-[#009846] transition-all duration-300"
         >
-          {isCollapsed ? <ArrowRight size={20} color="#fff" /> : <ArrowLeft size={20} color="#fff" />}
+          {isCollapsed ? (
+            <ArrowRight size={20} color="#fff" />
+          ) : (
+            <ArrowLeft size={20} color="#fff" />
+          )}
         </button>
       </div>
     </aside>
   );
 }
+
+
+    

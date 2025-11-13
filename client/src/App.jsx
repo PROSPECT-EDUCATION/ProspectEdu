@@ -9,7 +9,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
 import SignupPage from "./pages/Auth/SignupPage";
 import StudentDashboard from './pages/Student/StudentDashboard';
-
+import LiveClasses from "./pages/Student/LiveClasses";
 function App() {
   return (
     <>
@@ -23,6 +23,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/student-dashboard" element={<StudentDashboard/>}/>
+      <Route path="/student/live-classes" element={<LiveClasses />} />
     </Routes>
     </>
   )
