@@ -10,6 +10,12 @@ import Login from "./pages/Login";
 import SignupPage from "./pages/Auth/SignupPage";
 import StudentDashboard from './pages/Student/StudentDashboard';
 import LiveClasses from "./pages/Student/LiveClasses";
+import MyCourses from './pages/Student/MyCourses';
+import MyTestSeries from './pages/Student/MyTestSeries';
+import StudyMaterials from './pages/Student/StudyMaterials';
+import Practice from './pages/Student/Practice';
+import AllTestSeries from './pages/Student/AllTestSeries';
+import AllCourses from './pages/Student/AllCourses';
 function App() {
   return (
     <>
@@ -24,6 +30,13 @@ function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/student-dashboard" element={<StudentDashboard/>}/>
       <Route path="/student/live-classes" element={<LiveClasses />} />
+      <Route path="/student/my-courses" element={<MyCourses/>}/>
+      <Route path="/student/test-series" element={<MyTestSeries/>}/>
+      <Route path="/student/study-materials" element={<StudyMaterials/>}/>
+      <Route path="/student/practice" element={<Practice/>}/>
+      <Route path="/student/all-test-series" element={<AllTestSeries/>}/>
+      <Route path="/student/all-courses" element={<AllCourses/>}/>
+
     </Routes>
     </>
   )
