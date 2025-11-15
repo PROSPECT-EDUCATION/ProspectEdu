@@ -17,6 +17,10 @@ import Practice from './pages/Student/Practice';
 import AllTestSeries from './pages/Student/AllTestSeries';
 import AllCourses from './pages/Student/AllCourses';
 import StorePage from './pages/Store/StorePage';
+import EditProfile from "./pages/Student/EditProfile";
+import ChangePassword from './pages/Student/ChangePassword';
+import OrdersPage from './pages/Student/OrdersPage';
+import Doubts from './pages/Student/Doubts';
 function App() {
   return (
     <>
@@ -37,7 +41,11 @@ function App() {
       <Route path="/student/practice" element={<Practice/>}/>
       <Route path="/student/all-test-series" element={<AllTestSeries/>}/>
       <Route path="/student/all-courses" element={<AllCourses/>}/>
+      <Route path="/student/edit-profile" element={<EditProfile />} />
       <Route path="/store" element={<StorePage/>}/>
+      <Route path="/student/change-password" element = {<ChangePassword/>}/>
+      <Route path="/student/orders" element={<OrdersPage />} />
+      <Route path="/student/doubts" element={<Doubts/>}/>
 
     </Routes>
     </>

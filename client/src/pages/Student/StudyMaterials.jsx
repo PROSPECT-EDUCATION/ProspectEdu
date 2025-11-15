@@ -123,7 +123,7 @@ export default function StudyMaterials() {
         {/* Page Body */}
         <main
           className="flex-1 overflow-y-auto px-4 md:px-6 py-8"
-          style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}
+          style={{ marginTop: "80px", height: "calc(100vh - 128px)" }}
         >
           <div className="w-full max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {studyMaterials.map((item, index) => (

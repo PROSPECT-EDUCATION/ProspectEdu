@@ -56,8 +56,7 @@ export default function LiveClasses() {
           style={{
             left: sidebarWidthPx,
           }}
-        >
-         <div className="w-full flex flex-col items-start ">
+        ><div className="w-full flex flex-col items-start ">
   {/* Breadcrumb (aligned left) */}
   <p className="text-sm text-[#5B7065] mb-3">
    <span
@@ -73,7 +72,6 @@ export default function LiveClasses() {
         : "Upcoming Live Class"}
     </span>
   </p>
-
             {/* Tabs */}
             <div className="flex gap-6 border-b border-[#E6F4EC]">
               <button

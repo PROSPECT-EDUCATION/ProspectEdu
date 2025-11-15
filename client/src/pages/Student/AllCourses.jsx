@@ -90,7 +90,7 @@ export default function AllCourses() {
         {/* Page Body */}
         <main
           className="flex-1 overflow-y-auto px-6 py-0"
-          style={{ marginTop: "128px" }}
+          style={{ marginTop: "80px" }}
         >
           {/* ALL COURSES */}
           {activeTab === "all" && (
