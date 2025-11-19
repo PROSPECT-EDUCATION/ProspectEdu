@@ -21,6 +21,17 @@ import EditProfile from "./pages/Student/EditProfile";
 import ChangePassword from './pages/Student/ChangePassword';
 import OrdersPage from './pages/Student/OrdersPage';
 import Doubts from './pages/Student/Doubts';
+import TeacherDashboard from './pages/Teacher/TeacherDashboard';
+import TeacherCoursesPage from './pages/Teacher/TeacherCoursesPage';
+import CreateCourse from './pages/Teacher/CreateCourse';
+import AddModulesPage from './pages/Teacher/AddModulesPage';
+import PublishCoursePage from './pages/Teacher/PublishCoursePage';
+import CourseManagement from './pages/Teacher/CourseManagement';
+import AssessmentDashboardPage from './pages/Teacher/AssessmentDashboardPage';
+import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
+import CreateQuizPage from './pages/Teacher/CreateQuizPage';
+import ViewSubmissionsPage from './pages/Teacher/ViewSubmissionsPage';
+import ReviewSubmissionsPageWrapper from './pages/Teacher/ReviewSubmissionsPageWrapper';
 function App() {
   return (
     <>
@@ -46,8 +57,19 @@ function App() {
       <Route path="/student/change-password" element = {<ChangePassword/>}/>
       <Route path="/student/orders" element={<OrdersPage />} />
       <Route path="/student/doubts" element={<Doubts/>}/>
-
-    </Routes>
+      <Route path="/teacher-dashboard" element={<TeacherDashboard/>}/>
+      <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
+      <Route path="/teacher/create-course" element={<CreateCourse/>}/>
+      <Route path="/teacher/add-modules" element={<AddModulesPage />} />
+      <Route path= "/teacher/publish-course" element ={<PublishCoursePage/>}/>
+      <Route path="/teacher/course/:courseId" element={<CourseManagement />} />
+      <Route path="/teacher/add-modules" element={<AddModulesPage />} />
+      <Route path="/teacher/assessments" element={<AssessmentDashboardPage />} />
+      <Route path="/teacher/assessment/assignment" element={<CreateAssignmentPage />} />
+      <Route path="/teacher/assessment/quiz" element={<CreateQuizPage />} />
+      <Route path="/teacher/assessment/submissions" element={<ViewSubmissionsPage />} />
+      <Route path="/teacher/assessments/review" element={<ReviewSubmissionsPageWrapper />} />
+      </Routes>
     </>
   )
 }

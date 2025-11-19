@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function SignupForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const role = location.state?.role || "I'm a Learner";  // ← Role received here
 
   const [formData, setFormData] = useState({
     name: "",
@@ -26,9 +29,21 @@ export default function SignupForm() {
       return;
     }
 
-    localStorage.setItem("student", JSON.stringify(formData));
-    navigate("/student-dashboard");
+    // Save role also
+    localStorage.setItem("user", JSON.stringify({ ...formData, role }));
+
+    // Redirect based on role
+    if (role === "I'm a Learner") {
+      navigate("/student-dashboard");
+    } else if (role === "I'm a Teacher") {
+      navigate("/teacher-dashboard");
+    } else if (role === "I'm a Parent/Organisation") {
+      navigate("/parent-dashboard");
+    } else if (role === "I'm an Admin") {
+      navigate("/admin-dashboard");
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

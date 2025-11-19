@@ -1,0 +1,45 @@
+import CourseDropdown from "../Student/ui/CourseDropdown";
+import SearchBar from "../Student/ui/SearchBar";
+import NotificationBell from "../Student/ui/NotificationBell";
+import ProfileAvatar from "../Student/ui/ProfileAvatar";
+import StoreButton from "../Student/ui/StoreButton";
+
+export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
+  return (
+    <header className="w-full bg-white px-6 py-3 flex items-center justify-between shadow-sm">
+      
+      {/* Left Section */}
+      <div className="flex flex-col leading-tight">
+  {pageTitle ? (
+    <>
+      <p className="text-sm text-[#5B7065] font-body">
+        Hello <span className="font-semibold text-[#124734]">Teacher</span>, Welcome Back!
+      </p>
+      <h2 className="text-lg font-heading font-semibold text-[#124734] -mt-1">
+        {pageTitle}
+      </h2>
+    </>
+  ) : (
+    <>
+      <p className="text-sm text-[#5B7065] font-body">
+        Hello <span className="font-semibold text-[#124734]">Teacher</span>, Welcome Back!
+      </p>
+      <h2 className="text-lg font-heading font-semibold text-[#124734] -mt-1">
+        Your Dashboard Today
+      </h2>
+    </>
+  )}
+</div>
+
+      {/* Right Controls (Exactly Same as Student Topbar) */}
+      <div className="flex items-center gap-4">
+        <CourseDropdown role="teacher"/>
+        <SearchBar />
+        <StoreButton />
+        <NotificationBell />
+        <ProfileAvatar />
+      </div>
+
+    </header>
+  );
+}
