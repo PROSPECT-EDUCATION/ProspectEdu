@@ -59,7 +59,7 @@ export default function TeacherDashboard() {
           { name: "DBMS", students: 32 },
           { name: "Operating Systems", students: 25 },
           { name: "Java Programming", students: 40 },
-          { name: "Computer Networks", students: 28 },
+           { name: "Computer Networks", students: 28 },
         ]}
       />
     </div>

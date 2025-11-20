@@ -1,6 +1,9 @@
 import { PlusCircle, UploadCloud, FilePlus2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function QuickActionsCard() {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E6F4EC] p-6 h-full">
 
@@ -14,6 +17,7 @@ export default function QuickActionsCard() {
 
         {/* Create Course */}
         <button
+          onClick={() => navigate("/teacher/create-course")}
           className="flex items-center gap-4 px-5 py-4 rounded-xl border border-[#A7E1B2]/40 
                      hover:bg-[#F2FBF6] hover:shadow-md transition text-left"
         >
@@ -28,6 +32,8 @@ export default function QuickActionsCard() {
 
         {/* Upload Lecture */}
         <button
+          // you did not specify a route → leaving unchanged
+          onClick={() => navigate("/teacher/courses")}
           className="flex items-center gap-4 px-5 py-4 rounded-xl border border-[#A7E1B2]/40 
                      hover:bg-[#F2FBF6] hover:shadow-md transition text-left"
         >
@@ -42,6 +48,7 @@ export default function QuickActionsCard() {
 
         {/* Create Assignment */}
         <button
+          onClick={() => navigate("/teacher/assessment/assignment")}
           className="flex items-center gap-4 px-5 py-4 rounded-xl border border-[#A7E1B2]/40 
                      hover:bg-[#F2FBF6] hover:shadow-md transition text-left"
         >

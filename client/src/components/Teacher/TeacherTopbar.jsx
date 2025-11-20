@@ -37,7 +37,7 @@ export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
         <SearchBar />
         <StoreButton />
         <NotificationBell />
-        <ProfileAvatar />
+        <ProfileAvatar role="teacher" />
       </div>
 
     </header>

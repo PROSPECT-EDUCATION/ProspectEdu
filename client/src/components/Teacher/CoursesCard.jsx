@@ -1,6 +1,9 @@
 import { BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function CoursesCard({ courses = [] }) {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E6F4EC] p-6">
 
@@ -19,11 +22,12 @@ export default function CoursesCard({ courses = [] }) {
           </p>
         </div>
       ) : (
-        /* Bigger Premium Course Grid */
+        /* Course Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {courses.map((course, index) => (
             <div
               key={index}
+              onClick={() => navigate("/teacher/courses")}   // ← ADDED NAVIGATION
               className="bg-[#F8FBF9] border border-[#A7E1B2]/40 rounded-2xl 
                          px-6 py-5 h-40 flex flex-col justify-between
                          hover:shadow-xl hover:bg-[#F2FBF6] transition cursor-pointer"

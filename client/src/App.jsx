@@ -32,6 +32,11 @@ import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
 import CreateQuizPage from './pages/Teacher/CreateQuizPage';
 import ViewSubmissionsPage from './pages/Teacher/ViewSubmissionsPage';
 import ReviewSubmissionsPageWrapper from './pages/Teacher/ReviewSubmissionsPageWrapper';
+import StudentsPerformancePage from './pages/Teacher/StudentsPerformancePage';
+import QueriesDoubtsPage from './pages/Teacher/QueriesDoubtsPage';
+import ChangePasswordTeacher from './pages/Teacher/ChangePasswordTeacher'
+import TeacherOrdersPage from './pages/Teacher/TeacherOrdersPage';
+import EditProfilePage from './pages/Teacher/EditProfilePage';
 function App() {
   return (
     <>
@@ -69,6 +74,11 @@ function App() {
       <Route path="/teacher/assessment/quiz" element={<CreateQuizPage />} />
       <Route path="/teacher/assessment/submissions" element={<ViewSubmissionsPage />} />
       <Route path="/teacher/assessments/review" element={<ReviewSubmissionsPageWrapper />} />
+      <Route path="/teacher/students/performance" element={<StudentsPerformancePage />} />
+      <Route path= "/teacher/queries/doubts" element = {<QueriesDoubtsPage/>}/>
+      <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
+      <Route path="/teacher/orders" element={<TeacherOrdersPage />}/>
+      <Route path="/teacher/edit-profile" element = {<EditProfilePage/>}/>
       </Routes>
     </>
   )

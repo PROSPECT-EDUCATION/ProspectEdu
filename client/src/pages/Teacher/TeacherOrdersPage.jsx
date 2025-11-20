@@ -1,10 +1,13 @@
 import { useState } from "react";
-import StudentSidebar from "../../components/Student/StudentSidebar";
-import StudentTopbar from "../../components/Student/StudentTopbar";
-import StudentOrders from "../../components/Common/StudentOrders";
 import { useNavigate } from "react-router-dom";
 
-export default function OrdersPage() {
+import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
+import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
+
+// After renaming StudentOrders → OrdersTable
+import StudentOrders from "../../components/Common/StudentOrders";
+
+export default function TeacherOrdersPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -19,7 +22,7 @@ export default function OrdersPage() {
           isCollapsed ? "w-20" : "w-64"
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
       >
-        <StudentSidebar
+        <TeacherSidebar
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
@@ -27,13 +30,13 @@ export default function OrdersPage() {
 
       {/* Main Section */}
       <div
-        className={`flex flex-col flex-1 h-screen transition-all duration-300`}
+        className="flex flex-col flex-1 h-screen transition-all duration-300"
         style={{
           marginLeft: sidebarWidthPx,
           width: `calc(100vw - ${sidebarWidthPx}px)`
         }}
       >
-        {/* Fixed Topbar */}
+        {/* Topbar */}
         <div
           className="fixed top-0 z-[999] bg-white shadow-sm h-[64px] transition-all duration-300"
           style={{
@@ -41,21 +44,21 @@ export default function OrdersPage() {
             right: 0
           }}
         >
-          <StudentTopbar isCollapsed={isCollapsed} pageTitle="Orders" />
+          <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Orders" />
         </div>
 
-        {/* Sticky Sub-header */}
+        {/* Breadcrumb */}
         <div
           className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] px-6 py-3"
           style={{
             left: sidebarWidthPx
           }}
         >
-            <div className="w-full flex flex-col items-start ">
-          <p className="text-sm text-[#5B7065] ">
+            
+          <p className="text-sm text-[#5B7065]">
             <span
-              className="hover:underline hover:text-[#009846] cursor-pointer transition-colors"
-              onClick={() => navigate("/student-dashboard")}
+              className="hover:underline hover:text-[#009846] cursor-pointer transition"
+              onClick={() => navigate("/teacher-dashboard")}
             >
               Home
             </span>{" "}
@@ -63,7 +66,7 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        {/* Page Content */}
+        {/* Content */}
         <main
           className="flex-1 overflow-y-auto px-4 md:px-3 py-8"
           style={{ marginTop: "20px", height: "calc(100vh - 128px)" }}
@@ -73,7 +76,7 @@ export default function OrdersPage() {
           </div>
         </main>
       </div>
-      </div>
+
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import LogoutModal from "../../Profile/LogoutModal";
 
-export default function ProfileAvatar() {
+export default function ProfileAvatar({ role = "student" }) {
   const [open, setOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
@@ -38,6 +38,22 @@ export default function ProfileAvatar() {
     setOpen(false);
   };
 
+  // 🔥 MENUS FOR STUDENT & TEACHER
+  const MENU_ITEMS =
+    role === "teacher"
+      ? [
+          { label: "Edit Profile", path: "/teacher/edit-profile" },
+          { label: "Change Password", path: "/teacher/change-password" },
+          {label: "Orders", path: "/teacher/orders"},
+          { label: "Doubts", path: "/teacher/queries/doubts" },
+        ]
+      : [
+          { label: "Edit Profile", path: "/student/edit-profile" },
+          { label: "Change Password", path: "/student/change-password" },
+          { label: "Orders", path: "/student/orders" },
+          { label: "Doubts", path: "/student/doubts" },
+        ];
+
   return (
     <>
       {/* Avatar */}
@@ -66,44 +82,34 @@ export default function ProfileAvatar() {
               zIndex: 2000,
             }}
           >
+            {/* PROFILE CARD */}
             <div
-              onMouseDown={() => handleNavigate("/student-dashboard")}
+              onMouseDown={() =>
+                handleNavigate(
+                  role === "teacher"
+                    ? "/teacher/dashboard"
+                    : "/student-dashboard"
+                )
+              }
               className="px-4 py-3 border-b border-[#A7E1B2]/30 hover:bg-[#F9FAFB] cursor-pointer transition"
             >
               <p className="font-semibold text-[#124734]">Pratima Singh</p>
               <p className="text-sm text-[#5B7065]">+91 98765 43210</p>
             </div>
 
+            {/* MENU LIST */}
             <ul className="text-sm text-[#124734]">
-              <li
-                onMouseDown={() => handleNavigate("/student/edit-profile")}
-                className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
-              >
-                Edit Profile
-              </li>
+              {MENU_ITEMS.map((item, idx) => (
+                <li
+                  key={idx}
+                  onMouseDown={() => handleNavigate(item.path)}
+                  className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
+                >
+                  {item.label}
+                </li>
+              ))}
 
-              <li
-                onMouseDown={() => handleNavigate("/student/change-password")}
-                className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
-              >
-                Change Password
-              </li>
-
-              <li
-                onMouseDown={() => handleNavigate("/student/orders")}
-                className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
-              >
-                Orders
-              </li>
-
-              <li
-                onMouseDown={() => handleNavigate("/student/doubts")}
-                className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
-              >
-                Doubts
-              </li>
-
-              {/* Logout using EXISTING LOGOUT MODAL */}
+              {/* Logout */}
               <li
                 onMouseDown={() => {
                   setOpen(false);
@@ -118,15 +124,15 @@ export default function ProfileAvatar() {
           document.body
         )}
 
-      {/* Your existing LogoutModal */}
+      {/* Logout Modal */}
       <LogoutModal
-  open={showLogout}
-  onClose={() => setShowLogout(false)}
-  onConfirm={() => {
-    setShowLogout(false);
-    navigate("/");
-  }}
-/>
+        open={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={() => {
+          setShowLogout(false);
+          navigate("/");
+        }}
+      />
     </>
   );
 }
