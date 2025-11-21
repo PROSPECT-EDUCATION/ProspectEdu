@@ -37,6 +37,10 @@ import QueriesDoubtsPage from './pages/Teacher/QueriesDoubtsPage';
 import ChangePasswordTeacher from './pages/Teacher/ChangePasswordTeacher'
 import TeacherOrdersPage from './pages/Teacher/TeacherOrdersPage';
 import EditProfilePage from './pages/Teacher/EditProfilePage';
+import ParentDashboard from './pages/Parent/ParentDashboard';
+import ParentStudentsPage from './pages/Parent/ParentStudentPage';
+import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
+import ParentMessagesPage from './pages/Parent/ParentMessagePage';
 function App() {
   return (
     <>
@@ -79,6 +83,10 @@ function App() {
       <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
       <Route path="/teacher/orders" element={<TeacherOrdersPage />}/>
       <Route path="/teacher/edit-profile" element = {<EditProfilePage/>}/>
+      <Route path="/parent-dashboard" element = {<ParentDashboard/>}/>
+      <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
+      <Route path="/parent/students/:id" element={<StudentDetailsPage />} />
+      <Route path="/parent/messages" element={<ParentMessagesPage/>}/>
       </Routes>
     </>
   )

@@ -38,21 +38,36 @@ export default function ProfileAvatar({ role = "student" }) {
     setOpen(false);
   };
 
-  // 🔥 MENUS FOR STUDENT & TEACHER
+  // 🔥 MENU LIST BASED ON ROLE
   const MENU_ITEMS =
     role === "teacher"
       ? [
           { label: "Edit Profile", path: "/teacher/edit-profile" },
           { label: "Change Password", path: "/teacher/change-password" },
-          {label: "Orders", path: "/teacher/orders"},
+          { label: "Orders", path: "/teacher/orders" },
           { label: "Doubts", path: "/teacher/queries/doubts" },
         ]
+      : role === "parent"
+      ? [
+          { label: "Settings", path: "/parent/settings" },
+          { label: "Payments", path: "/parent/payments" },
+          { label: "Announcements", path: "/parent/announcements" },
+        ]
       : [
+          // STUDENT MENU
           { label: "Edit Profile", path: "/student/edit-profile" },
           { label: "Change Password", path: "/student/change-password" },
           { label: "Orders", path: "/student/orders" },
           { label: "Doubts", path: "/student/doubts" },
         ];
+
+  // 🔥 PROFILE CARD CLICK DESTINATION
+  const PROFILE_REDIRECT =
+    role === "teacher"
+      ? "/teacher-dashboard"
+      : role === "parent"
+      ? "/parent/dashboard"
+      : "/student-dashboard";
 
   return (
     <>
@@ -82,15 +97,9 @@ export default function ProfileAvatar({ role = "student" }) {
               zIndex: 2000,
             }}
           >
-            {/* PROFILE CARD */}
+            {/* PROFILE HEADER */}
             <div
-              onMouseDown={() =>
-                handleNavigate(
-                  role === "teacher"
-                    ? "/teacher/dashboard"
-                    : "/student-dashboard"
-                )
-              }
+              onMouseDown={() => handleNavigate(PROFILE_REDIRECT)}
               className="px-4 py-3 border-b border-[#A7E1B2]/30 hover:bg-[#F9FAFB] cursor-pointer transition"
             >
               <p className="font-semibold text-[#124734]">Pratima Singh</p>

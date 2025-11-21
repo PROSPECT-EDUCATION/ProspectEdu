@@ -7,6 +7,8 @@ import {
   CreditCard,
   Settings,
   LogOut,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,109 +20,98 @@ export default function ParentSidebar({ isCollapsed, setIsCollapsed }) {
   const menu = [
     {
       label: "Dashboard",
-      icon: <LayoutDashboard size={20} />,
-      path: "/parent/dashboard",
+      icon: LayoutDashboard,
+      path: "/parent-dashboard",
     },
     {
       label: "My Students",
-      icon: <Users2 size={20} />,
+      icon: Users2,
       path: "/parent/students",
     },
     {
-      label: "Progress Reports",
-      icon: <BarChart3 size={20} />,
-      path: "/parent/reports",
-    },
-    {
       label: "Messages",
-      icon: <MessageSquare size={20} />,
+      icon: MessageSquare,
       path: "/parent/messages",
     },
     {
       label: "Announcements",
-      icon: <Bell size={20} />,
+      icon: Bell,
       path: "/parent/announcements",
     },
     {
       label: "Payments",
-      icon: <CreditCard size={20} />,
+      icon: CreditCard,
       path: "/parent/payments",
     },
     {
       label: "Settings",
-      icon: <Settings size={20} />,
+      icon: Settings,
       path: "/parent/settings",
     },
   ];
 
   return (
-    <div
-      className={`h-full bg-white border-r border-[#DDEFE4] shadow-sm flex flex-col transition-all duration-300`}
-      style={{ width: isCollapsed ? 80 : 256 }}
+    <aside
+      className={`bg-[#124734] text-white h-screen flex flex-col justify-between shadow-lg transition-all duration-300 ${
+        isCollapsed ? "w-20" : "w-64"
+      }`}
     >
-      {/* LOGO AREA */}
-      <div className="h-[64px] flex items-center justify-between px-4 border-b border-[#E6F4EC]">
-        {!isCollapsed && (
-          <h1 className="text-xl font-semibold text-[#124734]">Parent Portal</h1>
-        )}
-
-        {/* Collapse Button */}
-        <button
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          className="p-2 rounded-md hover:bg-[#E6F4EC]"
+      {/* Logo Section */}
+      <div>
+        <div
+          className={`flex items-center gap-3 px-6 py-6 border-b border-[#A7E1B2]/40 transition-all duration-300 ${
+            isCollapsed ? "justify-center" : "justify-start"
+          }`}
         >
-          <svg
-            className={`w-5 h-5 text-[#124734] transition-transform ${
-              isCollapsed ? "rotate-180" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
+          <img
+            src="/src/assets/logo.png.jpeg"
+            alt="ProspectEdu Logo"
+            className="h-10 w-10 rounded-full object-cover border border-[#A7E1B2]/50"
+          />
+
+          {!isCollapsed && (
+            <h2 className="text-xl font-heading font-semibold text-[#A7E1B2]">
+              ProspectEdu
+            </h2>
+          )}
+        </div>
+
+        {/* Menu Items */}
+        <nav className="mt-4 space-y-1 flex-1 overflow-y-auto">
+          {menu.map(({ label, icon: Icon, path }) => {
+            const active = location.pathname.startsWith(path);
+
+            return (
+              <div
+                key={label}
+                onClick={() => navigate(path)}
+                className={`flex items-center gap-3 px-6 py-3 cursor-pointer transition-all duration-200 font-body ${
+                  active
+                    ? "bg-[#009846]/20 text-[#A7E1B2] border-l-4 border-[#009846]"
+                    : "text-[#E6F4EC] hover:bg-[#009846]/10 hover:text-[#A7E1B2]"
+                } ${isCollapsed ? "justify-center" : ""}`}
+              >
+                <Icon size={18} />
+                {!isCollapsed && <span className="text-sm">{label}</span>}
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Collapse Button */}
+      <div className="p-4 border-t border-[#A7E1B2]/30 flex justify-center">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-2 rounded-full bg-[#009846]/80 hover:bg-[#009846] transition-all duration-300"
+        >
+          {isCollapsed ? (
+            <ArrowRight size={20} color="#fff" />
+          ) : (
+            <ArrowLeft size={20} color="#fff" />
+          )}
         </button>
       </div>
-
-      {/* MENU LIST */}
-      <div className="flex-1 overflow-y-auto py-4">
-        {menu.map((item) => {
-          const active = location.pathname.startsWith(item.path);
-
-          return (
-            <div
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`
-                flex items-center gap-3 px-4 py-3 cursor-pointer rounded-r-full
-                transition-all duration-200
-                ${
-                  active
-                    ? "bg-[#E6F4EC] text-[#124734] font-semibold border-r-4 border-[#009846]"
-                    : "text-[#5B7065] hover:bg-[#F2FBF6]"
-                }
-              `}
-            >
-              <div className="text-[#124734]">{item.icon}</div>
-
-              {!isCollapsed && <span className="text-sm">{item.label}</span>}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* LOGOUT BUTTON */}
-      <div
-        onClick={() => navigate("/")}
-        className="
-          flex items-center gap-3 px-4 py-3 mb-4 cursor-pointer 
-          text-[#D64545] hover:bg-red-50 rounded-r-full
-        "
-      >
-        <LogOut size={20} />
-        {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
-      </div>
-    </div>
+    </aside>
   );
 }
