@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "../../context/ToastContext";   // ✅ added
 
 export default function ChangePasswordForm() {
   const [show, setShow] = useState({
@@ -8,11 +9,44 @@ export default function ChangePasswordForm() {
     confirm: false,
   });
 
+  const { showToast } = useToast();   // ✅ added toast hook
+
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: "",
+  });
+
   const toggle = (field) =>
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
 
+  const handleChange = (field, value) =>
+    setPasswords((p) => ({ ...p, [field]: value }));
+
+  const handleSubmit = () => {
+    if (!passwords.old || !passwords.new || !passwords.confirm) {
+      showToast("Please fill all fields", "error");
+      return;
+    }
+
+    if (passwords.new !== passwords.confirm) {
+      showToast("New passwords do not match", "error");
+      return;
+    }
+
+    if (passwords.new.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return;
+    }
+
+    showToast("Password updated successfully!", "success");
+
+    // reset fields after success
+    setPasswords({ old: "", new: "", confirm: "" });
+  };
+
   return (
-    <div className="max-w-3xl  bg-white p-8 rounded-xl shadow-sm border border-[#E6F4EC]">
+    <div className="max-w-3xl bg-white p-8 rounded-xl shadow-sm border border-[#E6F4EC]">
       <h2 className="text-2xl font-heading text-[#124734] mb-2">
         Change Password
       </h2>
@@ -28,6 +62,8 @@ export default function ChangePasswordForm() {
             <input
               type={show.old ? "text" : "password"}
               placeholder="Please enter your old password"
+              value={passwords.old}
+              onChange={(e) => handleChange("old", e.target.value)}
               className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
             />
             <span
@@ -45,6 +81,8 @@ export default function ChangePasswordForm() {
             <input
               type={show.new ? "text" : "password"}
               placeholder="Please enter your new password"
+              value={passwords.new}
+              onChange={(e) => handleChange("new", e.target.value)}
               className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
             />
             <span
@@ -62,6 +100,8 @@ export default function ChangePasswordForm() {
             <input
               type={show.confirm ? "text" : "password"}
               placeholder="Please enter your new password again"
+              value={passwords.confirm}
+              onChange={(e) => handleChange("confirm", e.target.value)}
               className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
             />
             <span
@@ -73,7 +113,10 @@ export default function ChangePasswordForm() {
           </div>
         </div>
 
-        <button className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium">
+        <button
+          onClick={handleSubmit}
+          className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium"
+        >
           Update Password
         </button>
       </div>

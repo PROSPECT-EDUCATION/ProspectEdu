@@ -80,8 +80,24 @@ export default function ParentChatWindow({ chat }) {
       {/* CHAT BODY */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F8FFFA]">
         {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} />
-        ))}
+  <MessageBubble
+    key={i}
+    msg={msg}
+    index={i}
+    onDelete={(index) => {
+      setMessages((prev) => prev.filter((_, j) => j !== index));
+    }}
+    onEdit={(index, newText) => {
+  setMessages((prev) =>
+    prev.map((m, j) =>
+      j === index ? { ...m, text: newText, edited: true } : m
+    )
+  );
+}}
+
+  />
+))}
+
         <div ref={bottomRef} />
       </div>
 

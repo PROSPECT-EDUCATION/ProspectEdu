@@ -41,9 +41,17 @@ import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentStudentsPage from './pages/Parent/ParentStudentPage';
 import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
 import ParentMessagesPage from './pages/Parent/ParentMessagePage';
+import ParentAnnouncementsPage from './pages/Parent/ParentAnnouncementsPage';
+import ParentPaymentsPage from './pages/Parent/ParentPaymentsPage';
+import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
+import { ToastProvider } from "./context/ToastContext";
+import { ConfirmProvider } from "./context/ConfirmContext";
+import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
+import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 function App() {
   return (
-    <>
+    <ToastProvider>
+       <ConfirmProvider>
     <ScrollToTop />
     <Routes>
       <Route path="/" element={<Home/>}/>
@@ -87,8 +95,14 @@ function App() {
       <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
       <Route path="/parent/students/:id" element={<StudentDetailsPage />} />
       <Route path="/parent/messages" element={<ParentMessagesPage/>}/>
+      <Route path="/parent/announcements" element={<ParentAnnouncementsPage/>}/>
+      <Route path="/parent/payments" element={<ParentPaymentsPage/>}/>
+      <Route path="/parent/settings" element={<ParentSettingsPage/>}/>
+      <Route path="/parent/change-password" element={<ParentChangePasswordPage/>}/>
+      <Route path="/admin-dashboard" element = {<AdminDashboardPage/>}/>
       </Routes>
-    </>
+       </ConfirmProvider>
+    </ToastProvider>
   )
 }
 export default App

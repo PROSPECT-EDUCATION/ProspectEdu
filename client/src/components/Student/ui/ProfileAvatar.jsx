@@ -49,9 +49,9 @@ export default function ProfileAvatar({ role = "student" }) {
         ]
       : role === "parent"
       ? [
-          { label: "Settings", path: "/parent/settings" },
+          { label: "Edit Profile", path: "/parent/settings" },
           { label: "Payments", path: "/parent/payments" },
-          { label: "Announcements", path: "/parent/announcements" },
+          { label: "Change Password", path: "/parent/change-password" },
         ]
       : [
           // STUDENT MENU
@@ -66,7 +66,7 @@ export default function ProfileAvatar({ role = "student" }) {
     role === "teacher"
       ? "/teacher-dashboard"
       : role === "parent"
-      ? "/parent/dashboard"
+      ? "/parent-dashboard"
       : "/student-dashboard";
 
   return (
