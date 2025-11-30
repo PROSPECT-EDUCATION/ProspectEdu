@@ -48,6 +48,12 @@ import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
+import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
+import AdminAddStudentPage from './pages/Admin/AdminAddStudentPage';
+import AdminEditStudentPage from './pages/Admin/AdminEditStudentPage';
+import AdminAllTeachersPage from './pages/Admin/AdminAllTeachersPage';
+import AdminAddTeacherPage from './pages/Admin/AdminAddTeacherPage';
+import AdminEditTeacherPage from './pages/Admin/AdminEditTeacherPage';
 function App() {
   return (
     <ToastProvider>
@@ -100,6 +106,12 @@ function App() {
       <Route path="/parent/settings" element={<ParentSettingsPage/>}/>
       <Route path="/parent/change-password" element={<ParentChangePasswordPage/>}/>
       <Route path="/admin-dashboard" element = {<AdminDashboardPage/>}/>
+      <Route path="/admin/students" element= {<AdminAllStudentsPage/>}/>
+      <Route path="/admin/students/add" element={<AdminAddStudentPage/>}/>
+      <Route path="/admin/students/edit" element={<AdminEditStudentPage/>}/>
+      <Route path="/admin/teachers" element={<AdminAllTeachersPage/>}/>
+      <Route path="/admin/teachers/add" element={<AdminAddTeacherPage/>}/>
+      <Route path = "/admin/teachers/edit" element={<AdminEditTeacherPage/>}/>
       </Routes>
        </ConfirmProvider>
     </ToastProvider>

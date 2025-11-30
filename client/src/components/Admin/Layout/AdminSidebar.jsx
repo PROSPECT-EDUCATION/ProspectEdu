@@ -23,25 +23,15 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   };
 
   const menu = [
-    { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+    { title: "Dashboard", icon: LayoutDashboard, path: "/admin-dashboard" },
 
-    {
-      title: "Widgets",
-      icon: Boxes,
-      children: [
-        { label: "All Widgets", path: "/admin/widgets" },
-        { label: "Add Widget", path: "/admin/widgets/add" },
-        { label: "Edit Widget", path: "/admin/widgets/edit" },
-      ],
-    },
-
+    
     {
       title: "Students",
       icon: Users,
       children: [
         { label: "All Students", path: "/admin/students" },
         { label: "Add Student", path: "/admin/students/add" },
-        { label: "Edit Student", path: "/admin/students/edit" },
       ],
     },
 
@@ -51,7 +41,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       children: [
         { label: "All Teachers", path: "/admin/teachers" },
         { label: "Add Teacher", path: "/admin/teachers/add" },
-        { label: "Edit Teacher", path: "/admin/teachers/edit" },
       ],
     },
 
@@ -64,16 +53,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Edit Course", path: "/admin/courses/edit" },
         { label: "Assign Teachers", path: "/admin/courses/assign" },
         { label: "Enroll Students", path: "/admin/courses/enroll" },
-      ],
-    },
-
-    {
-      title: "Holidays",
-      icon: Calendar,
-      children: [
-        { label: "All Holidays", path: "/admin/holidays" },
-        { label: "Add Holiday", path: "/admin/holidays/add" },
-        { label: "Edit Holiday", path: "/admin/holidays/edit" },
       ],
     },
 
@@ -115,7 +94,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Create Announcement", path: "/admin/announcements/create" },
       ],
     },
-
     { title: "Settings", icon: Settings, path: "/admin/settings" },
   ];
 
@@ -150,43 +128,59 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
           className="mt-4 space-y-1 flex-1 overflow-y-auto 
           scrollbar-thin scrollbar-thumb-[#0B2F23] scrollbar-track-[#124734]"
         >
-          {menu.map((item, index) => (
-            <div key={index}>
-              {/* PARENT BUTTON */}
-              <button
-                onClick={() => item.children && toggleMenu(index)}
-                className={`flex items-center gap-3 px-6 py-3 w-full text-left transition-all duration-200 font-body ${
-                  location.pathname === item.path
-                    ? "bg-[#009846]/20 text-[#A7E1B2] border-l-4 border-[#009846]"
-                    : "text-[#E6F4EC] hover:bg-[#009846]/10 hover:text-[#A7E1B2]"
-                } ${isCollapsed ? "justify-center" : ""}`}
-              >
-                <item.icon size={18} />
-                {!isCollapsed && <span className="text-sm">{item.title}</span>}
-              </button>
+         {menu.map((item, index) => (
+  <div key={index}>
+    {/* IF ITEM HAS NO CHILDREN — USE NAVLINK */}
+    {!item.children ? (
+      <NavLink
+        to={item.path}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-6 py-3 w-full transition-all duration-200 
+          ${isActive
+            ? "bg-[#009846]/20 text-[#A7E1B2] border-l-4 border-[#009846]"
+            : "text-[#E6F4EC] hover:bg-[#009846]/10 hover:text-[#A7E1B2]"}
+          ${isCollapsed ? "justify-center" : ""}`
+        }
+      >
+        <item.icon size={18} />
+        {!isCollapsed && <span className="text-sm">{item.title}</span>}
+      </NavLink>
+    ) : (
+      <>
+        {/* IF ITEM HAS CHILDREN — USE BUTTON */}
+        <button
+          onClick={() => toggleMenu(index)}
+          className={`flex items-center gap-3 px-6 py-3 w-full text-left transition-all duration-200 
+          ${isCollapsed ? "justify-center" : ""}`}
+        >
+          <item.icon size={18} />
+          {!isCollapsed && <span className="text-sm">{item.title}</span>}
+        </button>
 
-              {/* CHILD DROPDOWN */}
-              {item.children && openMenu === index && !isCollapsed && (
-                <div className="ml-10 mt-1 space-y-1">
-                  {item.children.map((child, idx) => (
-                    <NavLink
-                      key={idx}
-                      to={child.path}
-                      className={({ isActive }) =>
-                        `block px-3 py-2 text-sm rounded transition-all duration-200 ${
-                          isActive
-                            ? "text-[#A7E1B2] bg-[#009846]/10"
-                            : "text-[#E6F4EC] hover:text-[#A7E1B2] hover:bg-[#009846]/5"
-                        }`
-                      }
-                    >
-                      {child.label}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        {/* DROPDOWN CHILDREN */}
+        {openMenu === index && !isCollapsed && (
+          <div className="ml-10 mt-1 space-y-1">
+            {item.children.map((child, idx) => (
+              <NavLink
+                key={idx}
+                to={child.path}
+                className={({ isActive }) =>
+                  `block px-3 py-2 text-sm rounded transition-all duration-200 
+                  ${isActive
+                    ? "text-[#A7E1B2] bg-[#009846]/10"
+                    : "text-[#E6F4EC] hover:text-[#A7E1B2] hover:bg-[#009846]/5"}`
+                }
+              >
+                {child.label}
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+))}
+
         </nav>
       </div>
 
