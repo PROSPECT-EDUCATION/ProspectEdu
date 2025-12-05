@@ -61,7 +61,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: CreditCard,
       children: [
         { label: "Fees Collection", path: "/admin/fees/collection" },
-        { label: "Fees Receipt", path: "/admin/fees/receipt" },
       ],
     },
 

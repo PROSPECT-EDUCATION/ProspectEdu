@@ -54,6 +54,14 @@ import AdminEditStudentPage from './pages/Admin/AdminEditStudentPage';
 import AdminAllTeachersPage from './pages/Admin/AdminAllTeachersPage';
 import AdminAddTeacherPage from './pages/Admin/AdminAddTeacherPage';
 import AdminEditTeacherPage from './pages/Admin/AdminEditTeacherPage';
+import FeesCollectionPage from './pages/Admin/FeesCollectionPage';
+import AddFeesPage from './pages/Admin/AddFeesPage';
+import FeesReceiptPage from './pages/Admin/FeesReceiptPage';
+import AdminAnnouncementsPage from './pages/Admin/AdminAnnouncementsPage';
+import AddAnnouncementPage from './pages/Admin/AddAnnouncementPage';
+import AdminCoursesPage from './pages/Admin/AdminCoursesPage';
+import AdminCourseDetailPage from './pages/Admin/AdminCourseDetailPage';
+
 function App() {
   return (
     <ToastProvider>
@@ -112,6 +120,13 @@ function App() {
       <Route path="/admin/teachers" element={<AdminAllTeachersPage/>}/>
       <Route path="/admin/teachers/add" element={<AdminAddTeacherPage/>}/>
       <Route path = "/admin/teachers/edit" element={<AdminEditTeacherPage/>}/>
+      <Route path="/admin/fees/collection" element={<FeesCollectionPage/>}/>
+      <Route path="admin/fees/addfees" element={<AddFeesPage/>}/>
+      <Route path="/admin/fees/receipt/:receiptId" element={<FeesReceiptPage />} />
+      <Route path="/admin/announcements" element ={<AdminAnnouncementsPage/>}/>
+      <Route path="/admin/announcements/create" element = {<AddAnnouncementPage/>}/>
+      <Route path="/admin/courses" element={<AdminCoursesPage/>}/>
+        <Route path="/admin/courses/:slug/edit" element={<AdminCourseDetailPage />} />
       </Routes>
        </ConfirmProvider>
     </ToastProvider>
