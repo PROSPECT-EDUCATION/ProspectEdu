@@ -37,7 +37,7 @@ export default function CourseDetail({ slug }) {
             {/* Admin Actions */}
             <div className="flex gap-4 mt-6">
               <button
-                onClick={() => navigate(`/admin/courses/${slug}/edit`)}
+                onClick={() => navigate(`/admin/course-edit/${slug}`)}
                 className="bg-[#124734] text-white px-4 py-2 rounded-md hover:bg-[#0E3A2B]"
               >
                 Edit Course

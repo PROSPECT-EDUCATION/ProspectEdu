@@ -50,8 +50,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       children: [
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
-        { label: "Edit Course", path: "/admin/courses/edit" },
-        { label: "Assign Teachers", path: "/admin/courses/assign" },
         { label: "Enroll Students", path: "/admin/courses/enroll" },
       ],
     },
@@ -77,9 +75,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Edit Category", path: "/admin/ecom/categories/edit" },
 
         { label: "All Orders", path: "/admin/ecom/orders" },
-        { label: "Order Details", path: "/admin/ecom/orders/details" },
-        { label: "Update Order Status", path: "/admin/ecom/orders/update" },
-
+         { label: "Customers", path: "/admin/ecom/customers" },
         { label: "Stock Levels", path: "/admin/ecom/inventory" },
         { label: "Restock Alerts", path: "/admin/ecom/inventory/alerts" },
       ],

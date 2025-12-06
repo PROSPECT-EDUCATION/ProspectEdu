@@ -61,6 +61,12 @@ import AdminAnnouncementsPage from './pages/Admin/AdminAnnouncementsPage';
 import AddAnnouncementPage from './pages/Admin/AddAnnouncementPage';
 import AdminCoursesPage from './pages/Admin/AdminCoursesPage';
 import AdminCourseDetailPage from './pages/Admin/AdminCourseDetailPage';
+import EditCoursePage from './pages/Admin/EditCoursePage';
+import AddCoursePage from './pages/Admin/AddCoursePage';
+import EnrollStudentsPage from './pages/Admin/EnrollStudentsPage';
+import EcomOrdersPage from './pages/Admin/Ecom/EcomOrdersPage';
+import OrderDetailsPage from './pages/Admin/Ecom/OrderDetailsPage';
+import CustomersPage from './pages/Admin/Ecom/CustomersPage';
 
 function App() {
   return (
@@ -126,8 +132,14 @@ function App() {
       <Route path="/admin/announcements" element ={<AdminAnnouncementsPage/>}/>
       <Route path="/admin/announcements/create" element = {<AddAnnouncementPage/>}/>
       <Route path="/admin/courses" element={<AdminCoursesPage/>}/>
-        <Route path="/admin/courses/:slug/edit" element={<AdminCourseDetailPage />} />
-      </Routes>
+      <Route path="/admin/courses/:slug/edit" element={<AdminCourseDetailPage />} />
+      <Route path="/admin/course-edit/:slug" element={<EditCoursePage/>}/>
+      <Route path="/admin/courses/add" element={<AddCoursePage/>}/>
+      <Route path="/admin/courses/enroll" element = {<EnrollStudentsPage/>}/>
+      <Route path="/admin/ecom/orders" element={<EcomOrdersPage />} />
+      <Route path="/admin/ecom/orders/:id" element={<OrderDetailsPage />} />
+      <Route path="/admin/ecom/customers" element={<CustomersPage/>}/>
+      </Routes> 
        </ConfirmProvider>
     </ToastProvider>
   )
