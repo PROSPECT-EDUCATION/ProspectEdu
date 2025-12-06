@@ -16,6 +16,8 @@ export default function CustomerInfoCard({ customer }) {
 
       <div className="border-t mt-4 pt-4 text-sm">
         <p><strong>Total Orders:</strong> {customer.orderCount}</p>
+        <p><strong>Completed Orders:</strong> {customer.completedOrder}</p>
+        <p><strong>Cancelled Orders:</strong> {customer.cancelledOrder}</p>
         <p><strong>Total Spend:</strong> ₹{customer.totalSpend}</p>
       </div>
     </div>

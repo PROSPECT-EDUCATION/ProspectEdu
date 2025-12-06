@@ -1,15 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import CustomerRow from "./CustomerRow";
-import customers from "../../../../data/customers";
+import customersData from "../../../../data/customers";
 
 export default function CustomerTable({ search, setSearch, page, itemsPerPage = 10 }) {
   
+  const [customers, setCustomers] = useState(customersData);
+
   // Filter
   const filtered = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.customerId.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ⭐ Delete Handler
+  const handleDelete = (id) => {
+    setCustomers((prev) => prev.filter((c) => c.id !== id));
+  };
 
   // Pagination Logic
   const start = (page - 1) * itemsPerPage;
@@ -35,19 +42,19 @@ export default function CustomerTable({ search, setSearch, page, itemsPerPage = 
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-[#ECF5EE]">
-            <th className="p-3 text-left">Customer Id</th>
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3 text-left">Phone</th>
-            <th className="p-3 text-left">Order Count</th>
-            <th className="p-3 text-left">Total Spend</th>
-            <th className="p-3 text-left">Status</th>
+            <th className="p-3 text-center">Customer Id</th>
+            <th className="p-3 text-center">Name</th>
+            <th className="p-3 text-center">Phone</th>
+            <th className="p-3 text-center">Order Count</th>
+            <th className="p-3 text-center">Total Spend</th>
+            <th className="p-3 text-center">Status</th>
             <th className="p-3 text-left">Action</th>
           </tr>
         </thead>
 
         <tbody>
           {rows.map((c) => (
-            <CustomerRow key={c.id} item={c} />
+            <CustomerRow key={c.id} item={c} onDelete={handleDelete} />
           ))}
         </tbody>
       </table>

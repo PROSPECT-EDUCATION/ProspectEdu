@@ -11,6 +11,8 @@ const customers = [
     status: "Active",        // Active | VIP | Inactive
     orderCount: 25,
     totalSpend: 3450.0,
+    cancelledOrder: 5,
+    completedOrder: 20,
 
     orders: [
       {
@@ -46,6 +48,8 @@ const customers = [
     status: "VIP",
     orderCount: 30,
     totalSpend: 4600.0,
+    cancelledOrder: 5,
+    completedOrder: 25,
 
     orders: [
       {
@@ -81,6 +85,8 @@ const customers = [
     status: "Inactive",
     orderCount: 5,
     totalSpend: 250.0,
+    cancelledOrder: 1,
+    completedOrder: 4,
 
     orders: [
       {

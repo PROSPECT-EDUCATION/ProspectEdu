@@ -66,12 +66,10 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       title: "E-Commerce",
       icon: ShoppingBag,
       children: [
-        { label: "All Products", path: "/admin/ecom/products" },
         { label: "Add Product", path: "/admin/ecom/products/add" },
         { label: "Edit Product", path: "/admin/ecom/products/edit" },
 
         { label: "All Categories", path: "/admin/ecom/categories" },
-        { label: "Add Category", path: "/admin/ecom/categories/add" },
         { label: "Edit Category", path: "/admin/ecom/categories/edit" },
 
         { label: "All Orders", path: "/admin/ecom/orders" },
