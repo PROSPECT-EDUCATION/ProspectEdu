@@ -13,7 +13,7 @@ const categories = [
   { title: "Soft Skills", img: itImg },
 ];
 
-export default function CategorySlider() {
+export default function CategorySlider({categories}) {
   const scrollRef = useRef(null);
 
   const scrollLeft = () => {
