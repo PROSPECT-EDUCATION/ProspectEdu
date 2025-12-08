@@ -40,34 +40,41 @@ export default function ProfileAvatar({ role = "student" }) {
 
   // 🔥 MENU LIST BASED ON ROLE
   const MENU_ITEMS =
-    role === "teacher"
-      ? [
-          { label: "Edit Profile", path: "/teacher/edit-profile" },
-          { label: "Change Password", path: "/teacher/change-password" },
-          { label: "Orders", path: "/teacher/orders" },
-          { label: "Doubts", path: "/teacher/queries/doubts" },
-        ]
-      : role === "parent"
-      ? [
-          { label: "Edit Profile", path: "/parent/settings" },
-          { label: "Payments", path: "/parent/payments" },
-          { label: "Change Password", path: "/parent/change-password" },
-        ]
-      : [
-          // STUDENT MENU
-          { label: "Edit Profile", path: "/student/edit-profile" },
-          { label: "Change Password", path: "/student/change-password" },
-          { label: "Orders", path: "/student/orders" },
-          { label: "Doubts", path: "/student/doubts" },
-        ];
+  role === "teacher"
+    ? [
+        { label: "Edit Profile", path: "/teacher/edit-profile" },
+        { label: "Change Password", path: "/teacher/change-password" },
+        { label: "Orders", path: "/teacher/orders" },
+        { label: "Doubts", path: "/teacher/queries/doubts" },
+      ]
+    : role === "parent"
+    ? [
+        { label: "Edit Profile", path: "/parent/settings" },
+        { label: "Payments", path: "/parent/payments" },
+        { label: "Change Password", path: "/parent/change-password" },
+      ]
+    : role === "admin"
+    ? [
+         { label: "Edit Profile", path: "/admin/edit-profile" },
+        { label: "Change Password", path: "/admin/change-password" },
+      ]
+    : [
+        // STUDENT
+        { label: "Edit Profile", path: "/student/edit-profile" },
+        { label: "Change Password", path: "/student/change-password" },
+        { label: "Orders", path: "/student/orders" },
+        { label: "Doubts", path: "/student/doubts" },
+      ];
 
   // 🔥 PROFILE CARD CLICK DESTINATION
   const PROFILE_REDIRECT =
-    role === "teacher"
-      ? "/teacher-dashboard"
-      : role === "parent"
-      ? "/parent-dashboard"
-      : "/student-dashboard";
+  role === "teacher"
+    ? "/teacher-dashboard"
+    : role === "parent"
+    ? "/parent-dashboard"
+    : role === "admin"
+    ? "/admin-dashboard"
+    : "/student-dashboard";
 
   return (
     <>

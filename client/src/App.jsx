@@ -69,6 +69,9 @@ import OrderDetailsPage from './pages/Admin/Ecom/OrderDetailsPage';
 import CustomersPage from './pages/Admin/Ecom/CustomersPage';
 import CustomerDetailsPage from './pages/Admin/Ecom/CustomerDetailsPage';
 import CategoriesPage from './pages/Admin/Ecom/CategoriesPage';
+import TransactionsPage from './pages/Admin/Ecom/TransactionsPage';
+import AdminEditProfile from './pages/Admin/AdminEditProfile';
+import AdminChangePassword from './pages/Admin/AdminChangePassword';
 
 function App() {
   return (
@@ -143,6 +146,9 @@ function App() {
       <Route path="/admin/ecom/customers" element={<CustomersPage/>}/>
       <Route path="/admin/ecom/customers/:id" element={<CustomerDetailsPage/>}/>
       <Route path="/admin/ecom/categories" element={<CategoriesPage/>}/>
+      <Route path="/admin/ecom/transaction" element={<TransactionsPage/>}/>
+      <Route path="/admin/edit-profile" element={<AdminEditProfile/>}/>
+      <Route path="/admin/change-password" element={<AdminChangePassword/>}/>
       </Routes> 
        </ConfirmProvider>
     </ToastProvider>

@@ -70,12 +70,11 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Edit Product", path: "/admin/ecom/products/edit" },
 
         { label: "All Categories", path: "/admin/ecom/categories" },
-        { label: "Edit Category", path: "/admin/ecom/categories/edit" },
 
         { label: "All Orders", path: "/admin/ecom/orders" },
          { label: "Customers", path: "/admin/ecom/customers" },
         { label: "Stock Levels", path: "/admin/ecom/inventory" },
-        { label: "Restock Alerts", path: "/admin/ecom/inventory/alerts" },
+        {label: "Transaction", path: "/admin/ecom/transaction"},
       ],
     },
 

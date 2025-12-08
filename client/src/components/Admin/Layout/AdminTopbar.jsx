@@ -1,5 +1,3 @@
-import CourseDropdown from "../../Student/ui/CourseDropdown";
-import SearchBar from "../../Student/ui/SearchBar";
 import NotificationBell from "../../Student/ui/NotificationBell";
 import ProfileAvatar from "../../Student/ui/ProfileAvatar";
 import StoreButton from "../../Student/ui/StoreButton";
@@ -34,8 +32,6 @@ export default function AdminTopbar({ pageTitle }) {
 
       {/* RIGHT SECTION */}
       <div className="flex items-center gap-4">
-        <CourseDropdown role="admin" />
-        <SearchBar />
         <StoreButton />
         <NotificationBell />
         <ProfileAvatar role="admin" />
