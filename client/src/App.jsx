@@ -75,6 +75,7 @@ import AdminChangePassword from './pages/Admin/AdminChangePassword';
 import SettingsPage from './pages/Admin/SettingsPage';
 import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
 import CoursePurchaseList from './pages/Admin/CoursePurchaseList';
+import EcomProductList from './pages/Admin/Ecom/EcomPurchaseList';
 function App() {
   return (
     <ToastProvider>
@@ -154,6 +155,7 @@ function App() {
       <Route path="/admin/settings" element={<SettingsPage/>}/>
       <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>
       <Route path="/admin/courses/purchaseList" element={<CoursePurchaseList/>}/>
+      <Route path="/admin/ecom/products/purchase" element = {<EcomProductList/>}/>
       </Routes> 
        </ConfirmProvider>
     </ToastProvider>
