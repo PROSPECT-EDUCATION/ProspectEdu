@@ -1,8 +1,9 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import testImg from "../assets/test1.jpg"; // same image for all test cards
-import WhyTestSeries from "../components/WhyTestSeries";
-import whyTestImg from "../assets/WhyTest.png"; 
+  import testImg from "../../assets/test1.jpg";
+import whyTestImg from "../../assets/WhyTest.png";
+
+ import WhyTestSeries from "../../components/WhyTestSeries";
 
 const TestDetails = () => {
   const { id } = useParams();

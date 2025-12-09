@@ -1,5 +1,6 @@
 import React from "react";
-import donateImg from "../assets/donate.jpg"; // donation image
+import donateImg from "../../assets/donate.jpg";
+  // donation image
 import { useNavigate } from "react-router-dom";
 
 const Donate = () => {

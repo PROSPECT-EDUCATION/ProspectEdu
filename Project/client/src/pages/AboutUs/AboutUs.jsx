@@ -1,7 +1,8 @@
 import React from "react";
-import aboutImg from "../assets/AboutUs.png"; // your About Us image
-import careerImg from "../assets/carrer2.png";
-import ContactUs from "../components/Contact";
+import aboutImg from "../../assets/AboutUs.png";
+import careerImg from "../../assets/carrer2.png";
+
+import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";
 
 

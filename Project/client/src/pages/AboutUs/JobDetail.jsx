@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import hiringImg from "../assets/hiring2.jpeg";
-import ContactUs from "../components/Contact";
+import hiringImg from "../../assets/hiring2.jpeg";
+
+import ContactUs from "../../components/Contact";
 
 const JobDetail = () => {
   const { id } = useParams();

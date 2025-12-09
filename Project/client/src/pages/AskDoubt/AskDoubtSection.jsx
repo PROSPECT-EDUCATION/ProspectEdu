@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import questionIllustration from "../assets/question.webp";
+import questionIllustration from "../../assets/question.webp";
+
 
 const AskDoubtSection = () => {
   const [formData, setFormData] = useState({

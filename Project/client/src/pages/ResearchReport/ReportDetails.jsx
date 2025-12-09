@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import researchImg from "../assets/research.jpg";
-import English from "../assets/English.pdf";
-import Hindi  from "../assets/Hindi.pdf";
+import researchImg from "../../assets/research.jpg";
+import English from "../../assets/English.pdf";
+import Hindi from "../../assets/Hindi.pdf";
+
 
 
 const ReportDetails = () => {

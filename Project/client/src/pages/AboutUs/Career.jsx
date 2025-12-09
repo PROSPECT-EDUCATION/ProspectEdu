@@ -1,6 +1,7 @@
 import React from "react";
-import hiringImg from "../assets/hiring2.jpeg"; // your hiring image
-import ContactUs from "../components/Contact";
+import hiringImg from "../../assets/hiring2.jpeg";
+ // your hiring image
+import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";
 
 const Career = () => {

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
+
 /* @tailwind base;
 @tailwind components;
 @tailwind utilities; */
@@ -9,5 +11,14 @@
   color: #124734;
   background-color: #F9FAFB;
 }
+@keyframes fadeIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
 
 /* Remove everything else from the default Vite CSS */

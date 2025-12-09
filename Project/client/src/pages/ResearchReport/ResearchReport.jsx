@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import researchImg from "../assets/research.jpg";
+import researchImg from "../../assets/research.jpg";
+
 
 const ResearchReport = () => {
   const [activeTab, setActiveTab] = useState("All");
@@ -163,7 +164,7 @@ const ResearchReport = () => {
                 </h3>
                 <p className="text-gray-700 text-sm">{report.description}</p>
                 <div className="flex items-center gap-3 text-gray-500 text-xs mt-2">
-                  <span className="px-2 py-1 bg-[#A7E1B2] text-[#124734] rounded-md text-[11px] font-medium">
+                  <span className="px-2 py-1 bg-   text-[#124734] rounded-md text-[11px] font-medium">
                     {report.subject}
                   </span>
                   <span>📅 {report.date}</span>

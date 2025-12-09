@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import testImg from "../assets/test1.jpg"; // same image for all cards
-import WhyTestSeries from "../components/WhyTestSeries";
-import whyTestImg from "../assets/WhyTest.png"; 
+import testImg from "../../assets/test1.jpg";//same image for all test cards
+import whyTestImg from "../../assets/WhyTest.png";
+ 
+import WhyTestSeries from "../../components/WhyTestSeries";
 import { useNavigate } from "react-router-dom";
 
 
