@@ -51,6 +51,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
         { label: "Enroll Students", path: "/admin/courses/enroll" },
+        {label: "Course Purchase List", path: "/admin/courses/purchaseList"},
       ],
     },
 
@@ -67,13 +68,13 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: ShoppingBag,
       children: [
         { label: "Add Product", path: "/admin/ecom/products/add" },
-        { label: "Edit Product", path: "/admin/ecom/products/edit" },
+        { label: "Purchase List", path: "/admin/ecom/products/purchase" },
 
         { label: "All Categories", path: "/admin/ecom/categories" },
 
         { label: "All Orders", path: "/admin/ecom/orders" },
          { label: "Customers", path: "/admin/ecom/customers" },
-        { label: "Stock Levels", path: "/admin/ecom/inventory" },
+        
         {label: "Transaction", path: "/admin/ecom/transaction"},
       ],
     },

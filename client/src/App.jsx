@@ -72,7 +72,9 @@ import CategoriesPage from './pages/Admin/Ecom/CategoriesPage';
 import TransactionsPage from './pages/Admin/Ecom/TransactionsPage';
 import AdminEditProfile from './pages/Admin/AdminEditProfile';
 import AdminChangePassword from './pages/Admin/AdminChangePassword';
-
+import SettingsPage from './pages/Admin/SettingsPage';
+import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
+import CoursePurchaseList from './pages/Admin/CoursePurchaseList';
 function App() {
   return (
     <ToastProvider>
@@ -149,6 +151,9 @@ function App() {
       <Route path="/admin/ecom/transaction" element={<TransactionsPage/>}/>
       <Route path="/admin/edit-profile" element={<AdminEditProfile/>}/>
       <Route path="/admin/change-password" element={<AdminChangePassword/>}/>
+      <Route path="/admin/settings" element={<SettingsPage/>}/>
+      <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>
+      <Route path="/admin/courses/purchaseList" element={<CoursePurchaseList/>}/>
       </Routes> 
        </ConfirmProvider>
     </ToastProvider>
