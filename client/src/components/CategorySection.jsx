@@ -1,6 +1,7 @@
 import itIcon from "../assets/it.png";
 import lawIcon from "../assets/law.png";
 import electricalIcon from "../assets/electrical.png";
+import medicalIcon from "../assets/medical.png"
 import { Link } from "react-router-dom";
 
 export default function CategorySection() {
@@ -8,7 +9,7 @@ export default function CategorySection() {
     {
       title: "Engineering",
       icon: itIcon,
-      description: "Explore programming, networking, and software courses.",
+      description: "Explore programming and software courses.",
       path: "/courses/engineering",
     },
     {
@@ -23,6 +24,12 @@ export default function CategorySection() {
       description: "Dive into power systems and Management.",
       path: "/courses/management"
     },
+    {
+      title: "Medical",
+      icon: medicalIcon,
+      description: "Understand how human body works.",
+      path: "/courses/medical"
+    }
   ];
 
   return (
@@ -34,7 +41,7 @@ export default function CategorySection() {
         </h2>
 
         {/* Category Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {categories.map((cat, i) => (
             <div
               key={i}

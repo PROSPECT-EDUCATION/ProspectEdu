@@ -41,10 +41,11 @@ export default function ParentMessagesPage() {
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
 
       {/* SIDEBAR */}
-      <div
-        className="fixed top-0 left-0 h-full transition-all duration-300 hidden md:block"
-        style={{ width: sidebarWidth }}
-      >
+<div
+  className="fixed top-0 left-0 h-full transition-all duration-300 block"
+  style={{ width: sidebarWidth }}
+>
+
         <ParentSidebar
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}

@@ -8,6 +8,7 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import EngineeringCoursesList, { engineeringCoursesData } from "../../components/Courses/EngineeringCoursesList";
 import ManagementCoursesList, { managementCoursesData } from "../../components/Courses/ManagementCoursesList";
 import LawCoursesList, { lawCoursesData } from "../../components/Courses/LawCoursesList";
+import MedicalCoursesList, {medicalCoursesData} from "../../components/Courses/MedicalCoursesList";
 
 export default function AllCourses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -70,6 +71,7 @@ export default function AllCourses() {
     ["engineering", "Engineering Courses"],
     ["management", "Management Courses"],
     ["law", "Law Courses"],
+    ["medical", "Medical Courses"]
   ].map(([id, label]) => (
     <button
       key={id}
@@ -116,6 +118,11 @@ export default function AllCourses() {
           {activeTab === "law" && (
             <LawCoursesList courses={lawCoursesData} />
           )}
+          {activeTab==="medical" && (
+            <MedicalCoursesList courses={medicalCoursesData}/>
+          )
+
+          }
         </main>
       </div>
     </div>

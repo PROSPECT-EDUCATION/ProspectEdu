@@ -13,7 +13,7 @@ export default function Navbar() {
 
   const links = [
     { label: "Home" },
-    { label: "Courses", dropdown: ["Engineering", "Law", "Management"] },
+    { label: "Courses", dropdown: ["Engineering", "Law", "Management", "Medical"] },
     { label: "Test & Learning", dropdown: ["Active Test Series 1", "Active Test Series 2"] },
     { label: "Scholarship", dropdown: ["Active Scholarship 1", "Active Scholarship 2"] },
     { label: "Research" },
