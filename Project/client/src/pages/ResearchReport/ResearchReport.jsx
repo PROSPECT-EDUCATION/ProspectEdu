@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import researchImg from "../../assets/research.jpg";
 
-
 const ResearchReport = () => {
   const [activeTab, setActiveTab] = useState("All");
   const navigate = useNavigate();
@@ -97,38 +96,44 @@ const ResearchReport = () => {
 
   return (
     <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+
       {/* Header */}
       <div className="bg-[#1E5631] text-white w-full py-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-8">
-          <div className="w-full md:w-1/2 pr-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
+
+          <div className="w-full md:w-1/2">
             <p className="text-sm mb-3 text-gray-200">Home &gt; Research Report</p>
-            <h1 className="font-semibold text-4xl mb-3 leading-snug">
+
+            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
               Research Reports made simple.
             </h1>
+
             <p className="text-[#B7F399] text-lg font-medium">
               Our Research Report section offers a deep dive into the latest academic
               and professional studies across multiple fields like Technology, Science,
               Education, and Innovation.
             </p>
           </div>
-          <div className="w-full md:w-1/2 flex justify-end mt-8 md:mt-0">
+
+          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
             <img
               src={researchImg}
               alt="Research Report Illustration"
-              className="max-w-[16rem] md:w-[350px] rounded-lg shadow-md"
+              className="w-[200px] md:w-[350px] rounded-lg shadow-md"
             />
           </div>
+
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white shadow-md rounded-xl max-w-6xl mx-auto mt-10 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-3">
+      <div className="bg-white shadow-md rounded-xl max-w-6xl mx-auto mt-10 px-4 md:px-6 py-4 flex flex-wrap items-center justify-center md:justify-between gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg border text-sm md:text-base transition-all duration-200 ${
                 activeTab === tab
                   ? "bg-[#A7E1B2] text-black border-[#A7E1B2]"
                   : "bg-white text-black border-gray-300 hover:bg-[#A7E1B2]"
@@ -142,7 +147,8 @@ const ResearchReport = () => {
 
       {/* Reports */}
       <div className="max-w-6xl mx-auto mt-10 px-4">
-        <h2 className="text-2xl font-semibold mb-6">
+
+        <h2 className="text-xl md:text-2xl font-semibold mb-6">
           {activeTab === "All" ? "All Research Reports" : activeTab + " Reports"}
         </h2>
 
@@ -150,25 +156,33 @@ const ResearchReport = () => {
           {filteredReports.map((report) => (
             <div
               key={report.id}
-              onClick={() => navigate(`/research-report/${report.id}`, { state: report })}
-              className="flex flex-col md:flex-row items-start bg-white shadow-sm rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() =>
+                navigate(`/research-report/${report.id}`, { state: report })
+              }
+              className="flex flex-col md:flex-row items-start bg-white shadow-sm rounded-lg p-4 md:p-5 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
             >
               <img
                 src={report.img}
                 alt={report.title}
-                className="w-full md:w-[180px] h-[120px] object-cover rounded-md"
+                className="w-full md:w-[180px] h-[140px] md:h-[120px] object-cover rounded-md"
               />
+
               <div className="md:ml-6 mt-3 md:mt-0">
-                <h3 className="text-xl font-semibold text-[#124734] mb-2">
+                <h3 className="text-lg md:text-xl font-semibold text-[#124734] mb-2">
                   {report.title}
                 </h3>
-                <p className="text-gray-700 text-sm">{report.description}</p>
-                <div className="flex items-center gap-3 text-gray-500 text-xs mt-2">
-                  <span className="px-2 py-1 bg-   text-[#124734] rounded-md text-[11px] font-medium">
+
+                <p className="text-gray-700 text-sm md:text-[15px]">
+                  {report.description}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3 text-gray-500 text-xs mt-2">
+                  <span className="px-2 py-1 bg-[#A7E1B2] text-[#124734] rounded-md text-[11px] font-medium">
                     {report.subject}
                   </span>
                   <span>📅 {report.date}</span>
                 </div>
+
               </div>
             </div>
           ))}

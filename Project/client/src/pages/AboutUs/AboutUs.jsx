@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 const AboutUs = () => {
     const navigate = useNavigate();
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
 
       {/* ---------------- Header (Same as Research Report) ---------------- */}
       <div className="bg-[#1E5631] text-white w-full py-10">
@@ -60,7 +60,7 @@ const AboutUs = () => {
 
     {/* Right Text */}
     <div>
-         <div className="md:pl-2">   {/* <-- small left padding for better alignment */}
+         <div className="md:pl-2">   {/* <-- small left padding for better alignment */ }
       <h3 className="text-2xl font-semibold mb-3">Founder’s Message</h3>
 
       <p className="text-gray-700 mb-4 leading-relaxed">
@@ -118,7 +118,7 @@ const AboutUs = () => {
 
     {/* Right Text */}
     <div>
-         <div className="md:pl-2">   {/* <-- small left padding for better alignment */}
+         <div className="md:pl-2">   {/* <-- small left padding for better alignment */ }
       <h3 className="text-2xl font-semibold mb-3">About Prospect Education</h3>
 
       <p className="text-gray-700 leading-relaxed mb-4">

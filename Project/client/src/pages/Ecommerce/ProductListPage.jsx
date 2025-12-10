@@ -9,7 +9,8 @@ import {
   merchandiseProducts,
   EnginneringProducts,
   LawProducts,
-  ManagementProducts
+  ManagementProducts,
+  MedicalProducts
 } from "../../data/ProductData";
 
 const ProductListPage = () => {
@@ -23,6 +24,7 @@ const ProductListPage = () => {
     if (type === "law-products") return LawProducts;
     if (type === "management-products") return ManagementProducts;
     if (type === "merchandise-products") return merchandiseProducts;
+    if (type === "medical-products") return MedicalProducts;
     return [];
   };
 
@@ -34,12 +36,12 @@ const ProductListPage = () => {
 
   return (
     <section className="pb-20 pt-36">
-
       <EcomHeader />
 
-       <div className="max-w-6xl mx-auto px-6 py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-[Open_Sans]">
+
         {/* Breadcrumb */}
-        <p className="text-gray-600 mb-5">
+        <p className="text-gray-600 mb-4 sm:mb-5 text-sm sm:text-base">
           <span
             className="cursor-pointer text-[#124734] hover:underline"
             onClick={() => navigate("/ecommerce-home")}
@@ -48,27 +50,25 @@ const ProductListPage = () => {
           </span>{" "}
           &gt; {type.replace("-", " ")}
         </p>
-        {/* Page Title */}
 
-        <h2 className="text-3xl font-bold mb-6 text-[#124734]">
+        {/* Page Title */}
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-[#124734]">
           {formatTitle(type)} ({products.length} Products Found)
         </h2>
 
-         {/* PRODUCT GRID */}
-      <ProductNoSlider
-  products={products}       // pass product list
-  cartItems={[]}            // empty cart for now
-  wishlist={[]}             // empty wishlist for now
-  onCart={() => {}}         // empty function (no crash)
-  onWishlist={() => {}}     // empty function (no crash)
-  columns={4}              // 4 columns for product grid
-/>
-
+        {/* PRODUCT GRID */}
+        {/* DESKTOP VIEW: SAME AS CURRENT (4 columns) */}
+        {/* MOBILE/TABLET ONLY: internal component will auto wrap */}
+        <ProductNoSlider
+          products={products}
+          cartItems={[]}
+          wishlist={[]}
+          onCart={() => {}}
+          onWishlist={() => {}}
+          columns={4}   // ⭐ KEEPING DESKTOP EXACTLY SAME
+        />
 
       </div>
-
-     
-
     </section>
   );
 };

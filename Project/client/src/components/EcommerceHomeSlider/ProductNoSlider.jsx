@@ -6,7 +6,6 @@ import { FaShoppingCart, FaHeart } from "react-icons/fa";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
-
 const ProductNoSlider = ({ products, columns = 3 }) => {
   const navigate = useNavigate();
 
@@ -30,8 +29,10 @@ const ProductNoSlider = ({ products, columns = 3 }) => {
             <div className="relative">
               <img src={p.img} className="w-full h-56 object-contain mb-4" />
 
-              <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                
+              {/* ⭐ FIXED – ICONS ALWAYS VISIBLE ON MOBILE */}
+              <div className="absolute top-2 left-2 flex gap-2 
+                opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
+
                 {/* CART BUTTON */}
                 {!p.outOfStock && (
                   <button
@@ -60,8 +61,9 @@ const ProductNoSlider = ({ products, columns = 3 }) => {
 
               </div>
 
-              {/* VIEW DETAILS */}
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition">
+              {/* ⭐ FIXED – VIEW DETAILS ALWAYS VISIBLE ON MOBILE */}
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center 
+                opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                 <button
                   onClick={() =>
                     navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {

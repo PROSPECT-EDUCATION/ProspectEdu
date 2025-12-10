@@ -1,3 +1,5 @@
+/* --- RESPONSIVE MyProfile.jsx (same logic, only layout fixed) --- */
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
@@ -89,9 +91,10 @@ const MyProfile = () => {
     <section className="pb-20 pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-6 py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans]">
+
         {/* Breadcrumb */}
-        <p className="text-gray-600 mb-5">
+        <p className="text-gray-600 mb-5 text-sm md:text-base">
           <span
             className="cursor-pointer text-[#124734] hover:underline"
             onClick={() => navigate("/ecommerce-home")}
@@ -102,31 +105,33 @@ const MyProfile = () => {
         </p>
 
         {/* Main Box */}
-        <div className="bg-white shadow-md rounded-xl p-10 border border-gray-200">
-          <h1 className="text-3xl font-bold text-[#124734] mb-6">
+        <div className="bg-white shadow-md rounded-xl p-5 md:p-10 border border-gray-200">
+
+          <h1 className="text-2xl md:text-3xl font-bold text-[#124734] mb-6">
             Welcome Akshat Agrawal
           </h1>
 
           {/* Phone & Email */}
-          <div className="flex flex-col md:flex-row text-lg mb-8">
+          <div className="flex flex-col md:flex-row md:items-center text-lg mb-8 gap-3 md:gap-20">
             <p>
               <span className="font-semibold">Phone:</span> +91 9407307073
             </p>
 
-            <p className="mt-2 md:mt-0 px-20">
+            <p>
               <span className="font-semibold">Email:</span>{" "}
               akshat.shubhit15@gmail.com
             </p>
           </div>
 
-          {/* Saved Address List */}
+          {/* Saved Address */}
           <p className="text-gray-700 font-semibold mb-3">Saved Address :</p>
 
           {addresses.map((addr) => (
             <div
               key={addr.id}
-              className="bg-[#A7E1B2] p-6 rounded-xl flex justify-between items-start border border-[#A7E1B2] mb-5"
+              className="bg-[#A7E1B2] p-4 md:p-6 rounded-xl flex flex-col md:flex-row justify-between gap-4 border border-[#A7E1B2] mb-5"
             >
+              {/* LEFT */}
               <div className="flex gap-3">
                 <img src={locationIcon} className="w-10 h-10" />
 
@@ -147,8 +152,8 @@ const MyProfile = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                {/* EDIT */}
+              {/* RIGHT (Buttons) */}
+              <div className="flex items-center gap-4 self-end md:self-center">
                 <button
                   onClick={() => {
                     setEditingId(addr.id);
@@ -169,7 +174,6 @@ const MyProfile = () => {
                   <FiEdit2 size={20} />
                 </button>
 
-                {/* DELETE */}
                 <button
                   onClick={() => deleteAddress(addr.id)}
                   className="text-red-600 hover:text-red-800"
@@ -187,20 +191,20 @@ const MyProfile = () => {
                 setShowForm(!showForm);
                 setEditingId(null);
               }}
-              className="bg-[#124734] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0f3a23]"
+              className="bg-[#124734] text-white px-4 md:px-6 py-3 rounded-lg font-semibold hover:bg-[#0f3a23] w-full md:w-auto"
             >
               {showForm ? "Close Address Form" : "Add New Address"}
             </button>
           </div>
 
-          {/* Form */}
+          {/* Address Form */}
           {showForm && (
-            <div className="mt-10 bg-white shadow-md p-8 rounded-xl border">
+            <div className="mt-10 bg-white shadow-md p-6 md:p-8 rounded-xl border">
               <h2 className="text-xl font-bold text-[#124734] mb-6">
                 {editingId ? "Edit Address" : "Add New Address"}
               </h2>
 
-              {/* Contact Name & Number */}
+              {/* Name + Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="font-semibold">* Contact Name</label>
@@ -250,7 +254,7 @@ const MyProfile = () => {
                 ></textarea>
               </div>
 
-              {/* City & Pincode */}
+              {/* City + Pincode */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="font-semibold">* City</label>
@@ -297,10 +301,10 @@ const MyProfile = () => {
                 />
               </div>
 
-              {/* Save Button */}
+              {/* Save */}
               <button
                 onClick={saveAddress}
-                className="bg-[#124734] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0d3a25]"
+                className="bg-[#124734] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0d3a25] w-full md:w-auto"
               >
                 {editingId ? "Update Address" : "Save Address"}
               </button>

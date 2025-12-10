@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import logoImg from "../assets/logo.jpg";
-import { FiShoppingBag, FiHeart, FiShoppingCart } from "react-icons/fi";
+import { FiShoppingBag, FiHeart, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 import { FaShoppingBag, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { IoSearch, IoPersonCircle } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+
 import {
   trendingProducts,
   merchandiseProducts,
@@ -12,251 +13,276 @@ import {
   ManagementProducts,
 } from "../data/ProductData";
 
-
-
 const EcomHeader = () => {
   const navigate = useNavigate();
+
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-const [searchResults, setSearchResults] = useState([]);
-
+  const [searchResults, setSearchResults] = useState([]);
 
   const [openMenu, setOpenMenu] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+
   const [isScrolled, setIsScrolled] = useState(false);
 
   const allProducts = [
-  ...trendingProducts,
-  ...EnginneringProducts,
-  ...LawProducts,
-  ...ManagementProducts,
-  ...merchandiseProducts,
-];
-const handleSearch = (value) => {
-  setSearchQuery(value);
+    ...trendingProducts,
+    ...EnginneringProducts,
+    ...LawProducts,
+    ...ManagementProducts,
+    ...merchandiseProducts,
+  ];
 
-  if (!value.trim()) {
-    setSearchResults([]);
-    return;
-  }
+  const handleSearch = (value) => {
+    setSearchQuery(value);
 
-  const results = allProducts.filter((p) =>
-    p.title.toLowerCase().includes(value.toLowerCase())
-  );
+    if (!value.trim()) return setSearchResults([]);
 
-  setSearchResults(results);
-};
+    const results = allProducts.filter((p) =>
+      p.title.toLowerCase().includes(value.toLowerCase())
+    );
 
+    setSearchResults(results);
+  };
 
-  // Detect scroll
+  // Detect scrolling
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 80);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 80);
     window.addEventListener("scroll", handleScroll);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
-      className={`w-full bg-white fixed top-0 left-0 z-50 transition-all duration-300 shadow-md 
+      className={`w-full bg-white fixed top-0 left-0 z-50 shadow-md transition-all duration-300 
       ${isScrolled ? "py-1 shadow-lg" : "py-0"}`}
     >
-
-      {/* --- Top Welcome Bar --- */}
+      {/* Top Bar */}
       {!isScrolled && (
-        <div className="w-full bg-[#124734] text-white text-center py-2 text-sm font-medium">
+        <div className="w-full bg-[#124734] text-white text-center py-2 text-xs sm:text-sm font-medium">
           Welcome to the Store
         </div>
       )}
 
-      {/* --- Main Header --- */}
+      {/* MAIN NAV */}
       <div
-        className={`max-w-7xl mx-auto flex items-center justify-between transition-all duration-300 
-        ${isScrolled ? "py-2 px-4" : "py-6 px-6"}`}
+        className={`max-w-7xl mx-auto flex items-center justify-between 
+        ${isScrolled ? "py-2 px-4" : "py-4 sm:py-6 px-3 sm:px-6"}`}
       >
-
-        {/* Logo Section */}
+        {/* LOGO */}
         <div
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer"
           onClick={() => navigate("/ecommerce-home")}
         >
           <img
             src={logoImg}
-            alt="Logo"
-            className={`rounded-full transition-all duration-300 
-            ${isScrolled ? "w-12 h-12" : "w-16 h-16"}`}
+            alt="logo"
+            className={`rounded-full transition-all duration-300
+            ${isScrolled ? "w-10 h-10 sm:w-12 sm:h-12" : "w-12 h-12 sm:w-16 sm:h-16"}`}
           />
-
           <h1
-            className={`font-bold text-[#124734] leading-none transition-all duration-300
-            ${isScrolled ? "text-xl" : "text-2xl"}`}
+            className={`font-bold text-[#124734] transition-all duration-300
+            ${isScrolled ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"}`}
           >
             Prospect Store
           </h1>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative ">
-  <div
-  className={`flex items-center bg-[#A7E1B2] rounded-full shadow-lg transition-all duration-300
-  ${isScrolled ? "py-1 px-3 max-w-sm mx-4" : "py-3 px-5 max-w-lg mx-8"}`}
->
-  <IoSearch size={isScrolled ? 20 : 28} className="text-[#124734]" />
-  <input
-    type="text"
-    placeholder="Search for a product..."
-    value={searchQuery}
-    onChange={(e) => handleSearch(e.target.value)}
-    className="w-full bg-transparent outline-none px-3 text-[#124734]"
-  />
-</div>
-
-  {/* ------- SEARCH RESULTS BOX ------- */}
-  {searchQuery && (
-    <div className="absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto z-50">
-
-      {searchResults.length === 0 ? (
-        <p className="p-4 text-gray-500">No product found</p>
-      ) : (
-        searchResults.map((p) => (
-          <div
-            key={p.id}
-            className="flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-100"
-            onClick={() => {
-              navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {
-                state: p,
-              });
-              setSearchQuery("");
-              setSearchResults([]);
-            }}
-          >
-            <img src={p.img} className="w-12 h-12 object-contain" />
-            <p className="font-medium">{p.title}</p>
-          </div>
-        ))
-      )}
-    </div>
-  )}
-</div>
-
-
-        {/* Right Side Icons */}
-        <div
-          className={`flex items-center gap-6 text-[#124734] font-medium transition-all duration-300
-          ${isScrolled ? "text-sm" : "text-base"}`}
+        {/* MOBILE MENU BUTTON */}
+        <button
+          onClick={() => setMobileMenu(true)}
+          className="text-3xl text-[#124734] sm:hidden"
         >
+          <FiMenu />
+        </button>
 
-          {/* User Dropdown */}
+        {/* DESKTOP NAV */}
+        <div className="hidden sm:flex items-center gap-6 text-[#124734] font-medium">
+
+          {/* SEARCH BAR */}
+          <div className="relative w-64 md:w-80">
+            <div className="flex items-center bg-[#A7E1B2] rounded-full shadow-lg py-2 px-4">
+              <IoSearch size={20} className="text-[#124734]" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full bg-transparent outline-none px-3"
+              />
+            </div>
+
+            {/* DESKTOP SEARCH RESULTS */}
+            {searchQuery && (
+              <div className="absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-2 max-h-64 overflow-y-auto z-[9999]">
+                {searchResults.length === 0 ? (
+                  <p className="p-4 text-gray-500 text-sm">No product found</p>
+                ) : (
+                  searchResults.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {
+                          state: p,
+                        });
+                        setSearchQuery("");
+                        setSearchResults([]);
+                      }}
+                    >
+                      <img src={p.img} className="w-10 h-10 object-contain" />
+                      <p className="font-medium text-sm">{p.title}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* USER MENU */}
           <div className="relative">
             <button
               onClick={() => setOpenMenu(!openMenu)}
-              className={`flex items-center gap-1 bg-[#A7E1B2] rounded-full shadow transition-all duration-300
-              ${isScrolled ? "px-2 py-1" : "px-4 py-2"}`}
+              className="flex items-center gap-1 bg-[#A7E1B2] px-4 py-2 rounded-full"
             >
-              <IoPersonCircle size={isScrolled ? 20 : 24} />
+              <IoPersonCircle size={22} />
               <span>Akshat</span>
               <span>▼</span>
             </button>
 
             {openMenu && (
-              <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg border z-50">
-                <button
-                  onClick={() => navigate("/my-profile")}
-                  className="w-full text-left px-4 py-2 hover:bg-[#A7E1B2]"
-                >
-                  My Profile
-                </button>
-                <button
-                  onClick={() => navigate("/my-order")}
-                  className="w-full text-left px-4 py-2 hover:bg-[#A7E1B2]"
-                >
-                  My Orders
-                </button>
-               <button
-                  onClick={() => setShowLogoutPopup(true)}
-                  className="w-full text-left px-4 py-2 hover:bg-[#A7E1B2]">
-                  Logout
-                </button>
-
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border">
+                <button onClick={() => navigate("/my-profile")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Profile</button>
+                <button onClick={() => navigate("/my-order")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Orders</button>
+                <button onClick={() => setShowLogoutPopup(true)} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">Logout</button>
               </div>
             )}
           </div>
 
           {/* SHOP */}
-          <div 
-          onClick={() => navigate("/shop")}
-          className="group flex items-center gap-2 cursor-pointer">
-             
-            <FiShoppingBag size={isScrolled ? 20 : 26} className="group-hover:hidden" />
-            <FaShoppingBag size={isScrolled ? 20 : 26} className="hidden group-hover:block text-[#1E5631]" />
-            <span className="group-hover:text-[#1E5631] transition">Shop</span>
+          <div onClick={() => navigate("/shop")} className="group flex items-center gap-2 cursor-pointer">
+            <FiShoppingBag className="group-hover:hidden" />
+            <FaShoppingBag className="hidden group-hover:block text-[#1E5631]" />
+            <span className="group-hover:text-[#1E5631]">Shop</span>
           </div>
 
-          <div className="w-[2px] h-7 bg-gray-400"></div>
+          <div className="w-[2px] h-6 bg-gray-400"></div>
 
           {/* WISHLIST */}
-          <div
-           onClick={() => navigate("/wishlist")} 
-          className="group flex items-center gap-2 cursor-pointer">
-            <FiHeart size={isScrolled ? 20 : 26} className="group-hover:hidden" />
-            <FaHeart size={isScrolled ? 20 : 26} className="hidden group-hover:block text-[#1E5631]" />
-            <span className="group-hover:text-[#1E5631] transition">
-              My Wishlist
-            </span>
+          <div onClick={() => navigate("/wishlist")} className="group flex items-center gap-2 cursor-pointer">
+            <FiHeart className="group-hover:hidden" />
+            <FaHeart className="hidden group-hover:block text-[#1E5631]" />
+            <span className="group-hover:text-[#1E5631]">Wishlist</span>
           </div>
 
-          <div className="w-[2px] h-7 bg-gray-400"></div>
+          <div className="w-[2px] h-6 bg-gray-400"></div>
 
           {/* CART */}
-          <div 
-           onClick={() => navigate("/my-cart")} 
-          className="group flex items-center gap-2 cursor-pointer">
-            <FiShoppingCart size={isScrolled ? 20 : 26} className="group-hover:hidden" />
-            <FaShoppingCart size={isScrolled ? 20 : 26} className="hidden group-hover:block text-[#1E5631]" />
-            <span className="group-hover:text-[#1E5631] transition">My Cart</span>
+          <div onClick={() => navigate("/my-cart")} className="group flex items-center gap-2 cursor-pointer">
+            <FiShoppingCart className="group-hover:hidden" />
+            <FaShoppingCart className="hidden group-hover:block text-[#1E5631]" />
+            <span className="group-hover:text-[#1E5631]">My Cart</span>
           </div>
         </div>
       </div>
+
+      {/* ⭐ MOBILE SLIDE MENU ⭐ */}
+      {mobileMenu && (
+        <div className="fixed inset-0 bg-black/50 z-[9999]">
+          <div className="absolute right-0 top-0 w-64 h-full bg-white shadow-xl p-6">
+
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => setMobileMenu(false)}
+              className="text-2xl text-[#124734] mb-6"
+            >
+              <FiX />
+            </button>
+
+            {/* MOBILE SEARCH */}
+            <div className="relative mb-6">
+              <div className="w-full bg-[#A7E1B2] flex items-center px-4 py-2 rounded-full">
+                <IoSearch size={20} className="text-[#124734]" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="bg-transparent w-full outline-none ml-2"
+                />
+              </div>
+
+              {/* MOBILE SEARCH RESULTS */}
+              {searchQuery && (
+                <div className="absolute left-0 right-0 bg-white rounded-lg shadow-xl mt-2 max-h-64 overflow-y-auto z-[9999]">
+                  {searchResults.length === 0 ? (
+                    <p className="p-3 text-gray-500">No product found</p>
+                  ) : (
+                    searchResults.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {
+                            state: p,
+                          });
+                          setMobileMenu(false);
+                          setSearchQuery("");
+                        }}
+                      >
+                        <img src={p.img} className="w-10 h-10 object-contain" />
+                        <p>{p.title}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* MOBILE MENU LINKS */}
+            <div className="flex flex-col gap-5 text-[#124734] text-lg">
+              <button onClick={() => navigate("/shop")}>Shop</button>
+              <button onClick={() => navigate("/wishlist")}>Wishlist</button>
+              <button onClick={() => navigate("/my-cart")}>My Cart</button>
+              <button onClick={() => navigate("/my-profile")}>My Profile</button>
+              <button onClick={() => navigate("/my-order")}>My Orders</button>
+              <button onClick={() => setShowLogoutPopup(true)}>Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOGOUT POPUP */}
       {showLogoutPopup && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-    
-    <div className="bg-white p-8 rounded-2xl shadow-2xl w-[340px] text-center animate-fadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl w-[300px] sm:w-[340px] text-center">
+            <h2 className="text-xl font-bold text-[#124734] mb-3">
+              Are you sure you want to logout?
+            </h2>
 
-      <div className="text-4xl mb-3 text-[#124734]">⚠️</div>
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => setShowLogoutPopup(false)}
+                className="flex-1 border border-[#124734] text-[#124734] py-2 rounded-xl hover:bg-gray-100"
+              >
+                Cancel
+              </button>
 
-      <h2 className="text-xl font-bold text-[#124734] mb-3">
-        Are you sure you want to logout?
-      </h2>
-
-      <p className="text-gray-600 mb-6">
-        You will be redirected to the home page.
-      </p>
-
-      <div className="flex gap-4">
-        
-        <button
-          onClick={() => setShowLogoutPopup(false)}
-          className="flex-1 border border-[#124734] text-[#124734] py-2 rounded-xl hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={() => {
-            setShowLogoutPopup(false);
-            window.location.href = "/ecommerce-home"; // you can change this
-          }}
-          className="flex-1 bg-[#124734] text-white py-2 rounded-xl hover:bg-[#0f3a23]"
-        >
-          Logout
-        </button>
-
-      </div>
-    </div>
-  </div>
-)}
-
+              <button
+                onClick={() => {
+                  setShowLogoutPopup(false);
+                  window.location.href = "/ecommerce-home";
+                }}
+                className="flex-1 bg-[#124734] text-white py-2 rounded-xl hover:bg-[#0f3a23]"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

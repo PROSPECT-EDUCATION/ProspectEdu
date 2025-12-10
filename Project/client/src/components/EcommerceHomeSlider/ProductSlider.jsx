@@ -4,11 +4,9 @@ import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 
-
 const ProductSlider = ({ title, products, navigate }) => {
   const { wishlist, toggleWishlist } = useWishlist();
 
-  // ⭐ Use global cart
   const { cart, addToCart } = useCart();
 
   const [start, setStart] = useState(0);
@@ -21,7 +19,6 @@ const ProductSlider = ({ title, products, navigate }) => {
     setTimeout(() => setToastMsg(""), 3000);
   };
 
-  // ⭐ Slider
   const next = () => setStart((p) => (p + 1) % products.length);
   const prev = () => setStart((p) => (p - 1 + products.length) % products.length);
 
@@ -79,8 +76,9 @@ const ProductSlider = ({ title, products, navigate }) => {
                 className="w-full h-40 object-contain rounded-md"
               />
 
-              {/* Hover Icons */}
-              <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+              {/* ⭐ FIXED HOVER ICONS (Now visible on mobile/tablet) */}
+              <div className="absolute top-2 left-2 flex gap-2 
+                opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
 
                 {/* Cart */}
                 {!p.outOfStock && (
@@ -112,8 +110,9 @@ const ProductSlider = ({ title, products, navigate }) => {
                 </button>
               </div>
 
-              {/* View Details */}
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition">
+              {/* ⭐ FIXED VIEW DETAILS BUTTON */}
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center 
+                opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                 <button
                   onClick={() =>
                     navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {

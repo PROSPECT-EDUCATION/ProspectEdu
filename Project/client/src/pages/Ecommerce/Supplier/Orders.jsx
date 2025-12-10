@@ -13,7 +13,6 @@ import {
 export default function Orders() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // ⭐ Orders using real product images
   const orders = [
     {
       id: "ORD-101",
@@ -75,7 +74,12 @@ export default function Orders() {
         setIsCollapsed={setIsCollapsed}
       />
 
-      <div className="flex-1 flex flex-col">
+     <div
+  className={`flex-1 flex flex-col transition-all duration-300 
+    ${isCollapsed ? "ml-20 md:ml-0" : "ml-64 md:ml-0"}
+  `}
+>
+
         <SupplierTopbar pageTitle="Order List" />
 
         <div className="p-8">
@@ -83,25 +87,24 @@ export default function Orders() {
             Orders List
           </h1>
 
-          {/* ORDER CARDS */}
-          <div className="space-y-6">
+          {/* ============ MOBILE VIEW (Attractive Cards) ============ */}
+          <div className="md:hidden space-y-6">
             {orders.map((order, i) => (
               <div
                 key={i}
-                className="p-6 bg-white rounded-2xl shadow-md border border-[#A7E1B2]/40 hover:shadow-lg transition-all duration-200"
+                className="bg-white p-4 rounded-2xl shadow border border-[#A7E1B2]/40"
               >
                 {/* TOP ROW */}
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-[#124734]">
+                <div className="flex justify-between mb-3">
+                  <span className="font-semibold text-[#124734]">
                     #{order.id}
-                  </h3>
+                  </span>
 
-                  {/* Payment status */}
                   <span
-                    className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       order.paid
-                        ? "bg-green-200 text-green-800"
-                        : "bg-red-200 text-red-800"
+                        ? "bg-green-200 text-green-700"
+                        : "bg-red-200 text-red-700"
                     }`}
                   >
                     {order.paid ? "Paid" : "Pending"}
@@ -109,58 +112,116 @@ export default function Orders() {
                 </div>
 
                 {/* PRODUCT ROW */}
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_0.7fr_1fr_1.3fr] gap-6 items-center">
-
-                  {/* Product Image */}
+                <div className="flex gap-4">
+                  {/* IMAGE */}
                   <img
                     src={order.product.img}
-                    alt="product"
-                    className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2 shadow-sm"
+                    className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2"
                   />
 
-                  {/* Title Column */}
-                  <div className="flex flex-col gap-1">
-                    <p className="text-lg font-semibold text-[#124734]">
+                  {/* INFO */}
+                  <div className="flex-1">
+                    <p className="text-[#124734] font-semibold text-base leading-tight">
                       {order.product.title}
                     </p>
 
-                    <p className="text-gray-600 text-sm">
-                      Category: {order.product.category}
+                    <p className="text-gray-500 text-xs mt-1">
+                      {order.product.category}
                     </p>
 
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-[#124734] font-bold text-sm mt-2">
+                      ₹{order.amount} <span className="font-normal">• Qty {order.qty}</span>
+                    </p>
+
+                    <p className="text-gray-500 text-xs mt-1">
                       Payment: {order.paymentType}
                     </p>
-                  </div>
 
-                  {/* ⭐ QUANTITY COLUMN (center column) */}
-                  <div className="flex justify-center">
-                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-[#A7E1B2]/60 text-[#124734] shadow-sm">
-                      Qty: {order.qty}
-                    </span>
-                  </div>
+                    <p className="text-gray-400 text-xs mt-1">
+                      {order.orderDate}
+                    </p>
 
-                  {/* PRICE COLUMN */}
-                  <div className="text-lg font-extrabold text-[#124734] text-center">
-                    ₹{order.amount}
+                    {/* ADDRESS */}
+                    <p className="text-gray-600 mt-2 text-xs leading-4">
+                      {order.address.name} , {order.address.city}  – {order.address.pincode} ,{order.address.country}
+                      <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
+                    </p>
                   </div>
-
-                  {/* ADDRESS COLUMN */}
-                  <div className="text-sm leading-5 text-gray-700">
-                    <p className="font-semibold">{order.address.name}</p>
-                    <p>{order.address.street}, {order.address.city}</p>
-                    <p>{order.address.state} – {order.address.pincode}</p>
-                    <p>{order.address.country}</p>
-                    <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
-                  </div>
-
                 </div>
-
               </div>
             ))}
           </div>
 
-          {/* NO ORDERS */}
+          {/* ============ DESKTOP VIEW (ORIGINAL - UNTOUCHED) ============ */}
+          <div className="hidden md:block">
+            <div className="space-y-6">
+              {orders.map((order, i) => (
+                <div
+                  key={i}
+                  className="p-6 bg-white rounded-2xl shadow-md border border-[#A7E1B2]/40 hover:shadow-lg transition-all duration-200"
+                >
+                  {/* ORIGINAL DESKTOP TOP ROW (UNCHANGED) */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold text-[#124734]">
+                      #{order.id}
+                    </h3>
+
+                    <span
+                      className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                        order.paid
+                          ? "bg-green-200 text-green-800"
+                          : "bg-red-200 text-red-800"
+                      }`}
+                    >
+                      {order.paid ? "Paid" : "Pending"}
+                    </span>
+                  </div>
+
+                  {/* ORIGINAL DESKTOP GRID (UNCHANGED) */}
+                  <div className="grid grid-cols-[1fr_2fr_0.7fr_1fr_1.3fr] gap-6 items-center">
+
+                    <img
+                      src={order.product.img}
+                      alt="product"
+                      className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2 shadow-sm"
+                    />
+
+                    <div className="flex flex-col gap-1">
+                      <p className="text-lg font-semibold text-[#124734]">
+                        {order.product.title}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Category: {order.product.category}
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Payment: {order.paymentType}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center">
+                      <span className="px-3 py-1 text-sm font-semibold rounded-full bg-[#A7E1B2]/60 text-[#124734] shadow-sm">
+                        Qty: {order.qty}
+                      </span>
+                    </div>
+
+                    <div className="text-lg font-extrabold text-[#124734] text-center">
+                      ₹{order.amount}
+                    </div>
+
+                    <div className="text-sm leading-5 text-gray-700">
+                      <p className="font-semibold">{order.address.name}</p>
+                      <p>{order.address.street}, {order.address.city}</p>
+                      <p>{order.address.state} – {order.address.pincode}</p>
+                      <p>{order.address.country}</p>
+                      <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
+                    </div>
+
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {orders.length === 0 && (
             <div className="text-center mt-20 text-gray-500 text-xl">
               No Orders Found

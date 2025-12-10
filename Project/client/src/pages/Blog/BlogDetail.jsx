@@ -4,8 +4,6 @@ import blogImg from "../../assets/blog.png";
 import whatsappIcon from "../../assets/whatsapp.png";
 import linkedinIcon from "../../assets/linkedin.png";
 
-
-
 const blogData = {
   1: {
     title: "How to Study Smart",
@@ -32,111 +30,113 @@ const blogData = {
 const BlogDetails = () => {
   const { id } = useParams();
   const blog = blogData[id];
+
   const shareOnWhatsApp = () => {
-  const message = `Check out this blog: ${blog.title}\n\n${window.location.href}`;
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
-};
-const shareOnLinkedIn = () => {
-  const url = window.location.href;
-  const title = blog.title;
-  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-    url
-  )}`;
+    const message = `Check out this blog: ${blog.title}\n\n${window.location.href}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
 
-  window.open(linkedInUrl, "_blank");
-};
-
-
+  const shareOnLinkedIn = () => {
+    const url = window.location.href;
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+      url
+    )}`;
+    window.open(linkedInUrl, "_blank");
+  };
 
   return (
-   <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
 
-      {/* ======= Header (same as Blog page) ======= */}
-     
-      <div className="bg-[#1E5631] text-white w-full py-16">
-              <div className="max-w-7xl mx-auto flex justify-between items-start px-8">
-                <div className="w-1/2 pr-8">
-                  <p className="text-sm mb-3 text-gray-200">Home &gt; Blog &gt; {blog.title}</p>
-                  <h1 className="font-semibold text-4xl mb-3 leading-snug">
-                    Blogs made simple.
-                  </h1>
-                  <p className="text-[#B7F399] text-lg font-medium">
-                   Explore helpful blogs written in a simple way. Stay updated with
+      {/* ======= Header ======= */}
+      <div className="bg-[#1E5631] text-white w-full py-12 md:py-16">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
+
+          <div className="w-full md:w-1/2 text-center md:text-left">
+            <p className="text-sm mb-3 text-gray-200">
+              Home &gt; Blog &gt; {blog.title}
+            </p>
+
+            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
+              Blogs made simple.
+            </h1>
+
+            <p className="text-[#B7F399] text-lg font-medium">
+              Explore helpful blogs written in a simple way. Stay updated with
               ideas, insights, and useful information from technology, education,
               careers, and many more fields.
-                  </p>
-                </div>
-                <div className="w-1/2 flex justify-end">
-                  <img
-                    src={blogImg}
-                    alt="blogHeader"
-                    className="w-[250px] rounded-lg shadow-md"
-                  />
-                </div>
-              </div>
-            </div>
+            </p>
+          </div>
 
-     {/* ======= Blog Content ======= */}
-<div className="max-w-4xl mx-auto px-8 py-16">
+          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
+            <img
+              src={blogImg}
+              alt="blogHeader"
+              className="w-40 sm:w-56 md:w-[250px] rounded-lg shadow-md"
+            />
+          </div>
+        </div>
+      </div>
 
-  <div className="bg-[#A7E1B2] rounded-2xl shadow-lg p-6 md:p-10">
+      {/* ======= Blog Content ======= */}
+      <div className="max-w-4xl mx-auto px-6 md:px-8 py-16">
 
-    {/* Blog Image (from card) */}
-    <img
-      src={blog.cardImg}
-      alt="Blog"
-      className="w-full h-64 object-cover rounded-xl mb-8"
-    />
+        <div className="bg-[#A7E1B2] rounded-2xl shadow-lg p-6 md:p-10">
 
-    {/* Heading */}
-    <h2 className="text-3xl font-bold mb-3 text-[#124734]">
-      {blog.title}
-    </h2>
+          {/* Blog Image */}
+          <img
+            src={blog.cardImg}
+            alt="Blog"
+            className="w-full h-56 sm:h-64 md:h-72 object-cover rounded-xl mb-8"
+          />
 
-    {/* Underline */}
-    <div className="h-[4px] w-40 bg-[#124734] mb-6"></div>
-    <div className="flex items-center gap-5 text-sm text-[#0f3d24] mb-6">
-  <p><span className="font-semibold">Author:</span> Prospect Edu Team</p>
-  <p><span className="font-semibold">Published:</span> Nov 05, 2025</p>
-</div>
-<p className="text-sm text-[#0f3d24] mb-6">
-  ⏱️ Estimated Read Time: 8 minutes
-</p>
+          {/* Heading */}
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-[#124734]">
+            {blog.title}
+          </h2>
 
+          {/* Underline */}
+          <div className="h-[4px] w-32 md:w-40 bg-[#124734] mb-6"></div>
 
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-[#0f3d24] mb-6">
+            <p><span className="font-semibold">Author:</span> Prospect Edu Team</p>
+            <p><span className="font-semibold">Published:</span> Nov 05, 2025</p>
+          </div>
 
-    {/* Description */}
-    <p className="text-lg leading-7 text-[#124734]">
-        
-      {blog.desc}
-    </p>
-   {/* Share Buttons */}
-<div className="flex items-center gap-4 mt-8">
+          <p className="text-sm text-[#0f3d24] mb-6">
+            ⏱️ Estimated Read Time: 8 minutes
+          </p>
 
-  {/* WhatsApp Button */}
-  <button
-    onClick={shareOnWhatsApp}
-    className="flex items-center gap-2 bg-[#25D366] text-white px-4 py-2 rounded-full shadow hover:scale-[1.05] transition-all duration-200"
-  >
-    <img src={whatsappIcon} alt="WhatsApp" className="w-5 h-5" />
-    <span className="text-sm font-medium">Share on WhatsApp</span>
-  </button>
+          {/* Description */}
+          <p className="text-lg leading-7 text-[#124734]">
+            {blog.desc}
+          </p>
 
-  {/* LinkedIn Button */}
-  <button
-    onClick={shareOnLinkedIn}
-    className="flex items-center gap-2 bg-[#0A66C2] text-white px-4 py-2 rounded-full shadow hover:scale-[1.05] transition-all duration-200"
-  >
-    <img src={linkedinIcon} alt="LinkedIn" className="w-5 h-5" />
-    <span className="text-sm font-medium">Share on LinkedIn</span>
-  </button>
+          {/* Share Buttons */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mt-8">
 
-</div>
+            {/* WhatsApp */}
+            <button
+              onClick={shareOnWhatsApp}
+              className="flex items-center gap-2 bg-[#25D366] text-white px-4 py-2 rounded-full shadow hover:scale-[1.05] transition-all duration-200 w-full sm:w-auto justify-center"
+            >
+              <img src={whatsappIcon} className="w-5 h-5" />
+              <span className="text-sm font-medium">Share on WhatsApp</span>
+            </button>
 
-  </div>
+            {/* LinkedIn */}
+            <button
+              onClick={shareOnLinkedIn}
+              className="flex items-center gap-2 bg-[#0A66C2] text-white px-4 py-2 rounded-full shadow hover:scale-[1.05] transition-all duration-200 w-full sm:w-auto justify-center"
+            >
+              <img src={linkedinIcon} className="w-5 h-5" />
+              <span className="text-sm font-medium">Share on LinkedIn</span>
+            </button>
 
-</div>
+          </div>
+
+        </div>
+      </div>
 
     </section>
   );

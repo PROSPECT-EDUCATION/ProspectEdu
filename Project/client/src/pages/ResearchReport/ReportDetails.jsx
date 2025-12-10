@@ -4,8 +4,6 @@ import researchImg from "../../assets/research.jpg";
 import English from "../../assets/English.pdf";
 import Hindi from "../../assets/Hindi.pdf";
 
-
-
 const ReportDetails = () => {
   const { state: report } = useLocation();
   const navigate = useNavigate();
@@ -14,7 +12,7 @@ const ReportDetails = () => {
   if (!report)
     return <p className="text-center mt-20 text-lg">Report not found</p>;
 
-  // 🌍 Long content (demo until admin upload feature is ready)
+  // FULL CONTENT (your original content restored)
   const englishContent = `
 Education is changing fast because of new tools and ideas. Today many schools and colleges use computers, apps, and smart systems to help students learn. This article explains, in simple words, how modern tools help teaching and learning. It also talks about the good things and the problems we must solve.
 
@@ -43,9 +41,6 @@ Fifth, tools must support local languages and culture. If tools use only one lan
 Sixth, cost is a worry for some schools. Good systems cost money for software, devices, and training. Governments and schools must plan budgets and find low-cost options.
 
 To finish, technology makes learning more flexible, more personal, and more fun. It gives tools for students and teachers to do better work. But the change must be fair. All students must get access to devices and good internet. Teachers must get training. Privacy must be safe. When these problems are solved, technology will make education stronger for everyone.
-
-
-
 `;
 
   const hindiContent = `
@@ -74,68 +69,70 @@ To finish, technology makes learning more flexible, more personal, and more fun.
 पाँचवाँ, टूल को स्थानीय भाषाओं का समर्थन करना चाहिए ताकि हर छात्र उसे समझ सके।
 
 अंत में, तकनीक शिक्षा को लचीला, व्यक्तिगत और मज़ेदार बनाती है। लेकिन सभी को इसका लाभ तभी मिलेगा जब इंटरनेट, डिवाइस और प्रशिक्षण सबको समान रूप से उपलब्ध होंगे। तब शिक्षा सबके लिए मज़बूत और बेहतर बनेगी।
-
 `;
 
   return (
     <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-      {/* ---------------- Header (same as ResearchReport.jsx) ---------------- */}
-      <div className="bg-[#1E5631] text-white w-full py-16">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-8">
-          {/* Left Text */}
-          <div className="w-full md:w-1/2 pr-8">
+
+      {/* Header */}
+      <div className="bg-[#1E5631] text-white w-full py-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between px-6 md:px-8 gap-8">
+
+          <div className="w-full md:w-1/2">
             <p className="text-sm mb-3 text-gray-200">
-              Home &gt; Research Report &gt;{" "}
-              <span className="text-gray-200 font-medium">{report.title}</span>
+              Home &gt; Research Report &gt; 
+              <span className="font-medium"> {report.title}</span>
             </p>
-            <h1 className="font-semibold text-4xl mb-3 leading-snug">
+
+            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
               Research Reports made simple.
             </h1>
+
             <p className="text-[#B7F399] text-lg font-medium">
-              Our Research Report section offers a deep dive into the latest academic
-              and professional studies across multiple fields like Technology, Science,
-              Education, and Innovation.
+              Our Research Report section offers a deep dive into the latest studies across Technology, Science, Education and Innovation.
             </p>
           </div>
 
-          {/* Right Image */}
-          <div className="w-full md:w-1/2 flex justify-end mt-8 md:mt-0">
+          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
             <img
               src={researchImg}
-              alt="Research Report Illustration"
-              className="w-[250px] md:w-[350px] rounded-lg shadow-md"
+              alt="illustration"
+              className="w-[200px] md:w-[350px] rounded-lg shadow-md"
             />
           </div>
+
         </div>
       </div>
 
-      {/* ---------------- Report Content ---------------- */}
-      <div className="max-w-5xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6 relative">
-        {/* Top Right Language Toggle */}
+      {/* Content Section */}
+      <div className="max-w-5xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6 md:p-8 relative">
+
+        {/* Language Toggle */}
         <div className="absolute top-4 right-4 flex gap-2">
           <button
             onClick={() => setLanguage("English")}
-            className={`px-4 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+            className={`px-3 md:px-4 py-1 rounded-md border text-xs md:text-sm ${
               language === "English"
-                ? "bg-[#A7E1B2] text-black border-[#A7E1B2]"
-                : "bg-white text-black border-gray-300 hover:bg-[#A7E1B2]"
+                ? "bg-[#A7E1B2] border-[#A7E1B2]"
+                : "bg-white border-gray-300 hover:bg-[#A7E1B2]"
             }`}
           >
             English
           </button>
+
           <button
             onClick={() => setLanguage("Hindi")}
-            className={`px-4 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+            className={`px-3 md:px-4 py-1 rounded-md border text-xs md:text-sm ${
               language === "Hindi"
-                ? "bg-[#A7E1B2] text-black border-[#A7E1B2]"
-                : "bg-white text-black border-gray-300 hover:bg-[#A7E1B2]"
+                ? "bg-[#A7E1B2] border-[#A7E1B2]"
+                : "bg-white border-gray-300 hover:bg-[#A7E1B2]"
             }`}
           >
             Hindi
           </button>
         </div>
 
-        {/* Back Button */}
+        {/* Back */}
         <button
           onClick={() => navigate(-1)}
           className="text-[#1E5631] mb-6 text-sm font-semibold hover:underline"
@@ -144,27 +141,25 @@ To finish, technology makes learning more flexible, more personal, and more fun.
         </button>
 
         {/* Title */}
-       <h2 className="text-3xl font-bold text-[#124734] mb-2 border-b border-gray-300 pb-2">
-  {report.title}
-</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-2 border-b border-gray-300 pb-2">
+          {report.title}
+        </h2>
 
-
-        {/* Dynamic Content */}
-        <div className="text-gray-800 leading-relaxed whitespace-pre-line text-[15px] mt-2">
+        {/* CONTENT SHOWS HERE */}
+        <div className="text-gray-800 mt-2 whitespace-pre-line leading-relaxed text-sm md:text-[15px]">
           {language === "English" ? englishContent : hindiContent}
         </div>
-        {/* Download PDF Button */}
-{/* Download PDF Button (Dynamic based on selected language) */}
-<div className="mt-8">
-  <a
-    href={language === "English" ? English : Hindi}
-    download
-    className="inline-block bg-[#A7E1B2] text-[#124734] font-semibold px-5 py-2 rounded-lg shadow hover:bg-[#8fd49f] transition"
-  >
-    ⬇️ Download Full Report ({language})
-  </a>
-</div>
 
+        {/* Download PDF */}
+        <div className="mt-8">
+          <a
+            href={language === "English" ? English : Hindi}
+            download
+            className="inline-block bg-[#A7E1B2] text-[#124734] px-4 md:px-5 py-2 rounded-lg shadow font-semibold hover:bg-[#8fd49f]"
+          >
+            ⬇️ Download Full Report ({language})
+          </a>
+        </div>
 
       </div>
     </section>
