@@ -1,35 +1,30 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { createPortal } from "react-dom";
 
-import StoreButton from "../Student/ui/StoreButton";      
-import NotificationBell from "../Student/ui/NotificationBell"; 
-import ProfileAvatar from "../Student/ui/ProfileAvatar";   
+import StoreButton from "../Student/ui/StoreButton";
+import NotificationBell from "../Student/ui/NotificationBell";
+import ProfileAvatar from "../Student/ui/ProfileAvatar";
 
 export default function ParentTopbar({
   pageTitle = "Dashboard",
   students = [],
   selectedStudent,
   onSelectStudent,
-  showStudentSwitcher = true
+  showStudentSwitcher = true,
 }) {
   const navigate = useNavigate();
 
   const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const studentRef = useRef(null);
-  const profileRef = useRef(null);
 
-  // Close on outside click
+  // Close student dropdown on outside click
   useEffect(() => {
     const close = (e) => {
       if (studentRef.current && !studentRef.current.contains(e.target)) {
         setStudentDropdownOpen(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setProfileOpen(false);
       }
     };
     document.addEventListener("mousedown", close);
@@ -37,73 +32,160 @@ export default function ParentTopbar({
   }, []);
 
   return (
-    <header className="w-full h-[64px] bg-white shadow-sm flex items-center justify-between px-6">
+    <>
+      {/* TOPBAR */}
+      <header className="w-full h-[64px] bg-white shadow-sm flex items-center justify-between px-4 sm:px-6">
 
-      {/* LEFT — Parent Welcome */}
-      <div>
-        <p className="text-sm text-[#5B7065]">
-          Welcome back, <span className="text-[#124734] font-semibold">Parent !</span>
-        </p>
-        <h2 className="text-lg font-semibold text-[#124734] -mt-1">
-          {pageTitle || "Dashboard"}
+        {/* LEFT — Title */}
+        <div>
+          <p className="text-sm text-[#5B7065]">
+            Welcome back,{" "}
+            <span className="text-[#124734] font-semibold">Parent!</span>
+          </p>
+          <h2 className="text-lg font-semibold text-[#124734] -mt-1">
+            {pageTitle}
+          </h2>
+        </div>
+
+        {/* RIGHT CONTROLS (DESKTOP) */}
+        <div className="hidden md:flex items-center gap-4">
+
+          {showStudentSwitcher && (
+            <div className="relative" ref={studentRef}>
+              <button
+                onClick={() => setStudentDropdownOpen((v) => !v)}
+                className="flex items-center gap-2 px-3 py-2 border rounded-md text-[#124734] bg-[#F8FFFA] hover:bg-[#E6F4EC] transition"
+              >
+                {selectedStudent?.name || "Select Student"}
+                <span
+                  className={`transition-transform ${
+                    studentDropdownOpen ? "rotate-180" : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </button>
+
+          {studentDropdownOpen && (
+  <div
+    className="
+      absolute mt-2 
+      bg-white shadow-lg border border-[#E6F4EC] rounded-lg p-2 z-[2000]
+      max-h-60 overflow-y-auto
+      w-48 sm:w-56        /* SAFE width */
+      right-0 sm:right-0  /* desktop: stick right */
+      left-auto
+      translate-x-0
+    "
+    style={{
+      top: "100%",
+      // 🚀 Prevent overflow by clamping the dropdown inside viewport
+      maxWidth: "calc(100vw - 20px)",
+    }}
+  >
+    {students.map((s) => (
+      <div
+        key={s.id}
+        onClick={() => {
+          onSelectStudent(s);
+          setStudentDropdownOpen(false);
+        }}
+        className="px-3 py-2 rounded-md hover:bg-[#F2FBF6] cursor-pointer text-sm text-[#124734]"
+      >
+        {s.name}
+      </div>
+    ))}
+  </div>
+)}
+
+
+            </div>
+          )}
+
+          <StoreButton />
+          <NotificationBell
+            onClick={() => navigate("/parent/announcements")}
+          />
+          <ProfileAvatar role="parent" />
+        </div>
+
+        {/* MOBILE HAMBURGER BUTTON */}
+        <button
+          className="md:hidden text-[#124734]"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <Menu size={26} />
+        </button>
+      </header>
+
+      {/* MOBILE MENU OVERLAY */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-[2000] md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* MOBILE MENU DRAWER */}
+      <div
+        className={`fixed top-0 right-0 h-full w-72 bg-white shadow-xl p-5 z-[2001] transform transition-transform duration-300 md:hidden
+          ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}
+        `}
+      >
+        {/* Close button */}
+        <button
+          className="absolute top-4 right-4 text-[#124734]"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <X size={26} />
+        </button>
+
+        <h2 className="text-lg font-semibold text-[#124734] mb-6 mt-6">
+          Menu
         </h2>
-      </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex items-center gap-4">
+        <div className="space-y-5 flex flex-col items-start">
 
-        {/* ✅ FIXED: SHOW ONLY WHEN enabled */}
-        {showStudentSwitcher && (
-          <div className="relative" ref={studentRef}>
-            <button
-              onClick={() => setStudentDropdownOpen((v) => !v)}
-              className="flex items-center gap-2 px-3 py-2 border rounded-md text-[#124734] bg-[#F8FFFA] hover:bg-[#E6F4EC] transition"
-            >
-              {selectedStudent?.name || "Select Student"}
-              <svg
-                className={`h-4 w-4 transition-transform ${
-                  studentDropdownOpen ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+          {/* STUDENT SWITCHER (mobile full width) */}
+          {showStudentSwitcher && (
+            <div className="w-full">
+              <p className="text-sm text-[#124734] font-medium mb-1">
+                Select Student
+              </p>
+
+              <select
+                value={selectedStudent?.id || ""}
+                onChange={(e) => {
+                  const s = students.find((x) => x.id === e.target.value);
+                  if (s) onSelectStudent(s);
+                }}
+                className="w-full border px-3 py-2 rounded-md text-sm"
               >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-
-            {studentDropdownOpen && (
-              <div
-                className="absolute right-0 mt-2 w-56 bg-white shadow-lg border border-[#E6F4EC] rounded-lg p-2 z-[2000]"
-                style={{ top: "100%" }}
-              >
+                <option value="">Choose Student</option>
                 {students.map((s) => (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      onSelectStudent(s);
-                      setStudentDropdownOpen(false);
-                    }}
-                    className="px-3 py-2 rounded-md hover:bg-[#F2FBF6] cursor-pointer text-sm text-[#124734]"
-                  >
+                  <option key={s.id} value={s.id}>
                     {s.name}
-                  </div>
+                  </option>
                 ))}
-              </div>
-            )}
-          </div>
-        )}
+              </select>
+            </div>
+          )}
 
-        {/* STORE BUTTON */}
-        <StoreButton />
+          {/* Store */}
+          <StoreButton />
 
-        {/* NOTIFICATION ICON */}
-        <NotificationBell onClick={() => navigate("/parent/announcements")} />
+          {/* Notifications */}
+          <NotificationBell
+            onClick={() => {
+              navigate("/parent/announcements");
+              setMobileMenuOpen(false);
+            }}
+          />
 
-        {/* PROFILE DROPDOWN */}
-        <ProfileAvatar role="parent" />
+          {/* Profile */}
+          <ProfileAvatar role="parent" />
+        </div>
       </div>
-    </header>
+    </>
   );
 }

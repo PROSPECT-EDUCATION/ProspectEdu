@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 
-import CourseOverviewTab from "../../components/Teacher/CourseManagementPage.jsx/CourseOverviewTab";
+import CourseOverviewTab from "../../components/Teacher/CourseManagementPage/CourseOverviewTab";
 
 import Modules from "../../components/Teacher/Modules";
 import AssessmentDashboard from "../../components/Teacher/Assessments/AssessmentDashboard";

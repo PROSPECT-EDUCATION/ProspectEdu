@@ -58,27 +58,43 @@ export default function StudentDetailsPage() {
         <div className="p-6 overflow-y-auto">
 
           {/* HEADER CARD */}
-          <div className="bg-white rounded-2xl shadow-md p-6 flex items-center gap-6 border border-[#E6F4EC]">
-            
-            <img
-              src={student.avatar}
-              className="h-20 w-20 rounded-full border-2 border-[#009846]"
-            />
+          {/* HEADER CARD */}
+<div className="
+  bg-white rounded-2xl shadow-md p-6 
+  flex flex-col sm:flex-row 
+  sm:items-center items-start 
+  gap-4 sm:gap-6 
+  border border-[#E6F4EC]
+">
+  
+  {/* Avatar */}
+  <img
+    src={student.avatar}
+    className="h-20 w-20 rounded-full border-2 border-[#009846] mx-auto sm:mx-0"
+  />
 
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-[#124734]">{student.name}</h1>
-              <p className="text-[#5B7065]">Class {student.class} • Roll: {student.roll}</p>
-              
-              <div className="flex gap-6 mt-2">
-                <p className="text-sm text-[#124734]">
-                  <b>Attendance:</b> {student.attendance}%
-                </p>
-                <p className="text-sm text-[#124734]">
-                  <b>Progress:</b> {student.overallProgress}%
-                </p>
-              </div>
-            </div>
-          </div>
+  {/* Text Section */}
+  <div className="space-y-1 w-full">
+    <h1 className="text-2xl font-bold text-[#124734]">
+      {student.name}
+    </h1>
+
+    <p className="text-[#5B7065]">
+      Class {student.class} • Roll: {student.roll}
+    </p>
+
+    {/* Stats Row */}
+    <div className="flex flex-col xs:flex-row gap-2 sm:gap-6 mt-2">
+      <p className="text-sm text-[#124734]">
+        <b>Attendance:</b> {student.attendance}%
+      </p>
+      <p className="text-sm text-[#124734]">
+        <b>Progress:</b> {student.overallProgress}%
+      </p>
+    </div>
+  </div>
+</div>
+
 
           {/* GRID - TWO COLUMNS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">

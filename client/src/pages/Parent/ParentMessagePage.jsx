@@ -21,11 +21,7 @@ export default function ParentMessagesPage() {
   const handleMouseMove = (e) => {
     if (!isResizing) return;
 
-    const newWidth = Math.min(
-      Math.max(200, e.clientX - sidebarWidth),
-      450
-    );
-
+    const newWidth = Math.min(Math.max(200, e.clientX - sidebarWidth), 450);
     setPanelWidth(newWidth);
   };
 
@@ -46,7 +42,7 @@ export default function ParentMessagesPage() {
 
       {/* SIDEBAR */}
       <div
-        className="fixed top-0 left-0 h-full transition-all duration-300"
+        className="fixed top-0 left-0 h-full transition-all duration-300 hidden md:block"
         style={{ width: sidebarWidth }}
       >
         <ParentSidebar
@@ -56,30 +52,34 @@ export default function ParentMessagesPage() {
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
-
-        {/* TOPBAR */}
+      <div
+        className="flex-1 flex flex-col w-full"
+        style={{ marginLeft: sidebarWidth }}
+      >
         <ParentTopbar pageTitle="Messages" showStudentSwitcher={false} />
 
-        {/* CONTENT: RESIZABLE LAYOUT */}
+        {/* CONTENT */}
         <div className="flex h-full">
 
           {/* LEFT: CONVERSATION LIST */}
           <div
-            className="bg-white border-r border-[#E6F4EC]"
-            style={{ width: panelWidth }}
-          >
-            <ConversationList onSelect={(chat) => setSelectedChat(chat)} />
-          </div>
+  className={`
+    bg-white border-r border-[#E6F4EC]
+    ${selectedChat ? "hidden md:block" : "block"}
+  `}
+  style={{ width: panelWidth }}
+>
+  <ConversationList onSelect={(chat) => setSelectedChat(chat)} />
+</div>
 
-          {/* DRAGGABLE DIVIDER */}
+          {/* DRAGGABLE DIVIDER (hidden on mobile) */}
           <div
             onMouseDown={startResizing}
-            className="w-1 cursor-ew-resize bg-[#E6F4EC] hover:bg-[#CDECD7] transition"
+            className="w-1 cursor-ew-resize bg-[#E6F4EC] hover:bg-[#CDECD7] transition hidden md:block"
           ></div>
 
           {/* RIGHT: CHAT WINDOW */}
-          <div className="flex-1 bg-[#F9FAFB]">
+          <div className="flex-1 bg-[#F9FAFB] hidden md:flex items-center justify-center">
             {selectedChat ? (
               <ParentChatWindow chat={selectedChat} />
             ) : (
@@ -88,6 +88,16 @@ export default function ParentMessagesPage() {
               </div>
             )}
           </div>
+
+          {/* MOBILE: SHOW ONLY CHAT WHEN SELECTED */}
+          {selectedChat && (
+            <div className="flex-1 bg-[#F9FAFB] md:hidden absolute inset-0 z-50">
+              <ParentChatWindow
+                chat={selectedChat}
+                onBack={() => setSelectedChat(null)}
+              />
+            </div>
+          )}
 
         </div>
       </div>

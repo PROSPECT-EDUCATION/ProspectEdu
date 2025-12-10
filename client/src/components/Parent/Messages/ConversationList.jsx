@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 export default function ConversationList({ onSelect }) {
-  // Dummy Chat List (replace with API later)
   const conversations = [
     {
       id: 1,
@@ -36,11 +35,11 @@ export default function ConversationList({ onSelect }) {
 
   const handleSelect = (chat) => {
     setSelectedId(chat.id);
-    onSelect(chat); // send the entire conversation object upward
+    onSelect(chat);
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-white">
+    <div className="h-full overflow-y-auto bg-white w-full max-w-full">
       <h2 className="text-lg font-semibold text-[#124734] px-5 py-4 border-b border-[#E6F4EC]">
         Conversations
       </h2>
@@ -48,7 +47,7 @@ export default function ConversationList({ onSelect }) {
       {conversations.map((chat) => (
         <div
           key={chat.id}
-          className={`flex items-center gap-4 px-5 py-4 cursor-pointer transition border-b border-[#F0F0F0]
+          className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition border-b border-[#F0F0F0]
             ${
               selectedId === chat.id
                 ? "bg-[#E6F4EC] border-l-4 border-[#009846]"
@@ -60,22 +59,24 @@ export default function ConversationList({ onSelect }) {
           {/* Avatar */}
           <img
             src={chat.avatar}
-            className="h-12 w-12 rounded-full border border-[#A7E1B2]"
+            className="h-10 w-10 md:h-12 md:w-12 rounded-full border border-[#A7E1B2]"
           />
 
           {/* Text Content */}
-          <div className="flex-1">
-            <h3 className="font-semibold text-[#124734]">{chat.name}</h3>
-            <p className="text-xs text-[#5B7065]">{chat.subject}</p>
+          <div className="flex-1 overflow-hidden">
+            <h3 className="font-semibold text-[#124734] text-sm md:text-base truncate">
+              {chat.name}
+            </h3>
+            <p className="text-xs text-[#5B7065] truncate">{chat.subject}</p>
 
-            <p className="text-sm text-[#5B7065] truncate mt-1">
+            <p className="text-xs md:text-sm text-[#5B7065] truncate mt-1">
               {chat.lastMessage}
             </p>
           </div>
 
           {/* Time + Unread */}
-          <div className="text-right">
-            <p className="text-xs text-[#98A6A2]">{chat.time}</p>
+          <div className="text-right shrink-0">
+            <p className="text-[10px] md:text-xs text-[#98A6A2]">{chat.time}</p>
 
             {chat.unread > 0 && (
               <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#009846] text-white text-xs">

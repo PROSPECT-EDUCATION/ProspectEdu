@@ -2,8 +2,8 @@ import { CreditCard } from "lucide-react";
 
 export default function PaymentStatusCard() {
   return (
-    <div className="bg-white border border-[#E6F4EC] rounded-xl p-5 shadow-sm">
-      <div className="flex items-center gap-3 mb-3">
+    <div className="bg-white border border-[#E6F4EC] rounded-xl p-5 shadow-sm w-full">
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
         <CreditCard className="text-[#009846]" />
         <h3 className="text-lg font-semibold text-[#124734]">Payment Status</h3>
       </div>

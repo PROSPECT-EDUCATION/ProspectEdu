@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import { Paperclip } from "lucide-react";
 
-export default function ParentChatWindow({ chat }) {
+export default function ParentChatWindow({ chat, onBack }) {
   const [messages, setMessages] = useState([
     {
       from: "teacher",
@@ -25,7 +25,7 @@ export default function ParentChatWindow({ chat }) {
     const newMsg = {
       from: "parent",
       text: input || "",
-      attachment: attachment,
+      attachment,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       status: "sent",
     };
@@ -33,7 +33,6 @@ export default function ParentChatWindow({ chat }) {
     setMessages((prev) => [...prev, newMsg]);
     setInput("");
 
-    // Update statuses
     setTimeout(() => {
       setMessages((prev) =>
         prev.map((m, i) =>
@@ -51,7 +50,6 @@ export default function ParentChatWindow({ chat }) {
     }, 1500);
   };
 
-  // Handle File Upload
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -66,62 +64,67 @@ export default function ParentChatWindow({ chat }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
 
       {/* HEADER */}
-      <div className="p-4 border-b bg-white flex items-center gap-3">
-        <img src={chat.avatar} className="h-12 w-12 rounded-full border border-[#A7E1B2]" />
-        <div>
-          <h2 className="text-lg font-semibold text-[#124734]">{chat.name}</h2>
-          <p className="text-sm text-[#5B7065]">{chat.subject}</p>
+      <div className="p-3 md:p-4 border-b bg-white flex items-center gap-3 sticky top-0 z-10">
+        {/* Back button only on mobile */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="md:hidden text-[#124734] text-sm font-medium"
+          >
+            ← Back
+          </button>
+        )}
+
+        <img src={chat.avatar} className="h-10 w-10 md:h-12 md:w-12 rounded-full border border-[#A7E1B2]" />
+
+        <div className="truncate">
+          <h2 className="text-base md:text-lg font-semibold text-[#124734] truncate">
+            {chat.name}
+          </h2>
+          <p className="text-xs md:text-sm text-[#5B7065] truncate">
+            {chat.subject}
+          </p>
         </div>
       </div>
 
       {/* CHAT BODY */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F8FFFA]">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-[#F8FFFA]">
         {messages.map((msg, i) => (
-  <MessageBubble
-    key={i}
-    msg={msg}
-    index={i}
-    onDelete={(index) => {
-      setMessages((prev) => prev.filter((_, j) => j !== index));
-    }}
-    onEdit={(index, newText) => {
-  setMessages((prev) =>
-    prev.map((m, j) =>
-      j === index ? { ...m, text: newText, edited: true } : m
-    )
-  );
-}}
-
-  />
-))}
-
+          <MessageBubble
+            key={i}
+            msg={msg}
+            index={i}
+            onDelete={(index) => setMessages((prev) => prev.filter((_, j) => j !== index))}
+            onEdit={(index, newText) =>
+              setMessages((prev) =>
+                prev.map((m, j) => (j === index ? { ...m, text: newText, edited: true } : m))
+              )
+            }
+          />
+        ))}
         <div ref={bottomRef} />
       </div>
 
       {/* INPUT AREA */}
-      <div className="p-4 border-t bg-white flex items-center gap-2">
-
-        {/* File Upload Button */}
+      <div className="p-3 md:p-4 border-t bg-white flex items-center gap-2 md:gap-3">
         <label className="cursor-pointer p-2 bg-[#E6F4EC] rounded-lg hover:bg-[#CDECD7]">
           <Paperclip size={18} className="text-[#124734]" />
           <input type="file" className="hidden" onChange={handleFile} />
         </label>
 
-        {/* Text Input */}
         <input
-          className="flex-1 p-2 border border-[#E6F4EC] rounded-lg outline-[#124734]"
+          className="flex-1 p-2 border border-[#E6F4EC] rounded-lg outline-[#124734] text-sm md:text-base"
           placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
 
-        {/* Send Button */}
         <button
           onClick={() => sendMessage()}
-          className="px-5 py-2 bg-[#124734] text-white rounded-lg hover:bg-[#0E3A29]"
+          className="px-4 py-2 md:px-5 md:py-2 bg-[#124734] text-white rounded-lg hover:bg-[#0E3A29] text-sm md:text-base"
         >
           Send
         </button>

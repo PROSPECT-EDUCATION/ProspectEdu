@@ -20,7 +20,15 @@ export default function RecentActivity() {
   ];
 
   return (
-    <aside className="bg-white rounded-lg shadow-sm p-4 h-full border border-[#E6F4EC]">
+    <aside
+      className="
+        bg-white rounded-lg shadow-sm p-4 
+        border border-[#E6F4EC]
+        h-auto            /* FIXED — Removed h-full */
+        w-full
+        md:w-auto
+      "
+    >
       <h3 className="text-lg font-semibold text-[#124734] mb-4">
         Recent Activity
       </h3>
@@ -42,3 +50,4 @@ export default function RecentActivity() {
     </aside>
   );
 }
+

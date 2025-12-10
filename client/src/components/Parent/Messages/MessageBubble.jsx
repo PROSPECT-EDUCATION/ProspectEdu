@@ -22,31 +22,29 @@ export default function MessageBubble({
   const iconBtnBg = isParent ? "bg-[#0E3A29]" : "bg-white";
 
   return (
-   <div
-  className={`p-3 rounded-lg max-w-md ${
-    isEditing
-      ? "ml-auto bg-white text-[#124734] border"
-      : isParent
-      ? "ml-auto bg-[#124734] text-white"
-      : "bg-white border text-[#124734]"
-  }`}
->
+    <div
+      className={`p-3 rounded-lg max-w-[85%] md:max-w-md break-words ${
+        isEditing
+          ? "ml-auto bg-white text-[#124734] border"
+          : isParent
+          ? "ml-auto bg-[#124734] text-white"
+          : "bg-white border text-[#124734]"
+      }`}
+    >
 
-      {/* EDIT MODE (INLINE) */}
+      {/* EDIT MODE */}
       {isEditing ? (
         <div className="flex flex-col gap-2">
           <input
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            className="border p-1 rounded-md outline-[#124734] text-black"
+            className="border p-2 rounded-md outline-[#124734] text-black text-sm"
           />
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 text-xs">
             <button
-              onClick={() => {
-                setIsEditing(false);
-              }}
-              className="px-2 py-1 text-xs bg-gray-300 rounded-md"
+              onClick={() => setIsEditing(false)}
+              className="px-2 py-1 bg-gray-200 rounded-md"
             >
               Cancel
             </button>
@@ -56,7 +54,7 @@ export default function MessageBubble({
                 onEdit(index, editValue);
                 setIsEditing(false);
               }}
-              className="px-2 py-1 text-xs bg-[#124734] text-white rounded-md"
+              className="px-2 py-1 bg-[#124734] text-white rounded-md"
             >
               Save
             </button>
@@ -64,39 +62,40 @@ export default function MessageBubble({
         </div>
       ) : (
         <div>
-          {/* TEXT + BUTTONS */}
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex-1">
-              <p>{msg.text}</p>
+          <div className="flex justify-between items-start gap-2 md:gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm md:text-base break-words">{msg.text}</p>
 
-              {/* EDITED LABEL */}
+              {/* Edited Label */}
               {msg.edited && (
-                <p className="text-[10px] opacity-70 mt-1 italic">
+                <p classWind="text-[10px] opacity-70 mt-1 italic">
                   (edited)
                 </p>
               )}
 
-              {/* ATTACHMENT */}
+              {/* Attachment */}
               {msg.attachment && (
                 <div className="mt-2">
                   {msg.attachment.type === "image" ? (
                     <img
                       src={msg.attachment.url}
-                      className="rounded-lg border w-40"
+                      className="rounded-lg border w-32 md:w-40"
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2 border rounded-lg bg-white text-[#124734] mt-2">
                       <Paperclip size={16} />
-                      <span className="text-xs">{msg.attachment.name}</span>
+                      <span className="text-xs truncate max-w-[100px] md:max-w-[150px]">
+                        {msg.attachment.name}
+                      </span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* INLINE BUTTONS */}
+            {/* Actions */}
             {isParent && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 shrink-0">
                 <button
                   onClick={() => setIsEditing(true)}
                   className={`p-1 ${iconBtnBg} border rounded-full hover:opacity-80`}
@@ -114,8 +113,8 @@ export default function MessageBubble({
             )}
           </div>
 
-          {/* TIME + STATUS */}
-          <div className="mt-1 flex items-center gap-2 text-xs opacity-80">
+          {/* Time + Status */}
+          <div className="mt-1 flex items-center gap-2 text-[10px] md:text-xs opacity-80">
             <span>{msg.time}</span>
 
             {isParent && (

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import ModuleCard from "./CourseManagementPage.jsx/ModuleCard";
+import ModuleCard from "./CourseManagementPage/ModuleCard";
 import { Plus } from "lucide-react";
 import {
   DragDropContext,

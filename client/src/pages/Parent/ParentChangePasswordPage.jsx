@@ -29,8 +29,11 @@ export default function ParentChangePasswordPage() {
 
       {/* Main Content */}
       <div
-        className="flex flex-col flex-1"
-        style={{ marginLeft: sidebarWidth }}
+        className="flex flex-col flex-1 md:ml-[sidebarWidth] ml-0"
+       style={{
+  marginLeft: sidebarWidth,
+}}
+
       >
 
         {/* Topbar */}
@@ -67,7 +70,7 @@ export default function ParentChangePasswordPage() {
 
         {/* Body */}
         <main
-          className="flex-1 overflow-y-auto px-6 py-10"
+          className="flex-1 overflow-y-auto px-1 py-10"
           style={{ marginTop: "50px" }}
         >
           <ChangePasswordForm />

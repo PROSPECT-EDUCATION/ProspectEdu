@@ -22,16 +22,34 @@ export default function ProfileAvatar({ role = "student" }) {
 
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  const toggle = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 224,
-      });
+const toggle = () => {
+  if (buttonRef.current) {
+    const rect = buttonRef.current.getBoundingClientRect();
+
+    let leftPosition = rect.right + window.scrollX - 224;
+
+    // ⭐ Fix for collapsed sidebar OR being near the left edge
+    if (rect.left < 120) {
+      leftPosition = rect.left; // align dropdown directly below avatar
     }
-    setOpen((v) => !v);
-  };
+
+    // ⭐ Mobile fix — prevent overflow
+    if (window.innerWidth < 500) {
+      leftPosition = Math.min(
+        window.innerWidth - 240,
+        Math.max(10, rect.left)
+      );
+    }
+
+    setCoords({
+      top: rect.bottom + window.scrollY + 8,
+      left: leftPosition,
+    });
+  }
+
+  setOpen((v) => !v);
+};
+
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -40,41 +58,41 @@ export default function ProfileAvatar({ role = "student" }) {
 
   // 🔥 MENU LIST BASED ON ROLE
   const MENU_ITEMS =
-  role === "teacher"
-    ? [
-        { label: "Edit Profile", path: "/teacher/edit-profile" },
-        { label: "Change Password", path: "/teacher/change-password" },
-        { label: "Orders", path: "/teacher/orders" },
-        { label: "Doubts", path: "/teacher/queries/doubts" },
-      ]
-    : role === "parent"
-    ? [
-        { label: "Edit Profile", path: "/parent/settings" },
-        { label: "Payments", path: "/parent/payments" },
-        { label: "Change Password", path: "/parent/change-password" },
-      ]
-    : role === "admin"
-    ? [
-         { label: "Edit Profile", path: "/admin/edit-profile" },
-        { label: "Change Password", path: "/admin/change-password" },
-      ]
-    : [
-        // STUDENT
-        { label: "Edit Profile", path: "/student/edit-profile" },
-        { label: "Change Password", path: "/student/change-password" },
-        { label: "Orders", path: "/student/orders" },
-        { label: "Doubts", path: "/student/doubts" },
-      ];
+    role === "teacher"
+      ? [
+          { label: "Edit Profile", path: "/teacher/edit-profile" },
+          { label: "Change Password", path: "/teacher/change-password" },
+          { label: "Orders", path: "/teacher/orders" },
+          { label: "Doubts", path: "/teacher/queries/doubts" },
+        ]
+      : role === "parent"
+      ? [
+          { label: "Edit Profile", path: "/parent/settings" },
+          { label: "Payments", path: "/parent/payments" },
+          { label: "Change Password", path: "/parent/change-password" },
+        ]
+      : role === "admin"
+      ? [
+          { label: "Edit Profile", path: "/admin/edit-profile" },
+          { label: "Change Password", path: "/admin/change-password" },
+        ]
+      : [
+          // STUDENT
+          { label: "Edit Profile", path: "/student/edit-profile" },
+          { label: "Change Password", path: "/student/change-password" },
+          { label: "Orders", path: "/student/orders" },
+          { label: "Doubts", path: "/student/doubts" },
+        ];
 
   // 🔥 PROFILE CARD CLICK DESTINATION
   const PROFILE_REDIRECT =
-  role === "teacher"
-    ? "/teacher-dashboard"
-    : role === "parent"
-    ? "/parent-dashboard"
-    : role === "admin"
-    ? "/admin-dashboard"
-    : "/student-dashboard";
+    role === "teacher"
+      ? "/teacher-dashboard"
+      : role === "parent"
+      ? "/parent-dashboard"
+      : role === "admin"
+      ? "/admin-dashboard"
+      : "/student-dashboard";
 
   return (
     <>
@@ -82,7 +100,7 @@ export default function ProfileAvatar({ role = "student" }) {
       <div ref={buttonRef}>
         <div
           onClick={toggle}
-          className="p-[2px] rounded-full bg-[#A7E1B2]/40 hover:bg-[#009846]/30 cursor-pointer transition"
+          className="p-[2px] rounded-full bg-[#A7E1B2]/40 hover:bg-[#009846]/30 cursor-pointer transition inline-block"
         >
           <img
             src="/src/assets/profile.png"

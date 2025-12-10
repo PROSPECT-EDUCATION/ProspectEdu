@@ -64,26 +64,27 @@ export default function AllCourses() {
             </p>
 
             {/* Tabs */}
-            <div className="flex gap-6 border-b border-[#E6F4EC]">
-              {[
-                ["all", "All Courses"],
-                ["engineering", "Engineering Courses"],
-                ["management", "Management Courses"],
-                ["law", "Law Courses"],
-              ].map(([id, label]) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={`pb-2 text-sm font-medium transition ${
-                    activeTab === id
-                      ? "text-[#009846] border-b-2 border-[#009846]"
-                      : "text-[#5B7065]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <div className="flex flex-wrap gap-4 border-b border-[#E6F4EC] w-full">
+  {[
+    ["all", "All Courses"],
+    ["engineering", "Engineering Courses"],
+    ["management", "Management Courses"],
+    ["law", "Law Courses"],
+  ].map(([id, label]) => (
+    <button
+      key={id}
+      onClick={() => setActiveTab(id)}
+      className={`pb-2 text-sm font-medium whitespace-nowrap transition ${
+        activeTab === id
+          ? "text-[#009846] border-b-2 border-[#009846]"
+          : "text-[#5B7065]"
+      }`}
+    >
+      {label}
+    </button>
+  ))}
+</div>
+
           </div>
         </div>
 

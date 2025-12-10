@@ -10,6 +10,7 @@ import DashboardCharts from "../../components/Student/DashboardCharts";
 
 export default function StudentDashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
@@ -22,9 +23,12 @@ export default function StudentDashboard() {
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
       >
         <StudentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+  isCollapsed={isCollapsed}
+  setIsCollapsed={setIsCollapsed}
+  isMobileOpen={isMobileOpen}
+  setIsMobileOpen={setIsMobileOpen}
+/>
+
       </div>
 
       {/* Main Section */}
@@ -47,7 +51,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Body (below topbar) */}
-        <div
+                <div
           className="flex flex-1 overflow-hidden"
           style={{
             marginTop: "64px",
@@ -60,26 +64,34 @@ export default function StudentDashboard() {
             <div className="mb-6 max-w-5xl mx-auto">
               <BannerCarousel />
             </div>
+
             <div className="mb-6">
-  <DashboardStats />
-</div>
-<div className="mb-8">
-  <DashboardCharts />
-</div>
+              <DashboardStats />
+            </div>
+
+            <div className="mb-8">
+              <DashboardCharts />
+            </div>
 
             {/* Dynamic Page Content */}
             <div className="max-w-5xl mx-auto">
               <Outlet />
             </div>
+
+            {/* MOBILE — Recent Activity BELOW all content */}
+            <div className="lg:hidden w-full mt-6">
+              <RecentActivity />
+            </div>
           </main>
 
-          {/* Right Panel - Recent Activity */}
+          {/* DESKTOP VERSION — Right side panel */}
           <aside className="hidden lg:flex flex-col w-80 border-l border-[#E6F4EC] bg-white shadow-sm overflow-y-auto shrink-0">
             <div className="p-4">
               <RecentActivity />
             </div>
           </aside>
         </div>
+
       </div>
     </div>
   );

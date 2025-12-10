@@ -79,21 +79,23 @@ export default function AllTestSeries() {
           </p>
 
           {/* Tabs */}
-          <div className="flex gap-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === tab.key
-                    ? "bg-[#009846] text-white shadow"
-                    : "bg-white text-[#124734] border border-[#CDE8D5] hover:bg-[#E6F4EC]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+         {/* Tabs */}
+<div className="flex flex-wrap gap-2 w-full">
+  {tabs.map((tab) => (
+    <button
+      key={tab.key}
+      onClick={() => setActiveTab(tab.key)}
+      className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+        activeTab === tab.key
+          ? "bg-[#009846] text-white shadow"
+          : "bg-white text-[#124734] border border-[#CDE8D5] hover:bg-[#E6F4EC]"
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
+
         </div>
 </div>
         {/* Page Body */}
