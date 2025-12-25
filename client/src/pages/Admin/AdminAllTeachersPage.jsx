@@ -3,7 +3,7 @@ import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import TeachersTable from "../../components/Admin/Teachers/TeachersTable";
 import { useNavigate } from "react-router-dom";
-import profile from "../../assets/profile.png"
+import profile from "../../assets/profile.webp"
 export default function AdminAllTeachersPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();

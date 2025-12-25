@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import DropdownMenu from "./DropdownMenu";
-import logo from "../../assets/logo.png.jpeg";
+import logo from "../../assets/logo.png.webp";
 import { Link } from "react-router-dom";
 
 export default function Navbar() {

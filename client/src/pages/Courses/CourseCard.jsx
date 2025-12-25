@@ -1,12 +1,17 @@
 export default function CourseCard({ course }) {
   return (
-    <div className="flex flex-col justify-between bg-white border border-[#A7E1B2] rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4 h-[340px] w-full">
-      
-      {/* Smaller image area */}
+    <article
+      className="flex flex-col justify-between bg-white border border-[#A7E1B2] rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4 h-[340px] w-full"
+      aria-label={`Course: ${course.title}`}
+    >
+      {/* Image */}
       <div className="flex justify-center items-center h-[140px] mb-3">
         <img
           src={course.image}
-          alt={course.title}
+          alt={`${course.title} course`}
+          loading="lazy"
+          width="200"
+          height="140"
           className="h-full w-auto object-contain"
         />
       </div>
@@ -29,11 +34,14 @@ export default function CourseCard({ course }) {
             ₹{course.oldPrice}
           </span>
         </p>
-        <button className="mt-2 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition">
+
+        <button
+          className="mt-2 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition"
+          aria-label={`Enroll now for ${course.title}`}
+        >
           Enroll Now
         </button>
       </div>
-
-    </div>
+    </article>
   );
 }

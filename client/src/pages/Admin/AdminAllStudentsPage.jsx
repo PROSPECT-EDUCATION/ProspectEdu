@@ -4,7 +4,7 @@ import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { FiEdit2 } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-import profileImg from "../../assets/profile.png";
+import profileImg from "../../assets/profile.webp";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 export default function AdminStudentsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-import newsImg from "../../assets/News.png";
-import researchImg from "../../assets/research.jpg";
+import newsImg from "../../assets/News.webp";
+import researchImg from "../../assets/research.webp";
 
 const News = () => {
   const [activeTab, setActiveTab] = useState("All");

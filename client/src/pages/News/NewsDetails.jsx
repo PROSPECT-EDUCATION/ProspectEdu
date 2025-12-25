@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import newsImg from "../../assets/News.png";
+import newsImg from "../../assets/News.webp";
 
 const NewsDetails = () => {
   const { state: report } = useLocation();

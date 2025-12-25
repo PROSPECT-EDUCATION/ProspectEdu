@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
-import locationIcon from "../../assets/location.png";
+import locationIcon from "../../assets/location.webp";
 
 const MyProfile = () => {
   const navigate = useNavigate();

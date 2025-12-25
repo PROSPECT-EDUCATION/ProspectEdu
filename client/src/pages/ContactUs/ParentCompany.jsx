@@ -1,5 +1,5 @@
 import React from "react";
-import parentImg from "../../assets/ParentCompany.png";
+import parentImg from "../../assets/ParentCompany.webp";
 
 const ParentCompany = () => {
   return (

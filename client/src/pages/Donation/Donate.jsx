@@ -1,5 +1,5 @@
 import React from "react";
-import donateImg from "../../assets/donate.jpg";
+import donateImg from "../../assets/donate.webp";
 import { useNavigate } from "react-router-dom";
 
 const Donate = () => {

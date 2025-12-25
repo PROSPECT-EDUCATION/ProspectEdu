@@ -1,5 +1,5 @@
-import appStore from "../assets/app-store-badge.svg";
-import playStore from "../assets/google-play-badge.png";
+import appStore from "../assets/app-store-badge.webp";
+import playStore from "../assets/google-play-badge.webp";
 
 export default function MobileCTA() {
   return (

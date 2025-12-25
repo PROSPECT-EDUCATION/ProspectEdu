@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiShoppingBag, FiHeart } from "react-icons/fi";
-
 import EcomHeader from "../../components/EcomHeader";
-
-import img1 from "../../assets/EcommerceHome-carousel/c1.png";
-import img2 from "../../assets/EcommerceHome-carousel/c2.png";
-import img3 from "../../assets/EcommerceHome-carousel/c3.png";
-import contact from "../../assets/contact.png";
-
+import img1 from "../../assets/EcommerceHome-carousel/c1.webp";
+import img2 from "../../assets/EcommerceHome-carousel/c1.webp";
+import img3 from "../../assets/EcommerceHome-carousel/c1.webp";
+import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
-
 import {
   trendingProducts,
   merchandiseProducts,

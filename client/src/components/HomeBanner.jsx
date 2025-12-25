@@ -8,7 +8,7 @@ export default function HomeBanner() {
         flex items-center justify-center
       "
       style={{
-        backgroundImage: "url('/src/assets/banner.png')",
+        backgroundImage: "url('/src/assets/banner.webp')",
       }}
     >
       {/* Optional overlay for readability */}

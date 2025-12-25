@@ -1,11 +1,11 @@
 // src/components/Courses/MedicalCoursesList.jsx
 
 import CourseCard from "../../pages/Courses/CourseCard";
-import med1 from "../../assets/medical.png";
-import med2 from "../../assets/medical.png";
-import med3 from "../../assets/medical.png";
+import med1 from "../../assets/medical.webp";
+import med2 from "../../assets/medical.webp";
+import med3 from "../../assets/medical.webp";
 
-// 👉 Export courses so other pages can read them
+// 👉 Export courses so other pages can read them (UNCHANGED)
 export const medicalCoursesData = [
   {
     title: "MBBS Foundation Program",
@@ -38,10 +38,17 @@ export const medicalCoursesData = [
 
 export default function MedicalCoursesList({ courses }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course, index) => (
-        <CourseCard key={index} course={course} />
-      ))}
-    </div>
+    <section
+      aria-label="Medical courses list"
+      className="w-full"
+    >
+      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses.map((course) => (
+          <li key={course.title}>
+            <CourseCard course={course} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
-import aboutImg from "../../assets/AboutUs.png";
-import careerImg from "../../assets/carrer2.png";
+import aboutImg from "../../assets/AboutUs.webp";
+import careerImg from "../../assets/carrer2.webp";
 
 import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import testImg from "../../assets/test1.jpg";
-import whyTestImg from "../../assets/WhyTest.png";
+import testImg from "../../assets/test1.webp";
+import whyTestImg from "../../assets/WhyTest.webp";
 
 import WhyTestSeries from "../../components/WhyTestSeries";
 import { useNavigate } from "react-router-dom";

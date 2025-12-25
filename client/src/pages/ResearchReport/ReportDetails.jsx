@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import researchImg from "../../assets/research.jpg";
+import researchImg from "../../assets/research.webp";
 import English from "../../assets/English.pdf";
 import Hindi from "../../assets/Hindi.pdf";
 

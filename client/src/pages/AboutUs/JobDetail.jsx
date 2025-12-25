@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import hiringImg from "../../assets/hiring2.jpeg";
+import hiringImg from "../../assets/hiring2.webp";
 import ContactUs from "../../components/Contact";
 import { JobData } from "../../data/JobData"; // ✅ IMPORTED JOB DATA
 

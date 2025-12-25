@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import itImg from "../../../../assets/it.png";
+import itImg from "../../../../assets/it.webp";
 
 const categories = [
   { title: "Information Technology", img: itImg },

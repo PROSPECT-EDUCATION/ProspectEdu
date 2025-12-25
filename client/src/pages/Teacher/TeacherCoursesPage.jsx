@@ -4,7 +4,7 @@ import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import CourseCard from "../../components/Teacher/CourseCard";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import courseImg from "../../assets/course.png";
+import courseImg from "../../assets/course.webp";
 
 export default function TeacherCoursesPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);

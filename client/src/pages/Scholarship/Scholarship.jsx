@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import scholarshipImg from "../../assets/Scholarship.jpg";
-import scholarshipPool from "../../assets/scholarshipPool.png";
+import scholarshipImg from "../../assets/Scholarship.webp";
+import scholarshipPool from "../../assets/scholarshipPool.webp";
 
 const Scholarship = () => {
   const [email, setEmail] = useState("");

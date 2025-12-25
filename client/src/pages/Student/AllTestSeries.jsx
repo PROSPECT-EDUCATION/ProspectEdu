@@ -1,5 +1,5 @@
 // src/pages/Student/AllTestSeries.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
@@ -19,13 +19,21 @@ export default function AllTestSeries() {
     { key: "offline", label: "Offline Test Series" },
   ];
 
-  // No test series yet → always empty
-  const testSeriesList = [];
+  // ✅ Prevent indexing of student dashboard pages
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, follow";
+    document.head.appendChild(meta);
+
+    return () => document.head.removeChild(meta);
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+
       {/* Sidebar */}
-      <div
+      <aside
         className={`${
           isCollapsed ? "w-20" : "w-64"
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
@@ -34,7 +42,7 @@ export default function AllTestSeries() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
-      </div>
+      </aside>
 
       {/* Main Section */}
       <div
@@ -45,64 +53,80 @@ export default function AllTestSeries() {
         }}
       >
         {/* Topbar */}
-        <div
+        <header
           className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
           style={{ left: sidebarWidthPx, right: 0 }}
         >
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="Test Series" />
-        </div>
+        </header>
 
         {/* Breadcrumb + Tabs */}
-        <div
+        <nav
           className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] py-3"
+          aria-label="Student test series navigation"
           style={{ left: sidebarWidthPx }}
         >
-             <div className="w-full flex flex-col items-start pl-5">
-          {/* Breadcrumb */}
-          <p className="text-sm text-[#5B7065] mb-2">
-            <span
-              className="hover:underline hover:text-[#009846] cursor-pointer"
-              onClick={() => navigate("/student-dashboard")}
-            >
-              Home
-            </span>{" "}
-            /{" "}
-            <span className="hover:underline hover:text-[#009846] cursor-pointer"
-              onClick={() => navigate("/student/all-test-series")}
-            >
-              Recommended Test Series
-            </span>{" "}
-            /{" "}
-            <span className="text-[#124734] font-medium">
-              All Test Series
-            </span>
-          </p>
+          <div className="w-full flex flex-col items-start pl-5">
 
-          {/* Tabs */}
-         {/* Tabs */}
-<div className="flex flex-wrap gap-2 w-full">
-  {tabs.map((tab) => (
-    <button
-      key={tab.key}
-      onClick={() => setActiveTab(tab.key)}
-      className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-        activeTab === tab.key
-          ? "bg-[#009846] text-white shadow"
-          : "bg-white text-[#124734] border border-[#CDE8D5] hover:bg-[#E6F4EC]"
-      }`}
-    >
-      {tab.label}
-    </button>
-  ))}
-</div>
+            {/* Breadcrumb */}
+            <p className="text-sm text-[#5B7065] mb-2">
+              <span
+                className="hover:underline hover:text-[#009846] cursor-pointer"
+                onClick={() => navigate("/student-dashboard")}
+              >
+                Home
+              </span>{" "}
+              /{" "}
+              <span
+                className="hover:underline hover:text-[#009846] cursor-pointer"
+                onClick={() => navigate("/student/all-test-series")}
+              >
+                Recommended Test Series
+              </span>{" "}
+              /{" "}
+              <span className="text-[#124734] font-medium">
+                All Test Series
+              </span>
+            </p>
 
-        </div>
-</div>
+            {/* Tabs */}
+            <div
+              className="flex flex-wrap gap-2 w-full"
+              role="tablist"
+              aria-label="Test series filters"
+            >
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  role="tab"
+                  aria-selected={activeTab === tab.key}
+                  aria-current={activeTab === tab.key ? "true" : undefined}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    activeTab === tab.key
+                      ? "bg-[#009846] text-white shadow"
+                      : "bg-white text-[#124734] border border-[#CDE8D5] hover:bg-[#E6F4EC]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+          </div>
+        </nav>
+
         {/* Page Body */}
         <main
           className="flex-1 overflow-y-auto px-6 py-8"
           style={{ marginTop: "128px" }}
+          aria-labelledby="student-test-series-heading"
         >
+          {/* Hidden H1 for semantics */}
+          <h1 id="student-test-series-heading" className="sr-only">
+            All Test Series for Students
+          </h1>
+
           <div className="w-full max-w-6xl mx-auto">
             <RefreshComponent message="No test series available." />
           </div>

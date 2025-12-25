@@ -1,5 +1,5 @@
 import React from "react";
-import contactImg from "../../assets/contact.png";
+import contactImg from "../../assets/contact.webp";
 import ContactUs from "../../components/Contact";
 
 const ContactDetails = () => {

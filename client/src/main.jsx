@@ -8,7 +8,6 @@ import { CartProvider } from "./context/CartContext";
 import { AddressProvider } from "./context/AddressContext";
 import { OrderProvider } from "./context/OrderContext";
 
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

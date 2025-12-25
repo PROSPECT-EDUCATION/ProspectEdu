@@ -5,7 +5,7 @@ export default function SignupForm() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const role = location.state?.role || "I'm a Learner";  // ← Role received here
+  const role = location.state?.role || "I'm a Learner";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,137 +29,171 @@ export default function SignupForm() {
       return;
     }
 
-    // Save role also
     localStorage.setItem("user", JSON.stringify({ ...formData, role }));
 
-    // Redirect based on role
-    if (role === "I'm a Learner") {
-      navigate("/student-dashboard");
-    } else if (role === "I'm a Teacher") {
-      navigate("/teacher-dashboard");
-    } else if (role === "I'm a Parent/Organisation") {
-      navigate("/parent-dashboard");
-    } else if (role === "I'm an Admin") {
-      navigate("/admin-dashboard");
-    }
+    if (role === "I'm a Learner") navigate("/student-dashboard");
+    else if (role === "I'm a Teacher") navigate("/teacher-dashboard");
+    else if (role === "I'm a Parent/Organisation") navigate("/parent-dashboard");
+    else if (role === "I'm an Admin") navigate("/admin-dashboard");
   };
 
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Name */}
-      <div>
-        <label className="block text-sm font-medium text-[#124734] mb-1">Name *</label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Please enter your name"
-          className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-          required
-        />
-      </div>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+      aria-label="Signup form"
+      autoComplete="on"
+    >
+      <fieldset className="space-y-4">
+        <legend className="sr-only">Create your ProspectEdu account</legend>
 
-      {/* Email + Phone */}
-      <div className="grid grid-cols-2 gap-4">
+        {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">Email *</label>
+          <label htmlFor="name" className="block text-sm font-medium text-[#124734] mb-1">
+            Name *
+          </label>
           <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Please enter your email"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">Phone Number *</label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Please enter your phone number"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Password + Confirm */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">Password *</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Please enter your new password"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">Confirm Password *</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Please confirm your password"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-            required
-          />
-        </div>
-      </div>
-
-      {/* State + City */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">State *</label>
-          <input
+            id="name"
             type="text"
-            name="state"
-            value={formData.state}
+            name="name"
+            value={formData.name}
             onChange={handleChange}
-            placeholder="Please enter state"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            placeholder="Please enter your name"
             required
+            autoComplete="name"
+            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">City *</label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            placeholder="Please enter city"
-            className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
-            required
-          />
+
+        {/* Email + Phone */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#124734] mb-1">
+              Email *
+            </label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Please enter your email"
+              required
+              autoComplete="email"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-[#124734] mb-1">
+              Phone Number *
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Please enter your phone number"
+              required
+              inputMode="numeric"
+              autoComplete="tel"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        className="w-full bg-[#124734] text-white py-2 rounded-md hover:bg-[#009846] transition"
-      >
-        Register
-      </button>
+        {/* Password + Confirm */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[#124734] mb-1">
+              Password *
+            </label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Please enter your new password"
+              required
+              autoComplete="new-password"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
 
-      {/* Login Redirect */}
-      <p className="text-center text-sm text-[#5B7065] mt-4">
-        Have an account?{" "}
-        <Link to="/login" className="text-[#009846] font-medium hover:underline">
-          Login
-        </Link>
-      </p>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#124734] mb-1">
+              Confirm Password *
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Please confirm your password"
+              required
+              autoComplete="new-password"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
+        </div>
+
+        {/* State + City */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="state" className="block text-sm font-medium text-[#124734] mb-1">
+              State *
+            </label>
+            <input
+              id="state"
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              placeholder="Please enter state"
+              required
+              autoComplete="address-level1"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-[#124734] mb-1">
+              City *
+            </label>
+            <input
+              id="city"
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Please enter city"
+              required
+              autoComplete="address-level2"
+              className="w-full border border-[#A7E1B2] rounded-md px-4 py-2 focus:outline-none focus:border-[#009846]"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full bg-[#124734] text-white py-2 rounded-md hover:bg-[#009846] transition"
+          aria-label="Create your ProspectEdu account"
+        >
+          Register
+        </button>
+
+        {/* Login Redirect */}
+        <p className="text-center text-sm text-[#5B7065] mt-4">
+          Have an account?{" "}
+          <Link to="/login" className="text-[#009846] font-medium hover:underline">
+            Login
+          </Link>
+        </p>
+      </fieldset>
     </form>
   );
 }

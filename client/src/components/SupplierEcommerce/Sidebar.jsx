@@ -36,7 +36,7 @@ export default function SupplierSidebar({ isCollapsed, setIsCollapsed }) {
   `}
 >
   <img
-    src="/src/assets/logo.jpg"
+    src="/src/assets/logo.webp"
     className="h-10 w-10 rounded-full"
   />
 

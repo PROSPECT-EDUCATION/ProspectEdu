@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import testImg from "../../assets/test1.jpg";
-import whyTestImg from "../../assets/WhyTest.png";
+import testImg from "../../assets/test1.webp";
+import whyTestImg from "../../assets/WhyTest.webp";
 
 import WhyTestSeries from "../../components/WhyTestSeries";
 

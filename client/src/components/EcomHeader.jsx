@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logoImg from "../assets/logo.jpg";
+import logoImg from "../assets/logo.webp";
 import { FiShoppingBag, FiHeart, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 import { FaShoppingBag, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { IoSearch, IoPersonCircle } from "react-icons/io5";

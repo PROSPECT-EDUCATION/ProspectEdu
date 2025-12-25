@@ -6,23 +6,23 @@ import "swiper/css/pagination";
 export default function BannerCarousel() {
   const banners = [
     {
-      img: "/src/assets/banner.png",
+      img: "/src/assets/banner.webp",
       alt: "RRB JE 2025-26 Batch",
     },
     {
-      img: "/src/assets/banner.png",
+      img: "/src/assets/banner.webp",
       alt: "UPSC Civil Services Online Course",
     },
     {
-      img: "/src/assets/banner.png",
+      img: "/src/assets/banner.webp",
       alt: "SSC JE Mechanical 2025 Batch",
     },
     {
-      img: "/src/assets/banner.png",
+      img: "/src/assets/banner.webp",
       alt: "GATE Preparation 2025",
     },
     {
-      img: "/src/assets/banner.png",
+      img: "/src/assets/banner.webp",
       alt: "Bilingual Courses for College Students",
     },
   ];

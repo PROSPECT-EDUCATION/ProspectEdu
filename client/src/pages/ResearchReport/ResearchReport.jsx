@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import researchImg from "../../assets/research.jpg";
+import researchImg from "../../assets/research.webp";
 
 const ResearchReport = () => {
   const [activeTab, setActiveTab] = useState("All");

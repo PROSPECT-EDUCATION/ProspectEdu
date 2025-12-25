@@ -1,8 +1,8 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import blogImg from "../../assets/blog.png";
-import whatsappIcon from "../../assets/whatsapp.png";
-import linkedinIcon from "../../assets/linkedin.png";
+import blogImg from "../../assets/blog.webp";
+import whatsappIcon from "../../assets/whatsapp.webp";
+import linkedinIcon from "../../assets/linkedin.webp";
 
 const blogData = {
   1: {

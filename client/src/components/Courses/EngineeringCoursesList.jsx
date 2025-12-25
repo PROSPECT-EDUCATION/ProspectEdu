@@ -1,8 +1,8 @@
 // src/components/Courses/EngineeringCoursesList.jsx
 import CourseCard from "../../pages/Courses/CourseCard";
-import course1 from "../../assets/it.png";
-import course2 from "../../assets/electrical.png";
-import course3 from "../../assets/it.png";
+import course1 from "../../assets/it.webp";
+import course2 from "../../assets/electrical.webp";
+import course3 from "../../assets/it.webp";
 
 // 👉 Export courses so other pages can read them
 export const engineeringCoursesData = [

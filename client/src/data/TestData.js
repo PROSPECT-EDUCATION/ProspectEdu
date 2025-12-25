@@ -1,4 +1,4 @@
-import testImg from "../assets/test1.jpg";
+import testImg from "../assets/test1.webp";
 
 export const tests = [
   {

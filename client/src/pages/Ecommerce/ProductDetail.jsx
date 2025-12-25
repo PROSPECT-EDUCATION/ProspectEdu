@@ -1,12 +1,12 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/logo.webp";
 import { FaFacebookF } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaWhatsapp } from "react-icons/fa";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
-import book from "../../assets/book.png";
+import book from "../../assets/book.webp";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FiHeart } from "react-icons/fi";

@@ -1,10 +1,10 @@
 // src/components/Courses/LawCoursesList.jsx
 import CourseCard from "../../pages/Courses/CourseCard";
-import course1 from "../../assets/law.png";
-import course2 from "../../assets/law.png";
-import course3 from "../../assets/law.png";
+import course1 from "../../assets/law.webp";
+import course2 from "../../assets/law.webp";
+import course3 from "../../assets/law.webp";
 
-// 👉 Exported data array
+// 👉 Exported data array (UNCHANGED)
 export const lawCoursesData = [
   {
     title: "LLB Foundation Batch",
@@ -38,10 +38,17 @@ export const lawCoursesData = [
 // 👉 Component accepts courses as props
 export default function LawCoursesList({ courses }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course, index) => (
-        <CourseCard key={index} course={course} />
-      ))}
-    </div>
+    <section
+      aria-label="Law courses list"
+      className="w-full"
+    >
+      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses.map((course) => (
+          <li key={course.title}>
+            <CourseCard course={course} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

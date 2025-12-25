@@ -1,13 +1,13 @@
-import syllabusIcon from "../assets/syllabus.png";
-import previousYearIcon from "../assets/previous.png";
-import currentAffairsIcon from "../assets/current.png";
-import caseStudiesIcon from "../assets/case.png";
-import projectGuideIcon from "../assets/project.png";
-import labManualIcon from "../assets/lab.png";
-import mindMapIcon from "../assets/mindmap.png";
-import infographicIcon from "../assets/infographic.png";
-import assignmentIcon from "../assets/assignment.png";
-import quizIcon from "../assets/quiz.png";
+import syllabusIcon from "../assets/syllabus.webp";
+import previousYearIcon from "../assets/previous.webp";
+import currentAffairsIcon from "../assets/current.webp";
+import caseStudiesIcon from "../assets/case.webp";
+import projectGuideIcon from "../assets/project.webp";
+import labManualIcon from "../assets/lab.webp";
+import mindMapIcon from "../assets/mindmap.webp";
+import infographicIcon from "../assets/infographic.webp";
+import assignmentIcon from "../assets/assignment.webp";
+import quizIcon from "../assets/quiz.webp";
 
 export default function StudyMaterialsSection() {
   const materials = [
@@ -24,19 +24,27 @@ export default function StudyMaterialsSection() {
   ];
 
   return (
-    <section className="w-full bg-[#F9FAFB] py-16">
+    <section 
+      className="w-full bg-[#F9FAFB] py-16" 
+      aria-labelledby="study-materials-heading"
+    >
       <div className="max-w-7xl mx-auto px-6 text-center">
+
         {/* Title */}
-        <h2 className="text-3xl font-heading font-semibold text-[#124734] mb-10">
+        <h2 
+          id="study-materials-heading" 
+          className="text-3xl font-heading font-semibold text-[#124734] mb-10"
+        >
           Study Materials
         </h2>
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {materials.map((item, i) => (
-            <div
+            <article
               key={i}
               className="bg-white rounded-xl shadow-sm border border-[#A7E1B2] p-6 hover:shadow-md hover:scale-[1.03] transition-all duration-300 group"
+              aria-label={`${item.title} study material`}
             >
               <div
                 className="rounded-lg flex flex-col items-center justify-center p-4"
@@ -44,14 +52,18 @@ export default function StudyMaterialsSection() {
               >
                 <img
                   src={item.icon}
-                  alt={item.title}
+                  alt={`${item.title} Study Material Icon`}
+                  loading="lazy"
+                  width="64"
+                  height="64"
                   className="w-16 h-16 mb-4 object-contain group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
+
               <h3 className="mt-3 font-heading text-[#124734] font-semibold text-base">
                 {item.title}
               </h3>
-            </div>
+            </article>
           ))}
         </div>
       </div>

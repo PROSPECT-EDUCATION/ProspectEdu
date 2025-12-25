@@ -1,5 +1,5 @@
 // src/pages/Student/AllCourses.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import StudentSidebar from "../../components/Student/StudentSidebar";
@@ -8,7 +8,7 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import EngineeringCoursesList, { engineeringCoursesData } from "../../components/Courses/EngineeringCoursesList";
 import ManagementCoursesList, { managementCoursesData } from "../../components/Courses/ManagementCoursesList";
 import LawCoursesList, { lawCoursesData } from "../../components/Courses/LawCoursesList";
-import MedicalCoursesList, {medicalCoursesData} from "../../components/Courses/MedicalCoursesList";
+import MedicalCoursesList, { medicalCoursesData } from "../../components/Courses/MedicalCoursesList";
 
 export default function AllCourses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -17,10 +17,21 @@ export default function AllCourses() {
 
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
+  // ✅ NOINDEX for student dashboard pages
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, follow";
+    document.head.appendChild(meta);
+
+    return () => document.head.removeChild(meta);
+  }, []);
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+
       {/* Sidebar */}
-      <div
+      <aside
         className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
@@ -29,7 +40,7 @@ export default function AllCourses() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
-      </div>
+      </aside>
 
       {/* Main Content Area */}
       <div
@@ -40,89 +51,97 @@ export default function AllCourses() {
         }}
       >
         {/* Topbar */}
-        <div
+        <header
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
           style={{ left: sidebarWidthPx, right: 0 }}
         >
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="All Courses" />
-        </div>
+        </header>
 
         {/* Sub-header */}
-        <div
+        <nav
           className="sticky top-[64px] bg-[#F9FAFB] border-b border-[#E6F4EC] px-6 py-3 z-[998]"
-          style={{ left: sidebarWidthPx }}
+          aria-label="Student breadcrumb and filters"
         >
-          <div className="w-full flex flex-col items-start">
-            {/* Breadcrumb */}
-            <p className="text-sm text-[#5B7065] mb-3">
-              <span
-                onClick={() => navigate("/student-dashboard")}
-                className="cursor-pointer hover:text-[#009846] hover:underline"
-              >
-                Home
-              </span>{" "}
-              / <span className="text-[#124734] font-medium">All Courses</span>
-            </p>
-
-            {/* Tabs */}
-            <div className="flex flex-wrap gap-4 border-b border-[#E6F4EC] w-full">
-  {[
-    ["all", "All Courses"],
-    ["engineering", "Engineering Courses"],
-    ["management", "Management Courses"],
-    ["law", "Law Courses"],
-    ["medical", "Medical Courses"]
-  ].map(([id, label]) => (
-    <button
-      key={id}
-      onClick={() => setActiveTab(id)}
-      className={`pb-2 text-sm font-medium whitespace-nowrap transition ${
-        activeTab === id
-          ? "text-[#009846] border-b-2 border-[#009846]"
-          : "text-[#5B7065]"
-      }`}
-    >
-      {label}
-    </button>
-  ))}
-</div>
-
+          {/* Breadcrumb */}
+          <div className="w-full flex flex-col items-start ">
+          <p className="text-sm text-[#5B7065] mb-3">
+            <span
+              onClick={() => navigate("/student-dashboard")}
+              className="cursor-pointer hover:text-[#009846] hover:underline"
+            >
+              Home
+            </span>{" "}
+            / <span className="text-[#124734] font-medium">All Courses</span>
+          </p>
           </div>
-        </div>
+
+          {/* Tabs */}
+          <div
+            className="flex flex-wrap gap-4 border-b border-[#E6F4EC]"
+            role="tablist"
+            aria-label="Course categories"
+          >
+            {[
+              ["all", "All Courses"],
+              ["engineering", "Engineering Courses"],
+              ["management", "Management Courses"],
+              ["law", "Law Courses"],
+              ["medical", "Medical Courses"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={activeTab === id}
+                aria-current={activeTab === id ? "true" : undefined}
+                onClick={() => setActiveTab(id)}
+                className={`pb-2 text-sm font-medium transition ${
+                  activeTab === id
+                    ? "text-[#009846] border-b-2 border-[#009846]"
+                    : "text-[#5B7065]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </nav>
 
         {/* Page Body */}
         <main
-          className="flex-1 overflow-y-auto px-6 py-0"
+          className="flex-1 overflow-y-auto px-6"
           style={{ marginTop: "80px" }}
+          aria-labelledby="student-all-courses-heading"
         >
-          {/* ALL COURSES */}
+          {/* Hidden H1 for semantics */}
+          <h1 id="student-all-courses-heading" className="sr-only">
+            All Student Courses
+          </h1>
+
           {activeTab === "all" && (
             <div className="space-y-10">
               <EngineeringCoursesList courses={engineeringCoursesData} />
               <ManagementCoursesList courses={managementCoursesData} />
               <LawCoursesList courses={lawCoursesData} />
+              <MedicalCoursesList courses={medicalCoursesData} />
             </div>
           )}
 
-          {/* Engineering Only */}
           {activeTab === "engineering" && (
             <EngineeringCoursesList courses={engineeringCoursesData} />
           )}
 
-          {/* Management Only */}
           {activeTab === "management" && (
             <ManagementCoursesList courses={managementCoursesData} />
           )}
 
-          {/* Law Only */}
           {activeTab === "law" && (
             <LawCoursesList courses={lawCoursesData} />
           )}
-          {activeTab==="medical" && (
-            <MedicalCoursesList courses={medicalCoursesData}/>
-          )
 
-          }
+          {activeTab === "medical" && (
+            <MedicalCoursesList courses={medicalCoursesData} />
+          )}
         </main>
       </div>
     </div>

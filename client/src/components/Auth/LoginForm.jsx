@@ -25,98 +25,119 @@ export default function LoginForm() {
       </p>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Phone
-              size={18}
-              className="absolute left-3 top-2.5 text-[#A7E1B2]"
-            />
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter your phone number"
-              required
-              className="w-full pl-10 pr-3 py-2 border border-[#A7E1B2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009846] text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="block text-sm font-medium text-[#124734] mb-1">
-            Password <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Lock
-              size={18}
-              className="absolute left-3 top-2.5 text-[#A7E1B2]"
-            />
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              className="w-full pl-10 pr-3 py-2 border border-[#A7E1B2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009846] text-sm"
-            />
-          </div>
-          <div className="text-right mt-1">
-            <a
-              href="#"
-              className="text-xs text-[#009846] hover:underline transition"
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        aria-label="Login form"
+        autoComplete="on"
+      >
+        <fieldset className="space-y-4">
+          {/* Phone */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-[#124734] mb-1"
             >
-              Forgot Password?
-            </a>
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Phone
+                size={18}
+                className="absolute left-3 top-2.5 text-[#A7E1B2]"
+                aria-hidden="true"
+              />
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+                required
+                inputMode="numeric"
+                autoComplete="tel"
+                className="w-full pl-10 pr-3 py-2 border border-[#A7E1B2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009846] text-sm"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Remember Me */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="remember"
-            className="h-4 w-4 text-[#009846] border-gray-300 rounded"
-          />
-          <label htmlFor="remember" className="text-sm text-[#5B7065]">
-            Remember me
-          </label>
-        </div>
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-[#124734] mb-1"
+            >
+              Password <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Lock
+                size={18}
+                className="absolute left-3 top-2.5 text-[#A7E1B2]"
+                aria-hidden="true"
+              />
+              <input
+                id="password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+                className="w-full pl-10 pr-3 py-2 border border-[#A7E1B2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009846] text-sm"
+              />
+            </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300"
-        >
-          Log In
-        </button>
+            <div className="text-right mt-1">
+              <a
+                href="#"
+                className="text-xs text-[#009846] hover:underline transition"
+              >
+                Forgot Password?
+              </a>
+            </div>
+          </div>
 
-        {/* Sign Up */}
-    <p className="text-sm text-center text-[#5B7065] mt-4">
-  Don’t have an account?{" "}
-  <Link
-    to="/#dashboard"
-    className="text-[#009846] font-medium hover:underline"
-    onClick={() => {
-      setTimeout(() => {
-        const section = document.getElementById("dashboard");
-        if (section) {
-          section.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 300);
-    }}
-  >
-    Sign Up
-  </Link>
-</p>
+          {/* Remember Me */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="remember"
+              className="h-4 w-4 text-[#009846] border-gray-300 rounded"
+            />
+            <label htmlFor="remember" className="text-sm text-[#5B7065]">
+              Remember me
+            </label>
+          </div>
 
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300"
+            aria-label="Log in to your ProspectEdu account"
+          >
+            Log In
+          </button>
+
+          {/* Sign Up */}
+          <p className="text-sm text-center text-[#5B7065] mt-4">
+            Don’t have an account?{" "}
+            <Link
+              to="/#dashboard"
+              className="text-[#009846] font-medium hover:underline"
+              onClick={() => {
+                setTimeout(() => {
+                  const section = document.getElementById("dashboard");
+                  if (section) {
+                    section.scrollIntoView({ behavior: "smooth" });
+                  }
+                }, 300);
+              }}
+            >
+              Sign Up
+            </Link>
+          </p>
+        </fieldset>
       </form>
     </div>
   );

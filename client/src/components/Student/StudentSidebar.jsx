@@ -39,7 +39,7 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
           }`}
         >
           <img
-            src="/src/assets/logo.png.jpeg"
+            src="/src/assets/logo.png.webp"
             alt="ProspectEdu Logo"
             className="h-10 w-10 rounded-full object-cover border border-[#A7E1B2]/50"
           />

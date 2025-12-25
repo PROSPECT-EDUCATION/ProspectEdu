@@ -103,7 +103,7 @@ const toggle = () => {
           className="p-[2px] rounded-full bg-[#A7E1B2]/40 hover:bg-[#009846]/30 cursor-pointer transition inline-block"
         >
           <img
-            src="/src/assets/profile.png"
+            src="/src/assets/profile.webp"
             alt="User Avatar"
             className="h-8 w-8 rounded-full object-cover"
           />

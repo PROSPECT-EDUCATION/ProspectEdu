@@ -1,7 +1,7 @@
-import itIcon from "../assets/it.png";
-import lawIcon from "../assets/law.png";
-import electricalIcon from "../assets/electrical.png";
-import medicalIcon from "../assets/medical.png"
+import itIcon from "../assets/it.webp";
+import lawIcon from "../assets/law.webp";
+import electricalIcon from "../assets/electrical.webp";
+import medicalIcon from "../assets/medical.webp";
 import { Link } from "react-router-dom";
 
 export default function CategorySection() {
@@ -16,42 +16,48 @@ export default function CategorySection() {
       title: "Law",
       icon: lawIcon,
       description: "Understand the principles of law and legal studies.",
-      path: "/courses/law"
+      path: "/courses/law",
     },
     {
       title: "Management",
       icon: electricalIcon,
       description: "Dive into power systems and Management.",
-      path: "/courses/management"
+      path: "/courses/management",
     },
     {
       title: "Medical",
       icon: medicalIcon,
-      description: "Understand how human body works.",
-      path: "/courses/medical"
-    }
+      description: "Understand how the human body works.",
+      path: "/courses/medical",
+    },
   ];
 
   return (
-    <section className="w-full bg-[#F9FAFB] py-16">
+    <section className="w-full bg-[#F9FAFB] py-16" aria-labelledby="category-heading">
       <div className="max-w-6xl mx-auto px-6 text-center">
-        {/* Heading */}
-        <h2 className="text-3xl font-heading font-semibold text-[#124734] mb-10">
+
+        {/* Section Heading */}
+        <h2 id="category-heading" className="text-3xl font-heading font-semibold text-[#124734] mb-10">
           Categories
         </h2>
 
         {/* Category Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {categories.map((cat, i) => (
-            <div
+            <article
               key={i}
-              className="bg-white border border-[#A7E1B2] rounded-xl p-8 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.03] group"
+              className="bg-white border border-[#A7E1B2] rounded-xl p-8 shadow-sm hover:shadow-md 
+                         transition-all duration-300 hover:scale-[1.03] group"
             >
               <div className="flex flex-col items-center text-center">
+
                 {/* Icon */}
                 <img
                   src={cat.icon}
-                  alt={cat.title}
+                  alt={`${cat.title} Category Icon`}
+                  loading="lazy"
+                  width="64"
+                  height="64"
                   className="w-16 h-16 mb-4 object-contain group-hover:scale-110 transition-transform duration-300"
                 />
 
@@ -66,13 +72,17 @@ export default function CategorySection() {
                 </p>
 
                 {/* Button */}
-                <Link 
-                to= {cat.path}
-                className="mt-5 px-5 py-2 rounded-full border border-[#009846] text-[#009846] text-sm font-medium hover:bg-[#009846] hover:text-white transition">
+                <Link
+                  to={cat.path}
+                  aria-label={`Explore ${cat.title} Courses`}
+                  className="mt-5 px-5 py-2 rounded-full border border-[#009846] 
+                             text-[#009846] text-sm font-medium hover:bg-[#009846] 
+                             hover:text-white transition"
+                >
                   Explore
                 </Link>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

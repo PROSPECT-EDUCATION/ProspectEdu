@@ -1,10 +1,10 @@
 // src/components/Courses/ManagementCoursesList.jsx
 import CourseCard from "../../pages/Courses/CourseCard";
-import course1 from "../../assets/it.png";
-import course2 from "../../assets/it.png";
-import course3 from "../../assets/it.png";
+import course1 from "../../assets/it.webp";
+import course2 from "../../assets/it.webp";
+import course3 from "../../assets/it.webp";
 
-// 👉 Exported data array
+// 👉 Exported data array (UNCHANGED)
 export const managementCoursesData = [
   {
     title: "MBA Foundation Program",
@@ -38,10 +38,17 @@ export const managementCoursesData = [
 // 👉 Component accepts courses as props
 export default function ManagementCoursesList({ courses }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course, index) => (
-        <CourseCard key={index} course={course} />
-      ))}
-    </div>
+    <section
+      aria-label="Management courses list"
+      className="w-full"
+    >
+      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses.map((course) => (
+          <li key={course.title}>
+            <CourseCard course={course} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

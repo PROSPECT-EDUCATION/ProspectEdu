@@ -1,5 +1,5 @@
 import React from "react";
-import hiringImg from "../../assets/hiring2.jpeg";
+import hiringImg from "../../assets/hiring2.webp";
 import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";
 

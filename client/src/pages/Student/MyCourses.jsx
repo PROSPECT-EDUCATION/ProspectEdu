@@ -1,5 +1,5 @@
 // src/pages/Student/MyCourses.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
@@ -13,12 +13,22 @@ export default function MyCourses() {
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
   const courses = [];
-  const currentList = courses; // placeholder logic
+  const currentList = courses;
+
+  // ✅ SEO: prevent indexing of private page
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, follow";
+    document.head.appendChild(meta);
+
+    return () => document.head.removeChild(meta);
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
       {/* Sidebar */}
-      <div
+      <aside
         className={`${
           isCollapsed ? "w-20" : "w-64"
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
@@ -27,31 +37,32 @@ export default function MyCourses() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
-      </div>
+      </aside>
 
       {/* Main Section */}
       <div
-        className={`flex flex-col flex-1 h-screen transition-all duration-300`}
+        className="flex flex-col flex-1 h-screen transition-all duration-300"
         style={{
           marginLeft: sidebarWidthPx,
           width: `calc(100vw - ${sidebarWidthPx}px)`,
         }}
       >
         {/* Topbar */}
-        <div
-          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px] transition-all duration-300"
+        <header
+          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
           style={{ left: sidebarWidthPx, right: 0 }}
         >
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="My Courses" />
-        </div>
+        </header>
 
         {/* Sub-header (breadcrumb + tabs) */}
-        <div
+        <nav
           className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] py-3"
           style={{ left: sidebarWidthPx }}
+          aria-label="My courses navigation"
         >
           <div className="w-full flex flex-col items-start pl-5">
-            {/* Breadcrumb */}
+            {/* Breadcrumb — UNCHANGED */}
             <p className="text-sm text-[#5B7065] mb-2">
               <span
                 className="hover:underline hover:text-[#009846] cursor-pointer transition-colors"
@@ -71,7 +82,7 @@ export default function MyCourses() {
               </span>
             </p>
 
-            {/* Tabs */}
+            {/* Tabs — UNCHANGED */}
             <div className="flex gap-6 border-b border-[#E6F4EC]">
               <button
                 className={`pb-2 text-sm font-medium transition-colors duration-300 ${
@@ -118,16 +129,19 @@ export default function MyCourses() {
               </button>
             </div>
           </div>
-        </div>
+        </nav>
 
         {/* Body */}
         <main
           className="flex-1 overflow-y-auto px-4 md:px-6 py-8"
-          style={{
-            marginTop: "128px",
-            height: "calc(100vh - 128px)",
-          }}
+          style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}
+          aria-labelledby="my-courses-heading"
         >
+          {/* Hidden semantic heading */}
+          <h1 id="my-courses-heading" className="sr-only">
+            Student Enrolled Courses
+          </h1>
+
           <div className="w-full max-w-6xl mx-auto">
             {currentList.length === 0 ? (
               <RefreshComponent message="You haven't purchased any courses!" />

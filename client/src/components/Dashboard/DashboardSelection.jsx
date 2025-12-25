@@ -4,12 +4,10 @@ import { useNavigate } from "react-router-dom";
 export default function DashboardSelection() {
   const navigate = useNavigate();
 
-  // 💡 This function navigates to signup with selected role
   const handleRoleClick = (role) => {
     navigate("/signup", { state: { role } });
   };
 
-  // 🎓 Define roles here
   const roles = [
     { title: "I'm a Learner", color: "#A7E1B2" },
     { title: "I'm a Teacher", color: "#A7E1B2" },
@@ -18,15 +16,23 @@ export default function DashboardSelection() {
   ];
 
   return (
-    <section id="dashboard" className="w-full bg-[#FFFFFF] py-20">
+    <section
+      id="dashboard"
+      className="w-full bg-[#FFFFFF] py-20"
+      aria-labelledby="dashboard-heading"
+    >
       <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
 
-        {/* 🌿 Left: Image + Text */}
-        <div className="flex flex-col items-center text-center">
+        {/* Article for meaning */}
+        <article className="flex flex-col items-center text-center">
+
           <img
-            src="/src/assets/dashboard-banner.avif"
+            src="/src/assets/dashboard-banner.webp"
             alt="Learning Illustration"
+            width="500"
+            height="400"
             className="w-3/4 md:w-2/3 mx-auto"
+            loading="lazy"
           />
 
           <h3 className="font-heading text-lg font-semibold mt-8 text-[#124734]">
@@ -37,20 +43,21 @@ export default function DashboardSelection() {
             Regardless of who you are, mastering just one more skill with
             ProspectEdu can open doors to endless learning opportunities.
           </p>
-        </div>
+        </article>
 
-        {/* 💚 Right: Role Buttons */}
         <div>
-          <h2 className="text-3xl font-heading font-semibold text-[#124734] mb-6">
+          <h2 className="text-3xl font-heading font-semibold text-[#124734] mb-6" id="dashboard-heading">
             Login as
           </h2>
+
           <div className="flex flex-col gap-4">
             {roles.map((role, i) => (
               <RoleCard
                 key={i}
                 title={role.title}
                 color={role.color}
-                onClick={() => handleRoleClick(role.title)} 
+                aria-label={`Login as ${role.title}`}
+                onClick={() => handleRoleClick(role.title)}
               />
             ))}
           </div>

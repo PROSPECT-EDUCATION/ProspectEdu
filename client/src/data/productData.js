@@ -1,6 +1,6 @@
 // Import images
-import book from "../assets/book.jpg";
-import bag from "../assets/bag.jpg";
+import book from "../assets/book.webp";
+import bag from "../assets/bag.webp";
 
 // -------------------- TRENDING / BOOKS --------------------
 export const trendingProducts = [
