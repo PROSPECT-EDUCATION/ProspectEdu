@@ -2,16 +2,17 @@ import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
 import { useWishlist } from "../../context/WishlistContext";
 import { useNavigate } from "react-router-dom";
+import Footer from "../../components/Footer";
 
 const Wishlist = () => {
   const { wishlist, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 pb-20 text-left">
         {/* Breadcrumb */}
         <p className="text-gray-600 text-sm md:text-md mb-5">
           <span
@@ -47,6 +48,7 @@ const Wishlist = () => {
           />
         )}
       </div>
+      <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

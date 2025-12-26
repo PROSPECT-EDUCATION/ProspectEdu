@@ -54,11 +54,11 @@ export default function Footer() {
             Company
           </h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/about" className="hover:text-[#A7E1B2]">About Us</Link></li>
-            <li><Link to="/contact" className="hover:text-[#A7E1B2]">Contact</Link></li>
-            <li><Link to="/careers" className="hover:text-[#A7E1B2]">Careers</Link></li>
+            <li><Link to="/about-us" className="hover:text-[#A7E1B2]">About Us</Link></li>
+            <li><Link to="/contact-us" className="hover:text-[#A7E1B2]">Contact-Us</Link></li>
+            <li><Link to="/career" className="hover:text-[#A7E1B2]">Careers</Link></li>
             <li><Link to="/blog" className="hover:text-[#A7E1B2]">Blog</Link></li>
-            <li><Link to="/faqs" className="hover:text-[#A7E1B2]">FAQs</Link></li>
+           
           </ul>
         </nav>
 
@@ -80,11 +80,16 @@ export default function Footer() {
             Learning Resources
           </h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/scholarships" className="hover:text-[#A7E1B2]">Scholarships</Link></li>
-            <li><Link to="/research" className="hover:text-[#A7E1B2]">Research</Link></li>
+            <li><Link to="/ecommerce-home" className="hover:text-[#A7E1B2]">Ecommerce</Link></li>
+            <li><Link to="/scholarship" className="hover:text-[#A7E1B2]">Scholarships</Link></li>
+            <li><Link to="/research-report" className="hover:text-[#A7E1B2]">Research</Link></li>
             <li><Link to="/dashboard" className="hover:text-[#A7E1B2]">Student Dashboard</Link></li>
             <li><Link to="/parent-dashboard" className="hover:text-[#A7E1B2]">Parent Dashboard</Link></li>
+            <li><Link to="/ask-doubt" className="hover:text-[#A7E1B2]">Ask Doubt</Link></li>
             <li><Link to="/news" className="hover:text-[#A7E1B2]">News & Updates</Link></li>
+            <li><Link to="/donate" className="hover:text-[#A7E1B2]">Donate</Link></li>
+             <li><Link to="/achievers" className="hover:text-[#A7E1B2]">Achievers</Link></li>
+
           </ul>
         </nav>
       </div>

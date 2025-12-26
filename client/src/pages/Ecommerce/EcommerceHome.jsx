@@ -7,6 +7,9 @@ import img2 from "../../assets/EcommerceHome-carousel/c1.webp";
 import img3 from "../../assets/EcommerceHome-carousel/c1.webp";
 import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
+import Footer from "../../components/Footer";
+
+
 import {
   trendingProducts,
   merchandiseProducts,
@@ -14,7 +17,8 @@ import {
   LawProducts,
   ManagementProducts,
   MedicalProducts
-} from "../../data/ProductData";
+} from "../../data/productData";
+
 
 const categories = [
   { name: "Merchandise", color: "#800040", icon: "👕" },
@@ -57,10 +61,10 @@ const Ecommerce = () => {
   const goToSlide = (index) => setCurrent(index);
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <section className="max-w-7xl mx-auto px-4 mt-5">
+      <section className="max-w-7xl mx-auto px-4 mt-5 pb-20 text-left">
         {/* ---------- CAROUSEL ---------- */}
         <div className="relative w-full overflow-hidden rounded-2xl shadow-lg">
 
@@ -205,6 +209,7 @@ const Ecommerce = () => {
           </button>
         </div>
       </section>
+    <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

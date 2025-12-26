@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
 import { useOrders } from "../../context/OrderContext";
+import Footer from "../../components/Footer";
 
 const orderOptions = [
   "All Orders",
@@ -93,10 +94,10 @@ const MyOrder = () => {
         );
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-5 text-sm md:text-base">
           <span className="cursor-pointer text-[#124734] hover:underline">
@@ -265,15 +266,18 @@ const MyOrder = () => {
                 </div>
 
                 {/* EMPTY ORDERS NOTE */}
-                <div className="flex flex-col items-center mt-16">
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/17009/17009305.png"
-                    className="w-32 md:w-52 opacity-70"
-                  />
-                  <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">
-                    No Orders
-                  </p>
-                </div>
+               {filteredOrders.length === 0 && (
+  <div className="flex flex-col items-center mt-16">
+    <img
+      src="https://cdn-icons-png.flaticon.com/512/17009/17009305.png"
+      className="w-32 md:w-52 opacity-70"
+    />
+    <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">
+      No Orders
+    </p>
+  </div>
+)}
+
               </div>
             )}
 
@@ -580,6 +584,7 @@ const MyOrder = () => {
           </div>
         </div>
       )}
+      <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

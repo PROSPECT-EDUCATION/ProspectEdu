@@ -11,15 +11,46 @@ export default function Navbar() {
   const toggleMenu = (menu) =>
     setActiveMenu(activeMenu === menu ? null : menu);
 
+  // ------------------ UPDATED LINKS WITH CUSTOM ROUTES ------------------
   const links = [
-    { label: "Home" },
-    { label: "Courses", dropdown: ["Engineering", "Law", "Management", "Medical"] },
-    { label: "Test & Learning", dropdown: ["Active Test Series 1", "Active Test Series 2"] },
-    { label: "Scholarship", dropdown: ["Active Scholarship 1", "Active Scholarship 2"] },
-    { label: "Research" },
-    { label: "E-commerce" },
-    { label: "Donation" },
-    { label: "More", dropdown: ["Parent Company", "Blog", "About Us", "News", "Contact Us"] },
+    { label: "Home", to: "/" },
+
+    {
+      label: "Courses",
+      dropdown: [
+        { label: "Engineering", to: "/courses/engineering" },
+        { label: "Law", to: "/courses/law" },
+        { label: "Management", to: "/courses/management" },
+        { label: "Medical", to: "/courses/medical" },
+      ],
+    },
+
+    {
+      label: "Test & Learning", to:"/test-learning "
+     
+    },
+
+    {
+      label: "Scholarship", to:"/scholarship"
+     
+    },
+     
+    { label: "Research", to: "/research-report" },
+    { label: "E-commerce", to: "/ecommerce-home" },
+    { label: "Donation", to: "/donate" },
+
+    {
+      label: "More",
+      dropdown: [
+        { label: "Parent Company", to: "/parent-company" },
+        { label: "Ask-Doubt", to: "/ask-doubt" },
+        { label: "Blog", to: "/blog" },
+        { label: "About Us", to: "/about-us" },
+        { label: "News", to: "/news" },
+        { label: "Contact Us", to: "/contact-us" },
+        { label: "Achievers", to: "/achievers" },
+      ],
+    },
   ];
 
   return (
@@ -38,36 +69,32 @@ export default function Navbar() {
           </h1>
         </Link>
 
-        {/* ----------- DESKTOP NAV (unchanged) -------------- */}
+        {/* ----------- DESKTOP MENU ----------- */}
         <nav className="hidden lg:flex items-center justify-center gap-6 font-medium text-[#124734] font-body">
           {links.map((item) =>
             item.dropdown ? (
               <div key={item.label} className="relative group">
+                {/* Parent Button */}
                 <button
                   onClick={() => toggleMenu(item.label)}
                   className="flex items-center gap-1 whitespace-nowrap hover:text-[#009846] transition"
                 >
                   {item.label} <ChevronDown size={15} />
                 </button>
+
+                {/* Dropdown */}
                 {activeMenu === item.label && (
                   <DropdownMenu items={item.dropdown} />
                 )}
               </div>
-            ) : item.label === "Home" ? (
+            ) : (
               <Link
                 key={item.label}
-                to="/"
-                className="whitespace-nowrap hover:text-[#009846] transition"
-              >
-                Home
-              </Link>
-            ) : (
-              <button
-                key={item.label}
+                to={item.to}
                 className="whitespace-nowrap hover:text-[#009846] transition"
               >
                 {item.label}
-              </button>
+              </Link>
             )
           )}
         </nav>
@@ -80,10 +107,8 @@ export default function Navbar() {
           Login
         </Link>
 
-        {/* ----------- MOBILE RIGHT SIDE (Login + Menu) -------------- */}
+        {/* ----------- MOBILE MENU ICON ----------- */}
         <div className="flex items-center gap-4 lg:hidden">
-
-          {/* Mobile Login Button */}
           <Link
             to="/login"
             className="border border-[#009846] text-[#009846] rounded-full px-4 py-1.5 text-sm font-medium hover:bg-[#009846] hover:text-white transition"
@@ -91,33 +116,30 @@ export default function Navbar() {
             Login
           </Link>
 
-          {/* Mobile Menu Toggle */}
           <button
             className="text-[#124734]"
-            onClick={() => setMobileOpen((prev) => !prev)}
+            onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
       </div>
 
-      {/* ----------- MOBILE MENU DROPDOWN (ADDED) -------------- */}
+      {/* ----------- MOBILE MENU ----------- */}
       {mobileOpen && (
         <div className="lg:hidden bg-white border-t border-[#A7E1B2] shadow-sm px-6 py-4 space-y-3">
 
           {links.map((item) => (
             <div key={item.label}>
-              {/* If NO dropdown */}
               {!item.dropdown ? (
                 <Link
-                  to={item.label === "Home" ? "/" : `/${item.label.toLowerCase()}`}
+                  to={item.to}
                   className="block py-2 text-[#124734] font-medium"
                 >
                   {item.label}
                 </Link>
               ) : (
                 <>
-                  {/* Dropdown Parent */}
                   <button
                     onClick={() => toggleMenu(item.label)}
                     className="flex justify-between items-center w-full py-2 font-medium text-[#124734]"
@@ -125,22 +147,22 @@ export default function Navbar() {
                     {item.label}
                     <ChevronDown
                       size={18}
-                      className={`${
+                      className={`transition ${
                         activeMenu === item.label ? "rotate-180" : ""
-                      } transition`}
+                      }`}
                     />
                   </button>
 
-                  {/* Dropdown Items */}
+                  {/* Mobile Dropdown */}
                   {activeMenu === item.label && (
                     <div className="ml-4 mt-2 space-y-2">
                       {item.dropdown.map((d, i) => (
                         <Link
                           key={i}
-                          to={`/${d.toLowerCase().replace(/\s+/g, "-")}`}
+                          to={d.to}
                           className="block text-sm text-[#5B7065] hover:text-[#009846] transition"
                         >
-                          {d}
+                          {d.label}
                         </Link>
                       ))}
                     </div>
@@ -149,8 +171,6 @@ export default function Navbar() {
               )}
             </div>
           ))}
-
-          {/* (Mobile login is now OUTSIDE, so we removed the login button here) */}
         </div>
       )}
     </header>

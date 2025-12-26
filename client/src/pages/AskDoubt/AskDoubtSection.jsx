@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import questionIllustration from "../../assets/question.webp";
-
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 const AskDoubtSection = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -57,31 +59,18 @@ const AskDoubtSection = () => {
   };
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
-      {/* Header */}
-      <div className="bg-[#1E5631] text-white w-full py-16">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
-          
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-3 text-gray-200">Home &gt; Ask Question</p>
-            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
-              Go from questioning to understanding!
-            </h1>
-            <p className="text-[#B7F399] text-lg font-medium">
-              Discover the benefits of Ask a Doubt!
-            </p>
-          </div>
-
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <img
-              src={questionIllustration}
-              alt="Ask a Doubt Illustration"
-              className="w-[200px] md:w-[250px] rounded-lg shadow-md"
-            />
-          </div>
-        </div>
-      </div>
+   
+       <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+            <Navbar />
+      
+            {/* ---------------- Header Section ---------------- */}
+      
+            <HeaderSection
+                page="Ask Question"
+                title="Go from questioning to understanding!"
+                subtitle="Discover the benefits of Ask a Doubt!"
+                image={questionIllustration}
+              />
 
       {/* Page Heading */}
       <div className="text-center mt-10 mb-8 px-4">
@@ -91,7 +80,7 @@ const AskDoubtSection = () => {
       </div>
 
       {/* Form */}
-      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-2xl p-6 md:p-12">
+      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-2xl p-6 md:p-12 text-left">
         <h3 className="text-xl font-semibold mb-3 text-[#1E5631]">
           We are here to solve your Doubts
         </h3>
@@ -262,6 +251,7 @@ const AskDoubtSection = () => {
           </div>
         </div>
       </div>
+      <div className="pt-10"><Footer /></div> 
 
     </section>
   );

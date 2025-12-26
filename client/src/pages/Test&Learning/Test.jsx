@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import testImg from "../../assets/test1.webp";
 import whyTestImg from "../../assets/WhyTest.webp";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 import WhyTestSeries from "../../components/WhyTestSeries";
 import { useNavigate } from "react-router-dom";
@@ -21,35 +24,20 @@ const TestPage = () => {
   });
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+  
+      <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+      <Navbar />
 
-      {/* Header */}
-      <div className="bg-[#1E5631] text-white w-full py-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
-          
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-3 opacity-80">Home &gt; Test & Learning</p>
+      {/* ---------------- Header Section ---------------- */}
 
-            <h1 className="text-3xl md:text-4xl font-semibold mb-4 leading-snug">
-              Explore Test & Learning Resources
-            </h1>
+      <HeaderSection
+          page="Test & Learning"
+          title=" Explore Test & Learning Resources"
+          subtitle="Strengthen your academic foundation with our expert-curated learning
+              and test materials designed for Engineering, Law, and Management students."
+          image={testImg}
+        />
 
-            <p className="text-[#B7F399] text-lg font-medium">
-              Strengthen your academic foundation with our expert-curated learning
-              and test materials designed for Engineering, Law, and Management students.
-            </p>
-          </div>
-
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <img
-              src={testImg}
-              alt="Test and Learning"
-              className="w-[200px] md:w-[260px] rounded-2xl shadow-lg"
-            />
-          </div>
-
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="bg-white shadow-md rounded-2xl -mt-8 mx-auto max-w-6xl flex flex-col md:flex-row flex-wrap justify-between items-center px-6 py-4 gap-4">
@@ -149,7 +137,7 @@ const TestPage = () => {
           FAQ's
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-4 text-left">
           {[
             {
               question: "How many mock tests are included?",
@@ -172,12 +160,12 @@ const TestPage = () => {
                 {faq.question}
                 <span className="transition-transform group-open:rotate-180 text-[#1E5631]">▼</span>
               </summary>
-              <p className="text-gray-600 mt-3">{faq.answer}</p>
+              <p className="text-gray-600 mt-3 font-semibold ">{faq.answer}</p>
             </details>
           ))}
         </div>
       </div>
-
+     <div className="pt-10"><Footer /></div>
     </section>
   );
 };

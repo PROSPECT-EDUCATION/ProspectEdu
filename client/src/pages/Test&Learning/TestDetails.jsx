@@ -2,6 +2,10 @@ import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import testImg from "../../assets/test1.webp";
 import whyTestImg from "../../assets/WhyTest.webp";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
+
 
 import WhyTestSeries from "../../components/WhyTestSeries";
 
@@ -48,50 +52,34 @@ const TestDetails = () => {
   };
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
+    <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+      <Navbar />
       {/* Header */}
-      <div className="bg-[#1E5631] text-white w-full py-16">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
-          
-          {/* Left */}
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-3 opacity-80">Home &gt; Test Series &gt; {test.title}</p>
+     <HeaderSection
+  page={`Test Series > ${test.title}`}
+  title={test.title}
+  subtitle={
+    <div>
+      <p className="text-[#B7F399] text-lg font-medium mb-4">
+        What’s Included
+      </p>
 
-            <h1 className="text-3xl md:text-4xl font-semibold mb-4">{test.title}</h1>
-
-            <p className="text-[#B7F399] text-lg font-medium mb-4">What’s Included</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {includedItems.map((item, index) => (
-                <div key={index} className="flex items-center text-sm text-white gap-2">
-                  <span className="text-xl">{item.icon}</span>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
+      <div className="grid grid-cols-2 gap-y-4 gap-x-12 text-white max-w-xl">
+        {includedItems.map((item, index) => (
+          <div key={index} className="flex items-center gap-3 text-sm">
+            <span className="text-xl">{item.icon}</span>
+            <span className="font-medium">{item.label}</span>
           </div>
-
-          {/* Right */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end relative">
-            <img
-              src={testImg}
-              alt={test.title}
-              className="w-[250px] md:w-[300px] rounded-2xl shadow-lg"
-            />
-            <span
-              className={`absolute top-2 right-4 text-xs font-semibold px-3 py-1 rounded-md text-white ${
-                test.type === "Online" ? "bg-[#124734]" : "bg-red-600"
-              }`}
-            >
-              {test.type}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
+    </div>
+  }
+  image={testImg}
+/>
+
 
       {/* Lower Section */}
-      <div className="max-w-7xl mx-auto mt-12 px-6 md:px-8 flex flex-col md:flex-row gap-8">
+      <div className="max-w-7xl mx-auto mt-12 px-6 md:px-8 flex flex-col md:flex-row gap-8 text-left">
 
         {/* Schedule */}
         <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-2/3">
@@ -120,7 +108,7 @@ const TestDetails = () => {
         </div>
 
         {/* Right Card */}
-        <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-1/3 h-fit">
+        <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-1/3 h-fit text-left">
           <h3 className="text-2xl md:text-3xl font-semibold mb-4">{test.title}</h3>
 
           <p className="text-gray-700 text-base mb-2">
@@ -145,15 +133,7 @@ const TestDetails = () => {
       {/* Why Test Series */}
       <WhyTestSeries image={whyTestImg} />
 
-      {/* Back Button */}
-      <div className="text-center my-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="border border-[#1E5631] text-[#1E5631] px-6 py-2 rounded-full font-medium hover:bg-[#1E5631] hover:text-white transition"
-        >
-          ← Back
-        </button>
-      </div>
+      <div className="pt-10"><Footer /></div>
     </section>
   );
 };

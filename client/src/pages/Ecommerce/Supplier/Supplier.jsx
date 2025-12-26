@@ -33,7 +33,7 @@ export default function Supplier() {
   const bestSelling = sampleProducts[0];
 
   return (
-    <div className="flex bg-[#F9FAFB] min-h-screen">
+    <div className="flex bg-[#F9FAFB] min-h-screen text-left">
 
       {/* SIDEBAR */}
       <SupplierSidebar

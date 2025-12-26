@@ -4,46 +4,30 @@ import careerImg from "../../assets/carrer2.webp";
 
 import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 
 
 const AboutUs = () => {
     const navigate = useNavigate();
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
-      {/* ---------------- Header (Same as Research Report) ---------------- */}
-      <div className="bg-[#1E5631] text-white w-full py-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-8">
-
-          {/* Left Content */}
-          <div className="w-full md:w-1/2 pr-8">
-            <p className="text-sm mb-3 text-gray-200">Home &gt; About-Us</p>
-
-            <h1 className="font-semibold text-4xl mb-3 leading-snug">
-              Welcome to the Future of Education
-            </h1>
-
-            <p className="text-[#B7F399] text-lg font-medium">
-              Revolutionizing learning through innovative technology <br />
-              and personalized experiences.
-            </p>
-
-        
-          </div>
-
-          {/* Right Image */}
-          <div className="w-full md:w-1/2 flex justify-end mt-8 md:mt-0">
-            <img
-              src={aboutImg}
-              alt="About Us Illustration"
-              className="max-w-[18rem] md:w-[350px] rounded-lg shadow-md"
-            />
-          </div>
-        </div>
-      </div>
+    
+      <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+                  <Navbar />
+            
+                  {/* ---------------- Header Section ---------------- */}
+            
+                  <HeaderSection
+                      page=" About-Us"
+                      title="Welcome to the Future of Education"
+                      subtitle="Revolutionizing learning through innovative technology 
+              and personalized experiences."
+                      image={aboutImg}
+                    />
       {/* ---------------- Founder’s Message Section ---------------- */}
-<div className="max-w-7xl mx-auto px-8 py-16 text-[#124734] font-[Open_Sans,sans-serif]">
+<div className="max-w-7xl mx-auto px-8 py-16 text-[#124734] font-[Open_Sans,sans-serif] text-left">
 
   {/* Heading */}
   <h2 className="text-3xl font-bold mb-2">Founder’s Message</h2>
@@ -65,6 +49,7 @@ const AboutUs = () => {
 
       <p className="text-gray-700 mb-4 leading-relaxed">
         "शिक्षा का अर्थ है उस रोशनी को जलाना, जो अंधेरे में भी रास्ता दिखाए।"
+        <br />
         <span className="text-sm text-gray-500"> (Education means igniting the light that shows the way even in darkness.)</span>
       </p>
 
@@ -100,7 +85,7 @@ const AboutUs = () => {
 </div>
 </div>
 {/* ---------------- About Prospect Education Section ---------------- */}
-<div className="max-w-7xl mx-auto px-8 py-16 text-[#124734] font-[Open_Sans,sans-serif]">
+<div className="max-w-7xl mx-auto px-8 py-16 text-[#124734] font-[Open_Sans,sans-serif] text-left">
 
   {/* Heading */}
   <h2 className="text-3xl font-bold mb-2">About Prospect Education</h2>
@@ -156,7 +141,7 @@ const AboutUs = () => {
 </div>
 </div>
 {/* ---------------- Education for Everyone Section ---------------- */}
-<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif]">
+<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif] text-left">
 
   {/* Section Heading */}
   <h2 className="text-3xl font-bold mb-2">Education for Everyone</h2>
@@ -219,7 +204,7 @@ const AboutUs = () => {
   </div>
 </div>
 {/* ---------------- Mission and Vision Section ---------------- */}
-<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif]">
+<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif] text-left">
 
   {/* Section Heading */}
   <h2 className="text-3xl font-bold mb-2 ">Our Mission and Vision</h2>
@@ -274,7 +259,7 @@ const AboutUs = () => {
   </div>
 </div>
 {/* ---------------- Career at Prospect Edu Section ---------------- */}
-<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif]">
+<div className="max-w-7xl mx-auto px-8 py-20 text-[#124734] font-[Open_Sans,sans-serif] text-left">
 
   {/* Heading */}
   <h2 className="text-3xl font-bold mb-2">Career at Prospect Edu.</h2>
@@ -314,11 +299,14 @@ const AboutUs = () => {
   </div>
 </div>
   {/* your career sections */}
-      <ContactUs />
+  <div className="text-left">
+    <ContactUs />
+  </div>
+      
 
 
 
-
+     <div className="pt-10"><Footer /></div>
     </section>
   );
 };

@@ -40,7 +40,7 @@ export const ManagementProducts = [
   { id: 505, title: "Management Books5", category: "Management Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Comprehensive management books covering business strategies and leadership." },
 
-  { id: 506, title: "Notebooks", category: "Merchandise", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
+  { id: 506, title: "Management Notebooks", category: "Management Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Set of 3 high-quality plain notebooks with 300 pages each." },
 ];
 
@@ -61,7 +61,7 @@ export const EnginneringProducts = [
   { id: 105, title: "IT Books2", category: "IT Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Comprehensive management books covering business strategies and leadership." },
 
-  { id: 106, title: "Notebooks", category: "Merchandise", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
+  { id: 106, title: "IT Notebooks", category: "IT Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Set of 3 high-quality plain notebooks with 300 pages each." },
 ];
 
@@ -82,7 +82,7 @@ export const LawProducts = [
   { id: 205, title: "Law Book 5", category: "Law Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Comprehensive Law books covering business strategies and leadership." },
 
-  { id: 206, title: "Notebooks", category: "Merchandise", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
+  { id: 206, title: "Law Notebooks", category: "Law Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Set of 3 high-quality plain notebooks with 300 pages each." },
 ];
 
@@ -109,6 +109,18 @@ export const merchandiseProducts = [
 
   { id: 306, title: "Bagpack", category: "Merchandise", img: bag, price: 4999, oldPrice: 399, save: 100, outOfStock: false,
     description:"Durable and spacious backpack suitable for students and professionals." },
+
+    { id: 307, title: "Notebooks", category: "Merchandise", img: book, price: 499, oldPrice: 599, save: 100, outOfStock: false,
+    description:"Set of 3 high-quality plain notebooks with 300 pages each." },
+
+    { id: 308, title: "Notebooks", category: "Merchandise", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
+    description:"Set of 3 high-quality plain notebooks with 300 pages each." },
+
+    { id: 309, title: "Notebooks", category: "Merchandise", img: book, price: 1999, oldPrice: 2199, save: 100, outOfStock: false,
+    description:"Set of 3 high-quality plain notebooks with 300 pages each." },
+
+
+
 ];
 
 // -------------------- Medical BOOKS --------------------
@@ -131,3 +143,5 @@ export const MedicalProducts = [
   { id: 606, title: "Medical Notebooks", category: "Medical Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false,
     description:"Set of 3 high-quality plain notebooks with 300 pages each." },
 ];
+
+

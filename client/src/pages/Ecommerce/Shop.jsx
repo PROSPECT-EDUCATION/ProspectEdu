@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
+import Footer from "../../components/Footer";
 
 // DATA
 import {
@@ -96,10 +97,10 @@ const Shop = () => {
   }
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-left pb-20">
 
         {/* Breadcrumb */}
         <p className="text-gray-600 text-sm sm:text-md mb-4 sm:mb-5">
@@ -179,6 +180,7 @@ const Shop = () => {
           </div>
         </div>
       </div>
+       <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

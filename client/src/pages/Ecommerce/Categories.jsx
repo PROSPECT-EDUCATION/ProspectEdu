@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
+import Footer from "../../components/Footer";
 
 const categories = [
   { name: "Merchandise", color: "#800040", icon: "👕" },
@@ -17,10 +18,10 @@ const Categories = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10 pb-20 text-left">
 
         {/* Breadcrumb */}
         <p className="text-gray-600 text-xs sm:text-sm mb-6">
@@ -75,6 +76,7 @@ const Categories = () => {
           ))}
         </div>
       </div>
+      <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

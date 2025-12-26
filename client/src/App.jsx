@@ -110,6 +110,7 @@ import Supplier from "./pages/Ecommerce/Supplier/Supplier";
 import AddProduct from "./pages/Ecommerce/Supplier/AddProduct";
 import ProductList from "./pages/Ecommerce/Supplier/ProductList";
 import Orders from "./pages/Ecommerce/Supplier/Orders";
+import Achievers from './pages/Achievers/achievers';
 
 
 
@@ -198,7 +199,7 @@ function App() {
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />
        <Route path="/research-report" element={<ResearchReport />} />
-       <Route path="/research-report/:id" element={<ReportDetails />} />
+       <Route path="/research-report/:slug" element={<ReportDetails />} />
        <Route path="/scholarship" element={<Scholarship />} />
        <Route path="/test-learning" element={<TestAndLearning />} />
        <Route path="/test-learning/:id" element={<TestDetails />} />
@@ -209,9 +210,9 @@ function App() {
         <Route path="/career/:id" element={<JobDetail />} />
         <Route path="/contact-us" element={<ContactDetails />} />
         <Route path="/news" element={<News />} />
-        <Route path="/news/:id" element={<NewsDetails />} />
+        <Route path="/news/:slug" element={<NewsDetails />} />
         <Route path="/blog" element={<Blog />} />
-         <Route path="/blog/:id" element={<BlogDetails />} />
+         <Route path="/blog/:slug" element={<BlogDetails />} />
         <Route path="/parent-company" element={<ParentCompany />} />
         <Route path="/ecommerce-home" element={<Ecommerce />} />
         <Route path="/my-profile" element={<Profile />} />
@@ -227,6 +228,7 @@ function App() {
         <Route path="/supplier/add-product" element={<AddProduct />} />
         <Route path="/supplier/product-list" element={<ProductList />} />
         <Route path="/supplier/orders" element={<Orders />} />
+        <Route path="/achievers" element={<Achievers />} />
 
 
       </Routes> 

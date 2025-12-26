@@ -1,43 +1,28 @@
 import React from "react";
 import contactImg from "../../assets/contact.webp";
 import ContactUs from "../../components/Contact";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 const ContactDetails = () => {
   return (
     <>
-      {/* ---------------- Contact Us Header ---------------- */}
-      <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
-        <div className="w-full bg-[#1E5631] text-white py-10">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-6 md:px-8 gap-8">
-
-            {/* Left Text */}
-            <div className="w-full md:w-1/2 text-center md:text-left">
-              <p className="text-sm opacity-90 mb-3">Home &gt; Contact Us</p>
-
-              <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
-                Get in Touch
-              </h1>
-
-              <p className="text-[#B7F399] text-lg font-medium">
-                We’re here to help you, every step of the way.
-              </p>
-            </div>
-
-            {/* Right Image */}
-            <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-              <img
-                src={contactImg}
-                alt="Contact"
-                className="w-40 sm:w-56 md:w-[250px] rounded-lg shadow-md"
-              />
-            </div>
-
-          </div>
-        </div>
+     
+        <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+              <Navbar />
+        
+              {/* ---------------- Header Section ---------------- */}
+        
+              <HeaderSection
+                  page="Contact Us"
+                  title="  Get in Touch"
+                  subtitle="We’re here to help you, every step of the way."
+                  image={contactImg}
+                />
 
         {/* ---------------- Contact Form Section ---------------- */}
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 text-left">
           <ContactUs />
         </div>
 
@@ -74,7 +59,7 @@ const ContactDetails = () => {
           </div>
 
         </div>
-
+      <div className="pt-10"><Footer /></div>
       </section>
     </>
   );

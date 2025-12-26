@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import scholarshipImg from "../../assets/Scholarship.webp";
 import scholarshipPool from "../../assets/scholarshipPool.webp";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 const Scholarship = () => {
   const [email, setEmail] = useState("");
@@ -29,35 +32,21 @@ const Scholarship = () => {
   };
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+    <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+      <Navbar />
 
-      {/* ---------------- Header ---------------- */}
-      <div className="bg-[#1E5631] text-white w-full py-12">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between px-6 md:px-8 gap-8">
+      {/* ---------------- Header Section ---------------- */}
 
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-3 text-gray-200">Home &gt; Scholarship</p>
-
-            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
-              Unlock your potential with Scholarships.
-            </h1>
-
-            <p className="text-[#B7F399] text-lg font-medium">
-              Discover opportunities to support your education with merit-based, need-based,
+      <HeaderSection
+          page="Scholarship"
+          title="Unlock your potential with Scholarships."
+          subtitle="Discover opportunities to support your education with merit-based, need-based,
               and special category scholarships. Stay updated with latest announcements and
-              eligibility criteria.
-            </p>
-          </div>
+              eligibility criteria."
+          image={scholarshipImg}
+        />
 
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <img
-              src={scholarshipImg}
-              alt="Scholarship Illustration"
-              className="w-[220px] md:w-[350px] rounded-lg shadow-md"
-            />
-          </div>
-        </div>
-      </div>
+
 
       {/* ---------------- Scholarship Description ---------------- */}
       <div className="py-16 px-6 md:px-8">
@@ -182,7 +171,7 @@ const Scholarship = () => {
             Frequently Asked Questions
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
 
             <details className="bg-white p-6 rounded-lg shadow-md">
               <summary className="text-lg font-semibold text-[#1E5631] cursor-pointer">
@@ -322,7 +311,8 @@ const Scholarship = () => {
 
           </form>
         </div>
-      </div>
+      </div> 
+      <div className="pt-10"><Footer /></div>
 
     </section>
   );

@@ -1,6 +1,9 @@
 import React from "react";
 import donateImg from "../../assets/donate.webp";
 import { useNavigate } from "react-router-dom";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 const Donate = () => {
   const navigate = useNavigate();
@@ -10,36 +13,20 @@ const Donate = () => {
   };
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
-      {/* ---------------- Header ---------------- */}
-      <div className="bg-[#1E5631] text-white w-full py-12">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
-          
-          {/* Left Text */}
-          <div className="w-full md:w-1/2 pr-0 md:pr-8">
-            <p className="text-sm mb-3 text-gray-200">Home &gt; Donate</p>
-            <h1 className="font-semibold text-4xl mb-3 leading-snug">
-              Make a Difference with Your Donation.
-            </h1>
-            <p className="text-[#B7F399] text-lg font-medium">
-              Your support helps provide education, resources, and opportunities
+    
+       <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+            <Navbar />
+      
+            {/* ---------------- Header Section ---------------- */}
+      
+            <HeaderSection
+                page="Donate"
+                title="Make a Difference with Your Donation."
+                subtitle=" Your support helps provide education, resources, and opportunities
               to students who need them most. Together, we can build a stronger
-              and brighter future for everyone.
-            </p>
-          </div>
-
-          {/* Right Image */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end mt-8 md:mt-0">
-            <img
-              src={donateImg}
-              alt="Donate Illustration"
-              className="w-[220px] md:w-[350px] rounded-lg shadow-md"
-            />
-          </div>
-
-        </div>
-      </div>
+              and brighter future for everyone."
+                image={donateImg}
+              />
 
       {/* ---------------- Donate Us Section ---------------- */}
       <div className="bg-white py-16 px-6 md:px-8 text-center shadow-sm">
@@ -47,7 +34,7 @@ const Donate = () => {
           Donate Us
         </h2>
         <div className="h-[2px] w-32 bg-[#A7E1B2] mx-auto mb-6 shadow-sm shadow-green-300"></div>
-        <p className="max-w-5xl mx-auto text-gray-700 text-lg leading-relaxed">
+        <p className="max-w-5xl mx-auto text-gray-700 text-lg leading-relaxed text-left">
           Welcome to our donate page! We are a Bhopal-based non-profit
           organization dedicated to making a positive impact on our community
           and beyond. Your donation can help us continue our work and make a
@@ -63,7 +50,7 @@ const Donate = () => {
       {/* ---------------- Why Donate & How to Donate ---------------- */}
       <div className="max-w-5xl mx-auto px-6 md:px-8 py-16 text-center">
         <h2 className="text-3xl font-bold text-[#1E5631] mb-4">Why Donate?</h2>
-        <p className="text-gray-700 text-lg leading-relaxed mb-10">
+        <p className="text-gray-700 text-lg leading-relaxed mb-10 text-left">
           Your donation can make a real difference in the world. It can help
           provide food and shelter to the homeless, fund research for a cure for
           a disease, support education and literacy programs for underprivileged
@@ -74,7 +61,7 @@ const Donate = () => {
         <h2 className="text-3xl font-bold text-[#1E5631] mb-4">
           How to Donate?
         </h2>
-        <p className="text-gray-700 text-lg leading-relaxed">
+        <p className="text-gray-700 text-lg leading-relaxed text-left">
           We offer a variety of ways to donate to our cause. You can make a
           one-time donation through our website, or you can set up a recurring
           monthly contribution to help sustain our work. We also accept
@@ -125,7 +112,7 @@ const Donate = () => {
       </div>
 
       {/* ---------------- What Does Donation Support ---------------- */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 px-6 md:px-8 py-16">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 px-6 md:px-8 py-16 text-left">
 
         {/* Left Content */}
         <div className="w-full md:w-2/3">
@@ -162,7 +149,7 @@ const Donate = () => {
       </div>
 
       {/* ---------------- How Else Can You Help ---------------- */}
-      <div className="max-w-6xl mx-auto text-center px-6 md:px-8 py-16">
+      <div className="max-w-6xl mx-auto text-center px-6 md:px-8 py-16 text-left">
         <h2 className="text-3xl font-bold text-[#1E5631] mb-8">
           How else can you help?
         </h2>
@@ -179,7 +166,7 @@ const Donate = () => {
           Thank you for considering a donation to our organization. Together, we can create a brighter future.
         </p>
       </div>
-
+      <div className="pt-10"><Footer /></div> 
     </section>
   );
 };

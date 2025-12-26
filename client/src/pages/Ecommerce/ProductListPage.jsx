@@ -2,6 +2,7 @@ import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
+import Footer from "../../components/Footer";
 
 // PRODUCT DATA IMPORT
 import {
@@ -35,10 +36,10 @@ const ProductListPage = () => {
     t.replace("-", " ").replace("-", " ").toUpperCase();
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-[Open_Sans] pb-20 text-left">
 
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-4 sm:mb-5 text-sm sm:text-base">
@@ -69,6 +70,7 @@ const ProductListPage = () => {
         />
 
       </div>
+       <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

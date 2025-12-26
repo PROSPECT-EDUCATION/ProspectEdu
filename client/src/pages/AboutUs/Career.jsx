@@ -1,42 +1,30 @@
+
+
 import React from "react";
 import hiringImg from "../../assets/hiring2.webp";
 import ContactUs from "../../components/Contact";
 import { useNavigate } from "react-router-dom";
+import HeaderSection from "../../components/HeaderSection";
 
-const Career = () => {  
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
+
+import { JobData } from "../../data/JobData";
+
+const Career = () => {
   const navigate = useNavigate();
+
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+    <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+      <Navbar />
 
-      {/* ------------ Header ------------ */}
-      <div className="bg-[#1E5631] text-white w-full py-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start px-6 md:px-8 gap-8">
-
-          {/* Left Content */}
-          <div className="w-full md:w-1/2 md:pr-8 text-center md:text-left">
-            <p className="text-sm mb-2 text-gray-200">Home &gt; Career</p>
-
-            <h1 className="font-semibold text-3xl md:text-4xl mb-2 leading-snug">
-              Join the Future of Education
-            </h1>
-
-            <p className="text-[#B7F399] text-lg font-medium leading-relaxed">
-              Unlock your potential and make a difference in the lives  
-              of millions of learners worldwide.
-            </p>
-          </div>
-
-          {/* Right Image */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end mt-6 md:mt-0">
-            <img
-              src={hiringImg}
-              alt="Career Hiring Illustration"
-              className="w-52 sm:w-64 md:w-[250px] rounded-lg shadow-md object-contain"
-            />
-          </div>
-
-        </div>
-      </div>
+      <HeaderSection
+        page="Career"
+        title="Join the Future of Education"
+        subtitle="Unlock your potential and make a difference in the lives  
+        of millions of learners worldwide."
+        image={hiringImg}
+      />
 
       {/* ------------ About the Company Section ------------ */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-16">
@@ -80,82 +68,40 @@ const Career = () => {
         </div>
       </div>
 
-      {/* ------------ Open Positions Section ------------ */}
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-16">
-
-        <h2 className="text-3xl font-bold mb-10 text-center md:text-left">Open Positions</h2>
+      {/* ------------ Open Positions ------------ */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 text-left">
+        <h2 className="text-3xl font-bold mb-10 text-center md:text-left">
+          Open Positions
+        </h2>
 
         <div className="space-y-6">
-
-          {/* Job Card 1 */}
-          <div className="p-6 rounded-xl shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Subject Matter Expert (Engineering)</h3>
-              <p className="text-sm mt-1">
-                Vacancy: 3 &nbsp;/&nbsp; Location: Bhopal &nbsp;/&nbsp; Job Type: Full-Time
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/career/1")}
-              className="bg-[#1E5631] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#154727] transition w-full md:w-auto"
+          {JobData.map((job) => (
+            <div
+              key={job.id}
+              className="p-6 rounded-xl shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
             >
-              View Details
-            </button>
-          </div>
+              <div>
+                <h3 className="text-lg font-semibold">{job.title}</h3>
+                <p className="text-sm mt-1">
+                  Vacancy: {job.vacancy} &nbsp;/&nbsp;
+                  Location: {job.location} &nbsp;/&nbsp;
+                  Job Type: {job.jobType}
+                </p>
+              </div>
 
-          {/* Job Card 2 */}
-          <div className="p-6 rounded-xl shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Content Writer (Law Entrance)</h3>
-              <p className="text-sm mt-1">
-                Vacancy: 2 &nbsp;/&nbsp; Location: Bhopal &nbsp;/&nbsp; Job Type: Full-Time
-              </p>
+              <button
+                onClick={() => navigate(`/career/${job.id}`)}
+                className="bg-[#1E5631] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#154727] transition w-full md:w-auto"
+              >
+                View Details
+              </button>
             </div>
-            <button
-              onClick={() => navigate("/career/2")}
-              className="bg-[#1E5631] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#154727] transition w-full md:w-auto"
-            >
-              View Details
-            </button>
-          </div>
-
-          {/* Job Card 3 */}
-          <div className="p-6 rounded-xl shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Mock Test Creator (Engineering & Law)</h3>
-              <p className="text-sm mt-1">
-                Vacancy: 4 &nbsp;/&nbsp; Location: Remote &nbsp;/&nbsp; Job Type: Part-Time
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/career/3")}
-              className="bg-[#1E5631] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#154727] transition w-full md:w-auto"
-            >
-              View Details
-            </button>
-          </div>
-
-          {/* Job Card 4 */}
-          <div className="p-6 rounded-xl shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Batch Manager (Engineering/Law)</h3>
-              <p className="text-sm mt-1">
-                Vacancy: 1 &nbsp;/&nbsp; Location: Bhopal &nbsp;/&nbsp; Job Type: Full-Time
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/career/4")}
-              className="bg-[#1E5631] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#154727] transition w-full md:w-auto"
-            >
-              View Details
-            </button>
-          </div>
-
+          ))}
         </div>
       </div>
 
       {/* ------------ Company Culture Section ------------ */}
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 text-left">
 
         <h2 className="text-3xl font-bold mb-10 text-center md:text-left">Company Culture</h2>
 
@@ -227,12 +173,15 @@ const Career = () => {
 
         </div>
       </div>
-
-      {/* ------------ Contact Us Section ------------ */}
-      <ContactUs />
-
+      {/* ------------ Contact ------------ */}
+      <div className="text-left"> <ContactUs /></div>
+      
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };
 
 export default Career;
+

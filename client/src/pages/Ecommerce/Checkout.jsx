@@ -3,6 +3,7 @@ import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
 import { useCart } from "../../context/CartContext";
 import { useLocation } from "react-router-dom";
+import Footer from "../../components/Footer";
 
 const Checkout = () => {
   const { addresses, addAddress } = useAddress();
@@ -81,11 +82,11 @@ const Checkout = () => {
   const grandTotal = totalPrice + shipping;
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
       {/* MAIN GRID */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 px-4 md:px-10 py-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 px-4 md:px-10 py-10 pb-20 text-left">
 
         {/* LEFT SIDE */}
         <div className="md:col-span-2 bg-white shadow rounded-xl p-5 md:p-8">
@@ -304,6 +305,7 @@ const Checkout = () => {
           </button>
         </div>
       </div>
+      <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

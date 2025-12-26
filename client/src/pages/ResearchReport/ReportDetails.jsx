@@ -1,167 +1,98 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import researchImg from "../../assets/research.webp";
 import English from "../../assets/English.pdf";
 import Hindi from "../../assets/Hindi.pdf";
+import { reportData } from "../../data/ReportData";
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 const ReportDetails = () => {
-  const { state: report } = useLocation();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [language, setLanguage] = useState("English");
 
-  if (!report)
+  // 🔍 Find report by slug (SEO friendly)
+  const report = reportData.find((r) => r.slug === slug);
+
+  if (!report) {
     return <p className="text-center mt-20 text-lg">Report not found</p>;
-
-  // FULL CONTENT (your original content restored)
-  const englishContent = `
-Education is changing fast because of new tools and ideas. Today many schools and colleges use computers, apps, and smart systems to help students learn. This article explains, in simple words, how modern tools help teaching and learning. It also talks about the good things and the problems we must solve.
-
-First, learning now can be personal. In old days the same lesson was given to every student. But now digital tools can show different lessons to different students. If one student finds a topic easy, the tool gives harder exercises. If another student finds it hard, the tool gives simpler steps and more examples. This idea is called personalized learning. It helps students move at their own speed. They do not feel left behind or bored.
-
-Second, teachers get strong help. Good teachers are still very important. But digital tools save time on tasks like marking homework or making practice tests. Teachers can use this saved time to explain hard ideas, talk with students one by one, or plan better lessons. Tools can also show teachers which students need more help. This makes teaching more focused and better for students.
-
-Third, learning is not just books. Students use videos, games, and small projects. Videos can show things that are hard to see in a classroom, like how a machine works or a science experiment. Games make practice fun and keep students trying again. Small projects let students solve real problems. This makes learning active and useful for life.
-
-Fourth, tools help students practice again and again. When a student practices many times, the brain remembers better. Many apps give short practice with quick feedback. Quick feedback is important. It tells the student where they made a mistake and how to fix it. This makes learning faster.
-
-Fifth, students can learn from anywhere. A student in a small town can watch lessons from a top teacher far away. This lowers barriers. Many good courses are free or low cost online. This helps students who cannot go to big schools. It also helps adult learners who study while working.
-
-Sixth, data and reports help schools make smart choices. When apps collect simple data (like which questions many students miss), schools can find weak points in planning. They can update the syllabus, give training to teachers, or give special lessons. This makes the whole system better step by step.
-
-But there are problems. First, not all students have the same access to devices or internet. If a student has no device or weak internet, they cannot use online tools well. This creates a gap between students who have devices and those who do not. So, schools and governments must give good internet and devices to all.
-
-Second, too much screen time is not good. Students still need play, group work, and face-to-face talk. Balance is important. Teachers should mix online lessons with class work, discussion, and real projects.
-
-Third, privacy and safety matter. Tools collect student data. We must keep this data safe and use it only for learning. Rules and clear policies are needed so data is not misused.
-
-Fourth, teachers need training. New tools need new skills. Teachers must learn how to use tools well and how to combine them with good teaching methods. Training must be regular and practical.
-
-Fifth, tools must support local languages and culture. If tools use only one language, many students will be left out. Content must be in many languages and match local contexts.
-
-Sixth, cost is a worry for some schools. Good systems cost money for software, devices, and training. Governments and schools must plan budgets and find low-cost options.
-
-To finish, technology makes learning more flexible, more personal, and more fun. It gives tools for students and teachers to do better work. But the change must be fair. All students must get access to devices and good internet. Teachers must get training. Privacy must be safe. When these problems are solved, technology will make education stronger for everyone.
-`;
-
-  const hindiContent = `
-शिक्षा में आज बहुत तेज़ी से बदलाव हो रहा है क्योंकि नए औज़ार और विचार आ रहे हैं। आज कई स्कूल और कॉलेज कंप्यूटर, ऐप और स्मार्ट सिस्टम का उपयोग करते हैं ताकि छात्र बेहतर तरीके से सीख सकें। यह लेख सरल भाषा में बताता है कि आधुनिक औज़ार कैसे पढ़ाने और सीखने में मदद करते हैं और किन समस्याओं का समाधान ज़रूरी है।
-
-पहला, अब सीखना व्यक्तिगत हो गया है। पहले हर छात्र को एक जैसा पाठ पढ़ाया जाता था। अब डिजिटल टूल अलग-अलग छात्रों को अलग-अलग पाठ दिखा सकते हैं। अगर कोई छात्र किसी विषय को जल्दी समझता है तो उसे कठिन अभ्यास दिया जाता है। अगर किसी छात्र को मुश्किल होती है तो उसे आसान कदम और ज़्यादा उदाहरण दिए जाते हैं। इसे पर्सनलाइज़्ड लर्निंग कहा जाता है। इससे छात्र अपनी गति से सीख सकते हैं और कोई पीछे नहीं रह जाता।
-
-दूसरा, अध्यापक को मज़बूत मदद मिलती है। अच्छे अध्यापक अब भी बहुत ज़रूरी हैं, लेकिन डिजिटल टूल उनका समय बचाते हैं। अब अध्यापक अपना ज़्यादा समय कठिन विषय समझाने और छात्रों की मदद करने में लगा सकते हैं। इससे पढ़ाई ज़्यादा असरदार होती है।
-
-तीसरा, सीखना अब केवल किताबों तक सीमित नहीं है। छात्र वीडियो, गेम और छोटे प्रोजेक्ट का उपयोग करते हैं। वीडियो उन चीज़ों को दिखाते हैं जो कक्षा में देखना कठिन है। गेम अभ्यास को मज़ेदार बनाते हैं और छात्र बार-बार कोशिश करते रहते हैं। छोटे प्रोजेक्ट वास्तविक जीवन की समस्याएँ हल करने में मदद करते हैं।
-
-चौथा, टूल छात्रों को बार-बार अभ्यास करने में मदद करते हैं। जितना ज़्यादा अभ्यास होगा, दिमाग उतना बेहतर याद रखेगा। कई ऐप छोटे-छोटे अभ्यास देते हैं और तुरंत परिणाम दिखाते हैं जिससे सीखना तेज़ होता है।
-
-पाँचवाँ, अब छात्र कहीं से भी सीख सकते हैं। कोई भी छात्र छोटे शहर से भी किसी अच्छे अध्यापक की क्लास देख सकता है। कई कोर्स ऑनलाइन मुफ्त या कम दाम में मिलते हैं। इससे शिक्षा सबके लिए सुलभ बनती है।
-
-छठा, डेटा और रिपोर्ट से स्कूल बेहतर निर्णय ले सकते हैं। जब ऐप डेटा इकट्ठा करते हैं तो स्कूल यह देख सकते हैं कि कौन से विषय में छात्रों को दिक्कत है और सुधार कर सकते हैं।
-
-लेकिन कुछ समस्याएँ हैं। पहला, सभी छात्रों के पास इंटरनेट या उपकरण नहीं हैं। इससे अमीर और गरीब छात्रों के बीच अंतर बढ़ सकता है। सरकार और स्कूलों को सभी छात्रों को डिवाइस और अच्छा इंटरनेट देना चाहिए।
-
-दूसरा, बहुत अधिक स्क्रीन समय अच्छा नहीं होता। छात्रों को खेल, समूह कार्य और आमने-सामने की बातचीत भी करनी चाहिए ताकि वे संतुलित रहें।
-
-तीसरा, सुरक्षा और गोपनीयता ज़रूरी है। टूल छात्रों का डेटा इकट्ठा करते हैं, इसलिए यह ज़रूरी है कि इसे सुरक्षित रखा जाए और केवल पढ़ाई के लिए उपयोग किया जाए।
-
-चौथा, अध्यापकों को प्रशिक्षण चाहिए ताकि वे नए टूल का सही उपयोग कर सकें।
-
-पाँचवाँ, टूल को स्थानीय भाषाओं का समर्थन करना चाहिए ताकि हर छात्र उसे समझ सके।
-
-अंत में, तकनीक शिक्षा को लचीला, व्यक्तिगत और मज़ेदार बनाती है। लेकिन सभी को इसका लाभ तभी मिलेगा जब इंटरनेट, डिवाइस और प्रशिक्षण सबको समान रूप से उपलब्ध होंगे। तब शिक्षा सबके लिए मज़बूत और बेहतर बनेगी।
-`;
+  }
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
+    <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+                     <Navbar />
+               
+                     {/* ---------------- Header Section ---------------- */}
+               
+                     <HeaderSection
+                         page=" Research Report"
+                         title="Research Reports made simple."
+                         subtitle=" Easy-to-read research from Technology, Engineering, Law, and Management."
+                         image={researchImg}
+                       />
 
-      {/* Header */}
-      <div className="bg-[#1E5631] text-white w-full py-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between px-6 md:px-8 gap-8">
+      {/* ===== CONTENT ===== */}
+      <div className="max-w-5xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6 md:p-8 relative text-left">
 
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-3 text-gray-200">
-              Home &gt; Research Report &gt; 
-              <span className="font-medium"> {report.title}</span>
-            </p>
-
-            <h1 className="font-semibold text-3xl md:text-4xl mb-3 leading-snug">
-              Research Reports made simple.
-            </h1>
-
-            <p className="text-[#B7F399] text-lg font-medium">
-              Our Research Report section offers a deep dive into the latest studies across Technology, Science, Education and Innovation.
-            </p>
-          </div>
-
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <img
-              src={researchImg}
-              alt="illustration"
-              className="w-[200px] md:w-[350px] rounded-lg shadow-md"
-            />
-          </div>
-
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div className="max-w-5xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6 md:p-8 relative">
-
-        {/* Language Toggle */}
+        {/* Language toggle */}
         <div className="absolute top-4 right-4 flex gap-2">
-          <button
-            onClick={() => setLanguage("English")}
-            className={`px-3 md:px-4 py-1 rounded-md border text-xs md:text-sm ${
-              language === "English"
-                ? "bg-[#A7E1B2] border-[#A7E1B2]"
-                : "bg-white border-gray-300 hover:bg-[#A7E1B2]"
-            }`}
-          >
-            English
-          </button>
-
-          <button
-            onClick={() => setLanguage("Hindi")}
-            className={`px-3 md:px-4 py-1 rounded-md border text-xs md:text-sm ${
-              language === "Hindi"
-                ? "bg-[#A7E1B2] border-[#A7E1B2]"
-                : "bg-white border-gray-300 hover:bg-[#A7E1B2]"
-            }`}
-          >
-            Hindi
-          </button>
+          {["English", "Hindi"].map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`px-3 py-1 text-sm border rounded-md ${
+                language === lang
+                  ? "bg-[#A7E1B2] border-[#A7E1B2]"
+                  : "hover:bg-[#A7E1B2]"
+              }`}
+            >
+              {lang}
+            </button>
+          ))}
         </div>
 
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="text-[#1E5631] mb-6 text-sm font-semibold hover:underline"
+          className="text-[#1E5631] font-semibold mb-6 hover:underline"
         >
           ← Back
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold mb-2 border-b border-gray-300 pb-2">
+        <h2 className="text-2xl md:text-3xl font-bold border-b pb-2 mb-4">
           {report.title}
         </h2>
 
-        {/* CONTENT SHOWS HERE */}
-        <div className="text-gray-800 mt-2 whitespace-pre-line leading-relaxed text-sm md:text-[15px]">
-          {language === "English" ? englishContent : hindiContent}
+        {/* Meta */}
+        <div className="flex gap-4 text-sm text-gray-500 mb-4">
+          <span className="bg-[#A7E1B2] px-2 py-1 rounded">
+            {report.subject}
+          </span>
+          <span>📅 {report.date}</span>
         </div>
 
-        {/* Download PDF */}
+         {/* ✅ CONTENT (THIS WAS THE BUG) */}
+        <div className="mt-4 text-gray-800 whitespace-pre-line leading-relaxed text-sm md:text-[15px]">
+          {language === "English"
+            ? report.content.english
+            : report.content.hindi}
+        </div>
+
+        {/* PDF */}
         <div className="mt-8">
           <a
             href={language === "English" ? English : Hindi}
             download
-            className="inline-block bg-[#A7E1B2] text-[#124734] px-4 md:px-5 py-2 rounded-lg shadow font-semibold hover:bg-[#8fd49f]"
+            className="inline-block bg-[#A7E1B2] px-5 py-2 rounded-lg font-semibold hover:bg-[#8fd49f]"
           >
             ⬇️ Download Full Report ({language})
           </a>
         </div>
-
       </div>
+      <div className="pt-10"><Footer /></div>
     </section>
   );
 };

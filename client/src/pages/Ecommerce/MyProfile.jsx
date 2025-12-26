@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
 import locationIcon from "../../assets/location.webp";
+import Footer from "../../components/Footer";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -88,10 +89,10 @@ const MyProfile = () => {
   };
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
 
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-5 text-sm md:text-base">
@@ -312,6 +313,7 @@ const MyProfile = () => {
           )}
         </div>
       </div>
+       <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

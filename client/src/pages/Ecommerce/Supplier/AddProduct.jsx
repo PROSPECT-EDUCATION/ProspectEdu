@@ -20,7 +20,7 @@ const handleImageChange = (e, index) => {
 
 
   return (
-    <div className="flex bg-[#F9FAFB] min-h-screen">
+    <div className="flex bg-[#F9FAFB] min-h-screen text-left">
 
       {/* SIDEBAR */}
       <SupplierSidebar
@@ -49,7 +49,7 @@ const handleImageChange = (e, index) => {
 
               {/* PRODUCT IMAGES */}
              <div>
-  <p className="text-base font-semibold text-[#124734]">Product Images</p>
+  <p className="text-base font-semibold text-[#124734] ">Product Images</p>
 
   <div className="flex flex-wrap items-center gap-3 mt-3">
     {images.map((img, index) => (

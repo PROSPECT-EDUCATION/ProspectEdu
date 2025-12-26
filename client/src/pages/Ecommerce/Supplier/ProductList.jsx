@@ -46,7 +46,7 @@ export default function ProductList() {
   };
 
   return (
-    <div className="flex bg-[#F9FAFB] min-h-screen">
+    <div className="flex bg-[#F9FAFB] min-h-screen text-left">
       <SupplierSidebar
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}

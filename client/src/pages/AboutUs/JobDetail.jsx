@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import hiringImg from "../../assets/hiring2.webp";
 import ContactUs from "../../components/Contact";
 import { JobData } from "../../data/JobData"; // ✅ IMPORTED JOB DATA
+import HeaderSection from "../../components/HeaderSection";
+import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -41,32 +44,19 @@ const JobDetail = () => {
   };
 
   return (
-    <section className="bg-[#F9FAFB] text-[#124734] py-16 font-[Open_Sans,sans-serif]">
-
-      {/* ------------ Header ------------ */}
-      <div className="bg-[#1E5631] text-white w-full py-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-4 md:px-8 gap-6">
-          <div className="w-full md:w-1/2">
-            <p className="text-sm mb-2 text-gray-200">Home &gt; Career</p>
-            <h1 className="font-semibold text-3xl md:text-4xl mb-2 leading-snug">
-              Join the Future of Education
-            </h1>
-            <p className="text-[#B7F399] text-lg font-medium">
-              Unlock your potential and make a difference in the lives of millions of learners worldwide.
-            </p>
-          </div>
-
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-            <img
-              src={hiringImg}
-              className="w-40 sm:w-56 md:w-[250px] rounded-lg shadow-md"
-            />
-          </div>
-        </div>
-      </div>
+     <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+          <Navbar />
+    
+          <HeaderSection
+            page="Career"
+            title="Join the Future of Education"
+            subtitle="Unlock your potential and make a difference in the lives  
+            of millions of learners worldwide."
+            image={hiringImg}
+          />
 
       {/* ------------ Job Details Section ------------ */}
-      <div className="max-w-7xl mx-auto py-12 flex flex-col lg:flex-row gap-10">
+      <div className="max-w-7xl mx-auto py-12 flex flex-col lg:flex-row gap-10 text-left">
 
         {/* Left - Main Details */}
         <div className="w-full lg:w-3/4">
@@ -139,7 +129,7 @@ const JobDetail = () => {
               Your email and phone number will not be shared.
             </p>
 
-            <form className="space-y-4">
+            <form className="space-y-4 text-left">
               <div>
                 <label className="block mb-1">Name</label>
                 <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]" />
@@ -200,7 +190,8 @@ const JobDetail = () => {
       )}
 
       {/* ------------ Contact Us Section ------------ */}
-      <ContactUs />
+      <div className="text-left"><ContactUs /></div>
+       <div className="pt-10"><Footer /></div>
     </section>
   );
 };

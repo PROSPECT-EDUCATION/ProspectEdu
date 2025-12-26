@@ -11,6 +11,7 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FiHeart } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import Footer from "../../components/Footer";
 
 const ProductDetail = () => {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ const ProductDetail = () => {
   ];
 
   return (
-    <section className="pb-20 pt-36">
+    <section className="pt-36">
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white shadow-xl px-6 py-2 rounded-full text-[#124734] border z-[9999]">
           {toast}
@@ -85,7 +86,7 @@ const ProductDetail = () => {
 
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 pb-20 text-left">
 
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-3 sm:mb-5 text-sm sm:text-base">
@@ -276,6 +277,7 @@ const ProductDetail = () => {
       {/* Related + Recently Viewed */}
       <ProductSlider title="Related Products" products={trendingProducts} navigate={navigate} />
       <ProductSlider title="Recently Viewed" products={trendingProducts} navigate={navigate} />
+       <div className="pt-10"> <Footer /></div>
     </section>
   );
 };

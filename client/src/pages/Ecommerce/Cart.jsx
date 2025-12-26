@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import { useCart } from "../../context/CartContext";
+import Footer from "../../components/Footer";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -15,10 +16,10 @@ const Cart = () => {
   const grandTotal = (totalPrice + shipping).toFixed(2);
 
   return (
-    <section className="pb-20 pt-36">
+    <section className=" pt-36">
       <EcomHeader />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans]">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
         {/* Breadcrumb */}
         <p className="text-gray-600 text-sm md:text-md mb-5">
           <span
@@ -288,6 +289,7 @@ const Cart = () => {
           )}
         </div>
       </div>
+      <div className="pt-10"> <Footer /></div>
     </section>
   );
 };
