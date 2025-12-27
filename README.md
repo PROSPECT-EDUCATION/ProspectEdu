@@ -1,2 +1,0 @@
-# ProspectEdu
-Online education platform 
