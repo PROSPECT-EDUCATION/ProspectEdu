@@ -1,5 +1,6 @@
 import { registerSchema, loginSchema } from "./auth.validators.js";
 import { registerUser, loginUser } from "./auth.service.js";
+import { refreshSession, logoutUser } from "./auth.service.js";
 
 function setRefreshCookie(res, refreshToken) {
   // Local dev: secure false. In prod: secure true + sameSite "none" if cross-domain.
@@ -9,6 +10,15 @@ function setRefreshCookie(res, refreshToken) {
     sameSite: "lax",
     path: "/api/v1/auth/refresh",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    path: "/api/v1/auth/refresh",
   });
 }
 
@@ -51,6 +61,57 @@ export async function login(req, res, next) {
       e.statusCode = 422;
       e.message = e.errors?.[0]?.message || "Invalid input";
     }
+    next(e);
+  }
+}
+export async function refresh(req, res, next) {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    const result = await refreshSession({ refreshToken });
+
+    // rotate cookie
+    setRefreshCookie(res, result.refreshToken);
+
+    return res.json({
+      success: true,
+      accessToken: result.accessToken,
+      user: result.user,
+    });
+  } catch (e) {
+    // ensure cookie cleared if refresh fails
+    clearRefreshCookie(res);
+    next(e);
+  }
+}
+
+export async function logout(req, res, next) {
+  try {
+    // If user is logged in, we can optionally accept Bearer token
+    // But simplest: decode refresh cookie if exists (best effort)
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (refreshToken) {
+      try {
+        const payload = refreshToken ? (await import("../../utils/jwt.js")).then(m => m.verifyRefreshToken(refreshToken)) : null;
+      } catch {}
+    }
+
+    // Better: if access token provided, use it to clear DB
+    const header = req.headers.authorization || "";
+    const [type, token] = header.split(" ");
+    if (type === "Bearer" && token) {
+      try {
+        const { verifyAccessToken } = await import("../../utils/jwt.js");
+        const payload = verifyAccessToken(token);
+        await logoutUser({ userId: payload.sub });
+      } catch {}
+    }
+
+    clearRefreshCookie(res);
+
+    return res.json({ success: true, message: "Logged out" });
+  } catch (e) {
     next(e);
   }
 }

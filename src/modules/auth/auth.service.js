@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { User } from "../users/user.model.js";
-import { signAccessToken, signRefreshToken } from "../../utils/jwt.js";
+import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../../utils/jwt.js";
 
 export async function registerUser({ fullName, email, phone, password, role }) {
   const exists = await User.findOne({ email });
@@ -9,13 +9,29 @@ export async function registerUser({ fullName, email, phone, password, role }) {
     err.statusCode = 409;
     throw err;
   }
+const passwordHash = await bcrypt.hash(password, 10);
+ let user;
+  try {
+    user = await User.create({
+      fullName,
+      email,
+      phone,
+      role,
+      passwordHash,
+    });
+  } catch (e) {
+    // ✅ Handle Mongo duplicate key
+    if (e?.code === 11000) {
+      const field = Object.keys(e.keyPattern || {})[0] || "field";
+      const err = new Error(`${field} already in use`);
+      err.statusCode = 409;
+      throw err;
+    }
+    throw e;
+  }
+// load fresh doc with refreshTokenHash selectable
+const fresh = await User.findById(user._id).select("+refreshTokenHash");
 
-  const user = new User({ fullName, email, phone, role });
-  user.password = password; // virtual -> hashes into passwordHash
-  await user.save();
-
-  // Load passwordHash for refresh hashing operations
-  const fresh = await User.findById(user._id).select("+passwordHash +refreshTokenHash");
 
   const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
   const refreshToken = signRefreshToken({ sub: user._id.toString(), role: user.role });
@@ -27,8 +43,8 @@ export async function registerUser({ fullName, email, phone, password, role }) {
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 
-export async function loginUser({ email, password }) {
-  const user = await User.findOne({ email }).select("+passwordHash +refreshTokenHash");
+export async function loginUser({ phone, password }) {
+  const user = await User.findOne({ phone }).select("+passwordHash +refreshTokenHash");
   if (!user || !user.isActive) {
     const err = new Error("Invalid credentials");
     err.statusCode = 401;
@@ -64,3 +80,53 @@ export function sanitizeUser(user) {
     createdAt: user.createdAt,
   };
 }
+export async function refreshSession({ refreshToken }) {
+  if (!refreshToken) {
+    const err = new Error("Missing refresh token");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  let payload;
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    const err = new Error("Invalid refresh token");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const user = await User.findById(payload.sub).select("+refreshTokenHash");
+  if (!user || !user.isActive) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  // Compare stored hash with presented refresh token
+  const ok = await bcrypt.compare(refreshToken, user.refreshTokenHash || "");
+  if (!ok) {
+    // Token reuse / rotation protection: invalidate stored token
+    user.refreshTokenHash = null;
+    await user.save();
+
+    const err = new Error("Refresh token revoked");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  // Rotate: issue new tokens
+  const newAccessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
+  const newRefreshToken = signRefreshToken({ sub: user._id.toString(), role: user.role });
+
+  user.refreshTokenHash = await bcrypt.hash(newRefreshToken, 10);
+  await user.save();
+
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: sanitizeUser(user) };
+}
+
+export async function logoutUser({ userId }) {
+  if (!userId) return;
+  await User.updateOne({ _id: userId }, { $set: { refreshTokenHash: null } });
+}
+

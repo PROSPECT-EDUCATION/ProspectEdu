@@ -5,7 +5,7 @@ import { connectDB } from "./db/connect.js";
 async function bootstrap() {
   await connectDB();
   const app = createApp();
-
+ 
   app.listen(env.PORT, () => {
     console.log(`🚀 Server running on http://localhost:${env.PORT}`);
   });

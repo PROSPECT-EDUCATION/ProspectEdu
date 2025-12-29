@@ -18,7 +18,7 @@ const userSchema = new Schema(
       index: true,
     },
 
-    phone: { type: String, trim: true }, // optional
+    phone: { type: String, trim: true, unique: true, sparse: true }, // optional
 
     passwordHash: { type: String, required: true, select: false },
 
@@ -39,28 +39,6 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-/**
- * Virtual setter to accept "password" and store hashed value in passwordHash.
- * So controllers can do: user.password = "secret"
- */
-userSchema
-  .virtual("password")
-  .set(function setPassword(password) {
-    this._plainPassword = password;
-  });
-
-userSchema.pre("save", async function hashPassword(next) {
-  try {
-    if (this._plainPassword) {
-      const salt = await bcrypt.genSalt(10);
-      this.passwordHash = await bcrypt.hash(this._plainPassword, salt);
-      this._plainPassword = undefined;
-    }
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
 
 userSchema.methods.comparePassword = async function comparePassword(password) {
   // passwordHash may be not selected by default
