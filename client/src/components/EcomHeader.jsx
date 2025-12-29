@@ -13,6 +13,8 @@ import {
   ManagementProducts,
 } from "../data/ProductData";
 
+const AUTH_KEY = "isLoggedIn";
+
 const EcomHeader = () => {
   const navigate = useNavigate();
 
@@ -25,6 +27,11 @@ const EcomHeader = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
 
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // ✅ only for login/logout toggle (default: logged in if not set)
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem(AUTH_KEY) !== "false"
+  );
 
   const allProducts = [
     ...trendingProducts,
@@ -141,25 +148,34 @@ const EcomHeader = () => {
             )}
           </div>
 
-          {/* USER MENU */}
-          <div className="relative">
-            <button
-              onClick={() => setOpenMenu(!openMenu)}
-              className="flex items-center gap-1 bg-[#A7E1B2] px-4 py-2 rounded-full"
-            >
-              <IoPersonCircle size={22} />
-              <span>Akshat</span>
-              <span>▼</span>
-            </button>
+          {/* USER MENU / LOGIN BUTTON */}
+          {isLoggedIn ? (
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu(!openMenu)}
+                className="flex items-center gap-1 bg-[#A7E1B2] px-4 py-2 rounded-full"
+              >
+                <IoPersonCircle size={22} />
+                <span>Akshat</span>
+                <span>▼</span>
+              </button>
 
-            {openMenu && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border">
-                <button onClick={() => navigate("/my-profile")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Profile</button>
-                <button onClick={() => navigate("/my-order")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Orders</button>
-                <button onClick={() => setShowLogoutPopup(true)} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">Logout</button>
-              </div>
-            )}
-          </div>
+              {openMenu && (
+                <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border">
+                  <button onClick={() => navigate("/my-profile")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Profile</button>
+                  <button onClick={() => navigate("/my-order")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Orders</button>
+                  <button onClick={() => setShowLogoutPopup(true)} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">Logout</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="flex items-center gap-2 bg-[#124734] text-white px-5 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              Login
+            </button>
+          )}
 
           {/* SHOP */}
           <div onClick={() => navigate("/shop")} className="group flex items-center gap-2 cursor-pointer">
@@ -249,6 +265,18 @@ const EcomHeader = () => {
               <button onClick={() => navigate("/my-profile")}>My Profile</button>
               <button onClick={() => navigate("/my-order")}>My Orders</button>
               <button onClick={() => setShowLogoutPopup(true)}>Logout</button>
+
+              {!isLoggedIn && (
+                <button
+                  onClick={() => {
+                    setMobileMenu(false);
+                    navigate("/login");
+                  }}
+                  className="mt-2 bg-[#124734] text-white py-2 rounded-xl"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -272,7 +300,10 @@ const EcomHeader = () => {
 
               <button
                 onClick={() => {
+                  localStorage.setItem(AUTH_KEY, "false");
+                  setIsLoggedIn(false);
                   setShowLogoutPopup(false);
+                  setOpenMenu(false);
                   window.location.href = "/ecommerce-home";
                 }}
                 className="flex-1 bg-[#124734] text-white py-2 rounded-xl hover:bg-[#0f3a23]"
