@@ -1,18 +1,48 @@
 import { useState } from "react";
 import { Phone, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authApi } from "../../services/auth";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ phone: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Login submitted (backend to be added later)");
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  try {
+    const res = await authApi.login({
+      phone: formData.phone,
+      password: formData.password,
+    });
+
+    const { accessToken, user } = res.data;
+
+    // simplest working storage for now (we can move to Context later)
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("user", JSON.stringify(user));
+
+    // role-based redirect (adjust paths to your actual routes)
+    if (user.role === "admin") navigate("/admin-dashboard");
+    else if (user.role === "teacher") navigate("/teacher-dashboard");
+    else if (user.role === "student") navigate("/student-dashboard");
+    else if (user.role === "parent") navigate("/parent-dashboard");
+    else if (user.role === "supplier") navigate("/supplier-dashboard");
+    else navigate("/");
+  } catch (err) {
+    setError(err?.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="w-full max-w-md">
@@ -23,6 +53,12 @@ export default function LoginForm() {
       <p className="text-sm text-[#5B7065] mb-6">
         Please log in to access your account.
       </p>
+      {error ? (
+  <div className="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded">
+    {error}
+  </div>
+) : null}
+
 
       {/* Form */}
       <form
@@ -112,12 +148,14 @@ export default function LoginForm() {
 
           {/* Submit */}
           <button
-            type="submit"
-            className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300"
-            aria-label="Log in to your ProspectEdu account"
-          >
-            Log In
-          </button>
+  type="submit"
+  disabled={loading}
+  className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300 disabled:opacity-60"
+  aria-label="Log in to your ProspectEdu account"
+>
+  {loading ? "Logging in..." : "Log In"}
+</button>
+
 
           {/* Sign Up */}
           <p className="text-sm text-center text-[#5B7065] mt-4">

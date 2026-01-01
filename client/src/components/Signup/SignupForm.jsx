@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import ErrorToast from "../ui/ErrorToast.jsx";
+import { authApi } from "../../services/auth";
 
 export default function SignupForm() {
   const navigate = useNavigate();
   const location = useLocation();
-
+const [toastError, setToastError] = useState("");
   const role = location.state?.role || "I'm a Learner";
 
   const [formData, setFormData] = useState({
@@ -16,34 +18,94 @@ export default function SignupForm() {
     state: "",
     city: "",
   });
-
+const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+const mapRoleToBackend = (uiRole) => {
+  if (uiRole === "I'm an Admin") return "admin";
+  if (uiRole === "I'm a Teacher") return "teacher";
+  if (uiRole === "I'm a Learner") return "student";
+  if (uiRole === "I'm a Parent/Organisation") return "parent";
+  return "student";
+};
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
+if (formData.password.length < 6 || formData.confirmPassword.length < 6) {
+  setToastError("Password must be at least 6 characters long");
+  return;
+}
 
-    localStorage.setItem("user", JSON.stringify({ ...formData, role }));
+if (formData.password !== formData.confirmPassword) {
+  setToastError("Passwords do not match");
+  return;
+}
 
-    if (role === "I'm a Learner") navigate("/student-dashboard");
-    else if (role === "I'm a Teacher") navigate("/teacher-dashboard");
-    else if (role === "I'm a Parent/Organisation") navigate("/parent-dashboard");
-    else if (role === "I'm an Admin") navigate("/admin-dashboard");
-  };
+  setLoading(true);
+  try {
+    const backendRole = mapRoleToBackend(role);
+
+    const payload = {
+      fullName: formData.name,
+      email: formData.email,     // keep email for now
+      phone: formData.phone,
+      password: formData.password,
+      state: formData.state,
+      city: formData.city,
+      role: backendRole,
+    };
+console.log("PAYLOAD:", payload);
+    const res = await authApi.register(payload);
+ 
+
+    const { accessToken, user } = res.data;
+
+    // store access token (same approach as login)
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("user", JSON.stringify(user));
+  setToastError("");
+    // route according to your app
+    if (backendRole === "student") navigate("/student-dashboard");
+    else if (backendRole === "teacher") navigate("/teacher-dashboard");
+    else if (backendRole === "parent") navigate("/parent-dashboard");
+    else if (backendRole === "admin") navigate("/admin-dashboard");
+    else navigate("/");
+  }catch (err) {
+  const status = err.response?.status;
+  const backendMsg = err.response?.data?.message; // ✅ read backend message
+
+  if (status === 409) {
+    // backendMsg will be: "Email already in use" OR "phone already in use"
+    setToastError(backendMsg || "Email/Phone already registered");
+  } else if (status === 422) {
+    setToastError(backendMsg || "Invalid input");
+  } else {
+    setToastError(backendMsg || "Something went wrong");
+  }
+} finally {
+  setLoading(false);
+}
+};
+
 
   return (
+    <>
+    {toastError && (
+  <ErrorToast
+    message={toastError}
+    onClose={() => setToastError("")}
+  />
+)}
+
     <form
       onSubmit={handleSubmit}
       className="space-y-4"
       aria-label="Signup form"
       autoComplete="on"
     >
+      
       <fieldset className="space-y-4">
         <legend className="sr-only">Create your ProspectEdu account</legend>
 
@@ -179,12 +241,17 @@ export default function SignupForm() {
 
         {/* Submit */}
         <button
-          type="submit"
-          className="w-full bg-[#124734] text-white py-2 rounded-md hover:bg-[#009846] transition"
-          aria-label="Create your ProspectEdu account"
-        >
-          Register
-        </button>
+  type="submit"
+  disabled={loading}
+  className={`w-full py-2 rounded-md transition ${
+    loading
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-[#124734] hover:bg-[#009846] text-white"
+  }`}
+>
+  {loading ? "Registering..." : "Register"}
+</button>
+
 
         {/* Login Redirect */}
         <p className="text-center text-sm text-[#5B7065] mt-4">
@@ -195,5 +262,6 @@ export default function SignupForm() {
         </p>
       </fieldset>
     </form>
+    </>
   );
-}
+} 
