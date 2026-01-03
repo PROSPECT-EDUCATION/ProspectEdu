@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import { User } from "../users/user.model.js";
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../../utils/jwt.js";
+import { ensureStudentProfile } from "../students/students.service.js";
 
-export async function registerUser({ fullName, email, phone, password, role }) {
+export async function registerUser({ fullName, email, phone, password, role, state, city }) {
   const exists = await User.findOne({ email });
   if (exists) {
     const err = new Error("Email already in use");
@@ -17,8 +18,13 @@ const passwordHash = await bcrypt.hash(password, 10);
       email,
       phone,
       role,
+      state,
+      city,
       passwordHash,
     });
+    if (user.role === "student") {
+  await ensureStudentProfile(user._id, { state: "", city: "" });
+}
   } catch (e) {
     // ✅ Handle Mongo duplicate key
     if (e?.code === 11000) {
@@ -31,16 +37,13 @@ const passwordHash = await bcrypt.hash(password, 10);
   }
 // load fresh doc with refreshTokenHash selectable
 const fresh = await User.findById(user._id).select("+refreshTokenHash");
+const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
+const refreshToken = signRefreshToken({ sub: user._id.toString(), role: user.role });
 
-
-  const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
-  const refreshToken = signRefreshToken({ sub: user._id.toString(), role: user.role });
-
-  // Store refresh token hash in DB (recommended)
-  fresh.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-  await fresh.save();
-
-  return { user: sanitizeUser(user), accessToken, refreshToken };
+// Store refresh token hash in DB (recommended)
+fresh.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+await fresh.save();
+return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 
 export async function loginUser({ phone, password }) {
@@ -76,6 +79,8 @@ export function sanitizeUser(user) {
     email: user.email,
     phone: user.phone,
     role: user.role,
+    state: user.state,
+    city: user.city,
     isActive: user.isActive,
     createdAt: user.createdAt,
   };
