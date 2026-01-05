@@ -77,7 +77,7 @@ import SettingsPage from './pages/Admin/SettingsPage';
 import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
 import CoursePurchaseList from './pages/Admin/CoursePurchaseList';
 import EcomProductList from './pages/Admin/Ecom/EcomPurchaseList';
-
+import AdminCourseCategoryPage from './pages/Admin/AdminCourseCategoryPage';
 
 import AskDoubtSection from "./pages/AskDoubt/AskDoubtSection";
 import ResearchReport from "./pages/ResearchReport/ResearchReport";
@@ -179,8 +179,8 @@ function App() {
       <Route path="/admin/announcements" element ={<AdminAnnouncementsPage/>}/>
       <Route path="/admin/announcements/create" element = {<AddAnnouncementPage/>}/>
       <Route path="/admin/courses" element={<AdminCoursesPage/>}/>
-      <Route path="/admin/courses/:slug/edit" element={<AdminCourseDetailPage />} />
-      <Route path="/admin/course-edit/:slug" element={<EditCoursePage/>}/>
+      <Route path="/admin/courses/:courseId" element={<AdminCourseDetailPage />} />
+      <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage/>}/>
       <Route path="/admin/courses/add" element={<AddCoursePage/>}/>
       <Route path="/admin/courses/enroll" element = {<EnrollStudentsPage/>}/>
       <Route path="/admin/ecom/orders" element={<EcomOrdersPage />} />
@@ -195,7 +195,7 @@ function App() {
       <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>
       <Route path="/admin/courses/purchaseList" element={<CoursePurchaseList/>}/>
       <Route path="/admin/ecom/products/purchase" element = {<EcomProductList/>}/>
-
+      <Route path="/admin/courses/category"  element={<AdminCourseCategoryPage/>}/>
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />
        <Route path="/research-report" element={<ResearchReport />} />

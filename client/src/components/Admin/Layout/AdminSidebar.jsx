@@ -50,6 +50,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       children: [
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
+        { label: "Category", path: "/admin/courses/category" },
         { label: "Enroll Students", path: "/admin/courses/enroll" },
         {label: "Course Purchase List", path: "/admin/courses/purchaseList"},
       ],

@@ -3,18 +3,19 @@ import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
-
+import { coursesApi } from "../../services/courses";
 export default function AddCoursePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-
+const [loading, setLoading] = useState(false);
   // All form states
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [short, setShort] = useState("");
   const [description, setDescription] = useState("");
+  const [duration, setDuration] = useState("");
   const [info, setInfo] = useState("");
   const [professors, setProfessors] = useState([""]);
   const [price, setPrice] = useState("");
@@ -54,15 +55,39 @@ export default function AddCoursePage() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 💡 Normally you'd POST to backend — for now just toast
-    showToast("Course added successfully!", "success");
+    try {
+      setLoading(true);
 
-    navigate("/admin/courses");
+      const payload = {
+        title,
+        category,
+        short,
+        description,
+        duration,
+        info,
+        professors: professors.filter((p) => p.trim() !== ""),
+        price: Number(price || 0),
+        discount: Number(discount || 0),
+        tax: Number(tax || 0),
+        date,
+        img,
+        tags,
+      };
+
+       await coursesApi.create(payload);
+
+      showToast("Course added successfully!", "success");
+      navigate("/admin/courses");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || "Failed to add course";
+      showToast(msg, "error");
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
 
@@ -149,6 +174,15 @@ export default function AddCoursePage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows="4"
+                  className="w-full mt-2 p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="font-medium text-gray-700">Course Duration</label>
+                <textarea
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  rows="1"
                   className="w-full mt-2 p-2 border rounded"
                 />
               </div>

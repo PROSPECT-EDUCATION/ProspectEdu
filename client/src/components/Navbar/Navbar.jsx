@@ -1,30 +1,47 @@
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import DropdownMenu from "./DropdownMenu";
 import logo from "../../assets/logo.png.webp";
 import { Link } from "react-router-dom";
-
+import { categoriesApi } from "../../services/categories"; 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [courseCategories, setCourseCategories] = useState([]);
+
 
   const toggleMenu = (menu) =>
     setActiveMenu(activeMenu === menu ? null : menu);
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await categoriesApi.list();
+
+      // expecting: [{ _id, name }]
+      setCourseCategories(res.data.categories || []);
+    } catch (err) {
+      console.error("Failed to load course categories", err);
+    }
+  };
+
+  fetchCategories();
+}, []);
+
 
   // ------------------ UPDATED LINKS WITH CUSTOM ROUTES ------------------
   const links = [
     { label: "Home", to: "/" },
 
-    {
-      label: "Courses",
-      dropdown: [
-        { label: "Engineering", to: "/courses/engineering" },
-        { label: "Law", to: "/courses/law" },
-        { label: "Management", to: "/courses/management" },
-        { label: "Medical", to: "/courses/medical" },
-      ],
-    },
-
+   {
+  label: "Courses",
+  dropdown: courseCategories.map((cat) => ({
+    label: cat.name,
+    to: `/courses/${cat.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`,
+  })),
+},
+   
     {
       label: "Test & Learning", to:"/test-learning "
      

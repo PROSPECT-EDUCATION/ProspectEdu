@@ -1,5 +1,4 @@
 // src/data/courses.js
-
 import itImg from "../assets/it.webp";
 import projectImg from "../assets/project.webp";
 import electricalImg from "../assets/electrical.webp";
@@ -28,7 +27,7 @@ Students will develop technical, managerial, and professional communication skil
 The program prepares learners to confidently face workplace challenges and industry roles.
 By the end, participants emerge with job-ready skills and a strong foundational understanding.`,
 
-    image: itImg,
+    img: itImg,
     imageAlt:
       "PG Programme in Quantity Surveying and Contract Management course",
 
@@ -36,11 +35,10 @@ By the end, participants emerge with job-ready skills and a strong foundational 
     level: "Postgraduate",
     professors: ["Jimmy Morris", "Sarah Lewis"],
     tags: ["Quantity Surveying", "Contract Management", "Construction"],
-    languages: ["English"],
-
+    date: "07 August 2021",
     price: 1500,
-    discountPercent: 10,
-    taxPercent: 18,
+    discount: 10,
+    tax: 18,
   },
 
   {
@@ -65,7 +63,7 @@ Students will develop technical, managerial, and professional communication skil
 The program prepares learners to confidently face workplace challenges and industry roles.
 By the end, participants emerge with job-ready skills and a strong foundational understanding.`,
 
-    image: projectImg,
+    img: projectImg,
     imageAlt:
       "PG Programme in Project Management for working professionals",
 
@@ -73,11 +71,10 @@ By the end, participants emerge with job-ready skills and a strong foundational 
     level: "Postgraduate",
     professors: ["Anil Kumar", "Priya Singh"],
     tags: ["Project Management", "Agile", "Scrum"],
-    languages: ["English", "Hindi"],
-
+    date: "10 August 2021",
     price: 1800,
-    discountPercent: 5,
-    taxPercent: 18,
+    discount: 5,
+    tax: 18,
   },
 
   {
@@ -102,7 +99,7 @@ Students will develop technical, managerial, and professional communication skil
 The program prepares learners to confidently face workplace challenges and industry roles.
 By the end, participants emerge with job-ready skills and a strong foundational understanding.`,
 
-    image: electricalImg,
+    img: electricalImg,
     imageAlt:
       "PG Programme in Construction Management course details",
 
@@ -110,11 +107,10 @@ By the end, participants emerge with job-ready skills and a strong foundational 
     level: "Postgraduate",
     professors: ["Rohit Mehta", "Sneha Chauhan"],
     tags: ["Construction", "Management", "Planning"],
-    languages: ["English"],
-
+    date: "10 August 2021",
     price: 1700,
-    discountPercent: 8,
-    taxPercent: 18,
+    discount: 8,
+    tax: 18,
   },
 
   {
@@ -139,18 +135,17 @@ Students will develop technical, managerial, and professional communication skil
 The program prepares learners to confidently face workplace challenges and industry roles.
 By the end, participants emerge with job-ready skills and a strong foundational understanding.`,
 
-    image: lawImg,
+    img: lawImg,
     imageAlt: "Law internship programme with case studies",
 
     duration: "6 Weeks",
     level: "Internship",
     professors: ["Adv. Kavita Sharma", "Adv. Deepak Verma"],
     tags: ["Law", "Internship", "Case Studies"],
-    languages: ["English", "Hindi"],
-
+    date: "11 August 2021",
     price: 900,
-    discountPercent: 0,
-    taxPercent: 18,
+    discount: 0,
+    tax: 18,
   },
 ]);
 

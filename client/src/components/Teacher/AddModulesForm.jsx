@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Plus, Trash, Upload } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { courseContentApi } from "../../services/courseContent";
 
 export default function AddModulesForm({ onSave }) {
+  const { courseId } = useParams();
+
   const [modules, setModules] = useState([
     { title: "", description: "", videos: [], pdfs: [] },
   ]);
@@ -26,7 +30,7 @@ export default function AddModulesForm({ onSave }) {
     const updated = [...modules];
     updated[index][field] = value;
     setModules(updated);
-    setErrors({}); // clear error on typing
+    setErrors({});
   };
 
   // Validate Modules Before Saving
@@ -50,9 +54,25 @@ export default function AddModulesForm({ onSave }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateModules()) {
-      onSave(modules);
+  // ✅ API CONNECTED SAVE
+  const handleSave = async () => {
+    if (!validateModules()) return;
+
+    try {
+      for (let i = 0; i < modules.length; i++) {
+        const mod = modules[i];
+
+        await courseContentApi.createModule(courseId, {
+          title: mod.title,
+          description: mod.description,
+          order: i + 1,
+        });
+      }
+
+      if (onSave) onSave();
+    } catch (err) {
+      console.error("Create module error:", err);
+      alert(err.response?.data?.message || "Failed to create modules");
     }
   };
 
