@@ -2,10 +2,9 @@ import './App.css'
 import Home from "./pages/home";
 import {Routes, Route} from "react-router-dom";
 import Courses from "./pages/Courses";
-import EngineeringCourses from "./pages/Courses/EngineeringCourses";
-import LawCourses from "./pages/Courses/LawCourses";
-import ManagementCourses from "./pages/Courses/ManagementCourses";
-import MedicalCourses from './pages/Courses/MedicalCourses';
+import CategoryCourses from "./pages/Courses/CategoryCourses";
+import PublicCourseDetail from "./pages/Courses/PublicCourseDetail";
+import CheckoutPage from './pages/Courses/CheckoutPage';
 import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
 import SignupPage from "./pages/Auth/SignupPage";
@@ -122,10 +121,9 @@ function App() {
     <Routes>
       <Route path="/" element={<Home/>}/>
       <Route path="/courses" element={<Courses />} />
-      <Route path="/courses/engineering" element={<EngineeringCourses />} />
-      <Route path="/courses/law" element={<LawCourses />} />
-      <Route path="/courses/management" element={<ManagementCourses />} />
-      <Route path="/courses/medical" element={<MedicalCourses/>}/>
+      <Route path="/categories/:category" element={<CategoryCourses />} />
+      <Route path="/courses/:slug" element={<PublicCourseDetail/>}/>
+      <Route path="/checkout/:courseId" element={<CheckoutPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/student-dashboard" element={<StudentDashboard/>}/>

@@ -3,7 +3,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import DropdownMenu from "./DropdownMenu";
 import logo from "../../assets/logo.png.webp";
 import { Link } from "react-router-dom";
-import { categoriesApi } from "../../services/categories"; 
+import { publicCategoriesApi } from "../../services/publicCategories";
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -12,15 +12,14 @@ export default function Navbar() {
 
   const toggleMenu = (menu) =>
     setActiveMenu(activeMenu === menu ? null : menu);
-  useEffect(() => {
+useEffect(() => {
   const fetchCategories = async () => {
     try {
-      const res = await categoriesApi.list();
-
-      // expecting: [{ _id, name }]
+      const res = await publicCategoriesApi.list();
       setCourseCategories(res.data.categories || []);
     } catch (err) {
       console.error("Failed to load course categories", err);
+      setCourseCategories([]); // fallback
     }
   };
 
@@ -36,9 +35,7 @@ export default function Navbar() {
   label: "Courses",
   dropdown: courseCategories.map((cat) => ({
     label: cat.name,
-    to: `/courses/${cat.name
-      .toLowerCase()
-      .replace(/\s+/g, "-")}`,
+  to: `/categories/${cat.name.trim().toLowerCase()}`,
   })),
 },
    

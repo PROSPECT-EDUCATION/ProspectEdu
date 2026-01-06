@@ -4,6 +4,7 @@ import ConfirmDialog from "../../ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { coursesApi } from "../../../services/courses";
 
+
 export default function CourseDetail({ courseId }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -13,22 +14,23 @@ export default function CourseDetail({ courseId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchCourse = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await coursesApi.adminGet(courseId);
-        setCourse(res.data.course);
-      } catch (e) {
-        setError(e?.response?.data?.message || "Failed to load course");
-      } finally {
-        setLoading(false);
-      }
-    };
+ useEffect(() => {
+  const fetchCourse = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await coursesApi.adminGet(courseId);
+      setCourse(res.data.course);
+    } catch (e) {
+      setError(e?.response?.data?.message || "Failed to load course");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (courseId) fetchCourse();
-  }, [courseId]);
+  if (courseId) fetchCourse();
+}, [courseId]);
+
 
   const cost = useMemo(() => {
     const price = Number(course?.price || 0);
@@ -75,20 +77,23 @@ export default function CourseDetail({ courseId }) {
 
             {/* Admin Actions */}
             <div className="flex gap-4 mt-6">
-              <button
-                onClick={() => navigate(`/admin/courses/${course._id}/edit`)}
-                className="bg-[#124734] text-white px-4 py-2 rounded-md hover:bg-[#0E3A2B]"
-              >
-                Edit Course
-              </button>
+  
+      <button
+        onClick={() => navigate(`/admin/courses/${course._id}/edit`)}
+        className="bg-[#124734] text-white px-4 py-2 rounded-md hover:bg-[#0E3A2B]"
+      >
+        Edit Course
+      </button>
 
-              <button
-                onClick={() => setOpenDelete(true)}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-              >
-                Delete Course
-              </button>
-            </div>
+      <button
+        onClick={() => setOpenDelete(true)}
+        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+      >
+        Delete Course
+      </button>
+   
+</div>
+
           </div>
         </div>
 

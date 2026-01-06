@@ -10,25 +10,25 @@ export default function CategorySection() {
       title: "Engineering",
       icon: itIcon,
       description: "Explore programming and software courses.",
-      path: "/courses/engineering",
+      path: "/categories/engineering",
     },
     {
       title: "Law",
       icon: lawIcon,
       description: "Understand the principles of law and legal studies.",
-      path: "/courses/law",
+      path: "/categories/law",
     },
     {
       title: "Management",
       icon: electricalIcon,
       description: "Dive into power systems and Management.",
-      path: "/courses/management",
+      path: "/categories/management",
     },
     {
       title: "Medical",
       icon: medicalIcon,
       description: "Understand how the human body works.",
-      path: "/courses/medical",
+      path: "/categories/medical",
     },
   ];
 
