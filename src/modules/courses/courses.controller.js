@@ -72,7 +72,10 @@ export async function createCourse(req, res, next) {
     const course = await Course.create({
       // ===== FRONTEND FIELDS (same names) =====
       title: data.title,
-      category: data.category || "",
+      category: String(data.category || "")
+  .toLowerCase()
+  .trim(),
+
       short: data.short || "",
       description: data.description || "",
       info: data.info || "",
@@ -304,13 +307,20 @@ export async function adminDeleteCourse(req, res, next) {
 
 export async function listPublishedCourses(req, res, next) {
   try {
-    const { q = "", page = 1, limit = 12 } = queryCoursesSchema.parse(req.query);
+    const { q = "", page = 1, limit = 12, category } = req.query;
 
     const p = Math.max(1, Number(page));
     const l = Math.min(50, Math.max(1, Number(limit)));
 
-    const filter = { status: "published" };
-    if (q) filter.$text = { $search: String(q) };
+    const filter = {};
+
+    if (category) {
+      filter.category = String(category).trim().toLowerCase();
+    }
+
+    if (q) {
+      filter.$text = { $search: String(q) };
+    }
 
     const courses = await Course.find(filter)
       .sort({ createdAt: -1 })
@@ -318,11 +328,14 @@ export async function listPublishedCourses(req, res, next) {
       .limit(l)
       .select("-__v");
 
+    console.log("FOUND COURSES =", courses.length);
     res.json({ success: true, page: p, limit: l, courses });
   } catch (e) {
     next(e);
   }
 }
+
+
 
 export async function getCourseById(req, res, next) {
   try {

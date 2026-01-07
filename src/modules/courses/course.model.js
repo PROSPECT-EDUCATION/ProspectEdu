@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-export const COURSE_STATUS = ["draft", "published", "archived"];
 
 const courseSchema = new Schema(
   {
@@ -12,7 +11,7 @@ const courseSchema = new Schema(
     short: { type: String, trim: true, default: "" },        // Short Description
     description: { type: String, trim: true, default: "" },  // Course Description
     info: { type: String, trim: true, default: "" },         // Course Information
-
+    duration: {type : String , trim: true, default: "" },
     professors: [{ type: String, trim: true }],
 
     price: { type: Number, default: 0 },
@@ -26,7 +25,6 @@ const courseSchema = new Schema(
 
     // ===== AUTOMATION FIELDS =====
     slug: { type: String, unique: true, index: true },
-    status: { type: String, enum: COURSE_STATUS, default: "draft" },
 
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 

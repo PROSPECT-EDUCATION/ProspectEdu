@@ -12,6 +12,9 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import usersRoutes from "./modules/users/users.routes.js"
 import coursesRoutes from "./modules/courses/courses.routes.js";
 import contentRoutes from "./modules/courses/content.routes.js";
+import categoryRoutes from "./modules/courseCategories/category.routes.js";
+import purchaseRoutes from "./modules/purchases/purchase.routes.js";
+
 export function createApp() {
   const app = express();
 
@@ -30,6 +33,8 @@ export function createApp() {
   app.use("/api/v1/courses", coursesRoutes);
   app.use("/api/v1", contentRoutes);
 
+  app.use("/api/v1/course-categories", categoryRoutes);
+  app.use("/api/v1/purchases", purchaseRoutes);
 
   app.use(notFound);
   app.use(errorHandler);
