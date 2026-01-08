@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
-
+import { api } from "../../lib/api";
+import CourseCard from "../Courses/CourseCard";
 export default function MyCourses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -12,8 +13,9 @@ export default function MyCourses() {
 
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
-  const courses = [];
-  const currentList = courses;
+  // ✅ DATA STATE (no UI change)
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // ✅ SEO: prevent indexing of private page
   useEffect(() => {
@@ -24,6 +26,54 @@ export default function MyCourses() {
 
     return () => document.head.removeChild(meta);
   }, []);
+
+  // ✅ FETCH MY COURSES (enrollments)
+  useEffect(() => {
+    const fetchMyCourses = async () => {
+      try {
+        setLoading(true);
+
+        // must be logged in
+        const token = sessionStorage.getItem("accessToken");
+        if (!token) {
+          setCourses([]);
+          return;
+        }
+
+        // Backend route: GET /api/v1/courses/me/enrollments
+        const res = await api.get("/courses/me/enrollments");
+
+        // Support multiple possible response shapes
+        const rows = res?.data?.courses || res?.data?.enrollments || [];
+
+        // Normalize so UI can later render cards if you add them
+        const mapped = rows
+          .map((row) => row?.course || row?.courseId || row)
+          .filter(Boolean)
+          .map((c) => ({
+            _id: c._id,
+            slug: c.slug,
+            title: c.title,
+            img: c.img,
+            short: c.short,
+            date: c.date,
+            price: c.price,
+          }));
+
+        setCourses(mapped);
+      } catch (err) {
+        console.error("Failed to load enrolled courses", err);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyCourses();
+  }, []);
+
+  // ✅ NO UI change: keep same variables
+  const currentList = courses;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -134,7 +184,7 @@ export default function MyCourses() {
         {/* Body */}
         <main
           className="flex-1 overflow-y-auto px-4 md:px-6 py-8"
-          style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}
+          style={{ marginTop: "70px", height: "calc(100vh - 128px)" }}
           aria-labelledby="my-courses-heading"
         >
           {/* Hidden semantic heading */}
@@ -143,10 +193,29 @@ export default function MyCourses() {
           </h1>
 
           <div className="w-full max-w-6xl mx-auto">
-            {currentList.length === 0 ? (
+            {loading ? (
+              <p className="text-center text-[#5B7065] py-10">Loading...</p>
+            ) : currentList.length === 0 ? (
               <RefreshComponent message="You haven't purchased any courses!" />
             ) : (
-              <div>{/* Course cards go here later */}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {currentList.map((course) => (
+    <CourseCard
+      key={course._id}
+      course={{
+        _id: course._id,
+        slug: course.slug,
+        title: course.title,
+        image: course.img,       // ✅ important mapping
+        mode: course.short,
+        startDate: course.date,
+        price: course.price,
+        isPurchased: true,       // ✅ MyCourses always purchased
+      }}
+    />
+  ))}
+</div>
+
             )}
           </div>
         </main>

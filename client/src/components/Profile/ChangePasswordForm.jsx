@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { authApi } from "../../services/auth";
 
 export default function ChangePasswordForm() {
   const [show, setShow] = useState({
@@ -23,26 +24,42 @@ export default function ChangePasswordForm() {
   const handleChange = (field, value) =>
     setPasswords((p) => ({ ...p, [field]: value }));
 
-  const handleSubmit = () => {
-    if (!passwords.old || !passwords.new || !passwords.confirm) {
-      showToast("Please fill all fields", "error");
-      return;
-    }
+  const handleSubmit = async () => {
+  if (!passwords.old || !passwords.new || !passwords.confirm) {
+    showToast("Please fill all fields", "error");
+    return;
+  }
 
-    if (passwords.new !== passwords.confirm) {
-      showToast("New passwords do not match", "error");
-      return;
-    }
+  if (passwords.new !== passwords.confirm) {
+    showToast("New passwords do not match", "error");
+    return;
+  }
 
-    if (passwords.new.length < 6) {
-      showToast("Password must be at least 6 characters", "error");
-      return;
-    }
+  if (passwords.new.length < 6) {
+    showToast("Password must be at least 6 characters", "error");
+    return;
+  }
 
-    showToast("Password updated successfully!", "success");
+  try {
+    await authApi.changePassword({
+      oldPassword: passwords.old,
+      newPassword: passwords.new,
+    });
+
+    showToast("Password updated successfully! Please login again.", "success");
+
+    // clear token + redirect (recommended because refresh cookie cleared too)
+    sessionStorage.removeItem("accessToken");
+    window.location.href = "/login"; // or use navigate if you pass it
 
     setPasswords({ old: "", new: "", confirm: "" });
-  };
+  } catch (err) {
+    const msg =
+      err?.response?.data?.message ||
+      "Failed to update password. Please try again.";
+    showToast(msg, "error");
+  }
+};
 
   return (
     <div className="

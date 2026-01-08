@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import LogoutModal from "../../Profile/LogoutModal";
-
+import { activityApi } from "../../../services/activity";
+import { authApi } from "../../../services/auth"; 
 export default function ProfileAvatar({ role = "student" }) {
   const [open, setOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [me, setMe] = useState({ fullName: "", phone: "" });
 
   const buttonRef = useRef(null);
   const navigate = useNavigate();
@@ -19,6 +21,39 @@ export default function ProfileAvatar({ role = "student" }) {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
+  useEffect(() => {
+  (async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      if (!token) return;
+
+      const res = await authApi.me(token);
+
+      // adjust depending on response shape:
+      const user = res?.data?.user || res?.data || {};
+
+      setMe({
+        fullName: user.fullName || "",
+        phone: user.phone || "",
+      });
+    } catch (err) {
+      console.error("Failed to load user:", err?.response?.data || err.message);
+    }
+  })();
+}, []);
+useEffect(() => {
+  const refresh = async () => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+    const res = await authApi.me(token);
+    const user = res?.data?.user || res?.data || {};
+    setMe({ fullName: user.fullName || "", phone: user.phone || "" });
+  };
+
+  window.addEventListener("profile_refresh", refresh);
+  return () => window.removeEventListener("profile_refresh", refresh);
+}, []);
+
 
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
@@ -50,11 +85,26 @@ const toggle = () => {
   setOpen((v) => !v);
 };
 
+const handleNavigate = async (path, title) => {
+  try {
+    const token = sessionStorage.getItem("accessToken");
+    if (token) {
+      await activityApi.log({
+        type: path,                 // ✅ use path as type (unique)
+        title: title || "Profile",  // ✅ readable
+        route: path,
+      });
 
-  const handleNavigate = (path) => {
-    navigate(path);
-    setOpen(false);
-  };
+      // ✅ refresh RecentActivity in same tab
+      window.dispatchEvent(new Event("activity_refresh"));
+    }
+  } catch (e) {
+    console.error("ProfileAvatar activity log failed:", e?.response?.status, e?.response?.data);
+  }
+
+  navigate(path);
+  setOpen(false);
+};
 
   // 🔥 MENU LIST BASED ON ROLE
   const MENU_ITEMS =
@@ -124,11 +174,14 @@ const toggle = () => {
           >
             {/* PROFILE HEADER */}
             <div
-              onMouseDown={() => handleNavigate(PROFILE_REDIRECT)}
+              onMouseDown={() => handleNavigate(PROFILE_REDIRECT, "Profile")}
               className="px-4 py-3 border-b border-[#A7E1B2]/30 hover:bg-[#F9FAFB] cursor-pointer transition"
             >
-              <p className="font-semibold text-[#124734]">Pratima Singh</p>
-              <p className="text-sm text-[#5B7065]">+91 98765 43210</p>
+<p className="font-semibold text-[#124734]">{me.fullName || "—"}</p>
+<p className="text-sm text-[#5B7065]">
+  {me.phone ? `+91 ${me.phone}` : "—"}
+</p>
+
             </div>
 
             {/* MENU LIST */}
@@ -136,7 +189,7 @@ const toggle = () => {
               {MENU_ITEMS.map((item, idx) => (
                 <li
                   key={idx}
-                  onMouseDown={() => handleNavigate(item.path)}
+                  onMouseDown={() => handleNavigate(item.path, item.label)}
                   className="px-4 py-2 hover:bg-[#A7E1B2]/20 cursor-pointer transition"
                 >
                   {item.label}

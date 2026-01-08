@@ -52,23 +52,35 @@ export default function CourseCard({ course }) {
         </p>
 
         <div className=" mt-2 flex gap-3">
-          <button
-          onClick={() => navigate(`/courses/${course.slug}`)}
-            className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
-            aria-label={`Explore ${course.title}`}
-          >
-            Explore
-          </button>
+  {course.isPurchased ? (
+    <button
+      onClick={() => navigate(`/courses/${course.slug}`)}
+      className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
+      aria-label={`View ${course.title}`}
+    >
+      View
+    </button>
+  ) : (
+    <>
+      <button
+        onClick={() => navigate(`/courses/${course.slug}`)}
+        className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
+        aria-label={`Explore ${course.title}`}
+      >
+        Explore
+      </button>
 
-          <button
-          onClick={handleBuyNow}
+      <button
+        onClick={handleBuyNow}
+        className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
+        aria-label={`Enroll now for ${course.title}`}
+      >
+        Enroll Now
+      </button>
+    </>
+  )}
+</div>
 
-            className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
-            aria-label={`Enroll now for ${course.title}`}
-          >
-            Enroll Now
-          </button>
-        </div>
       </div>
     </article>
   );

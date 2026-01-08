@@ -7,12 +7,74 @@ import RecentActivity from "../../components/Student/RecentActivity";
 import BannerCarousel from "../../components/Student/BannerCarousel";
 import DashboardStats from "../../components/Student/DashboardStats";
 import DashboardCharts from "../../components/Student/DashboardCharts";
-
+import { useLocation } from "react-router-dom";
+import { activityApi } from "../../services/activity";
 export default function StudentDashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+  const location = useLocation();
+
+useEffect(() => {
+  const token = sessionStorage.getItem("accessToken");
+  if (!token) return;
+
+  const path = location.pathname;
+
+  // ✅ prevent duplicate spam (React strict mode + repeated clicks)
+  const lastPath = sessionStorage.getItem("lastActivityPath");
+  if (lastPath === path) return;
+  sessionStorage.setItem("lastActivityPath", path);
+
+  // ✅ Friendly titles for known pages (add as many as you want)
+  const routeTitles = {
+  "/student-dashboard": { type: "dashboard", title: "Dashboard" },
+  "/student/all-courses": { type: "all-courses", title: "All Courses" },
+  "/student/my-courses": { type: "my-courses", title: "My Courses" },
+  "/student/orders": { type: "orders", title: "Orders" },
+  "/student/doubts": { type: "doubts", title: "Doubts" },
+  "/student/live-classes": { type: "live-classes", title: "Live Classes" },
+  "/student/study-materials": { type: "study-materials", title: "Study Materials" },
+  "/student/practice": { type: "practice", title: "Practice" },
+  "/student/test-series": { type: "my-test-series", title: "My Test Series" },
+  "/student/change-password": { type: "change-password", title: "Change Password" },
+  "/student/edit-profile": { type: "edit-profile", title: "Edit Profile" },
+};
+
+
+  // ✅ Fallback: auto-generate title from URL
+  const makeTitleFromPath = (p) => {
+    const last = p.split("/").filter(Boolean).pop() || "Page";
+    // e.g. "live-classes" -> "Live Classes"
+    return last
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+const exact = routeTitles[path];
+const key = Object.keys(routeTitles).find((k) => path.startsWith(k));
+
+const meta =
+  exact ||
+  (key ? routeTitles[key] : { type: "navigation", title: makeTitleFromPath(path) });
+
+console.log("LOGGING ACTIVITY:", { type: meta.type, title: meta.title, route: path });
+  // ✅ Fire-and-forget (never block UI)
+ activityApi
+  .log({ type: meta.type, title: meta.title, route: path })
+  .then(() => {
+    // ✅ notify RecentActivity to refresh
+    window.dispatchEvent(new Event("activity_refresh"));
+
+  })
+  .catch((err) => {
+    console.error("ACTIVITY LOG FAILED:", err?.response?.status, err?.response?.data);
+  });
+
+
+
+}, [location.pathname]);
 
   // ✅ SEO: prevent indexing (private page)
   useEffect(() => {

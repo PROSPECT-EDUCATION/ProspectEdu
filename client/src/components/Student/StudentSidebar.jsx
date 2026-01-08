@@ -10,6 +10,7 @@ import {
   ListChecks
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { activityApi } from "../../services/activity";
 
 export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
   const location = useLocation();
@@ -53,19 +54,38 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
         {/* Menu Items */}
         <nav className="mt-4 space-y-1 flex-1 overflow-y-auto">
           {menuItems.map(({ label, icon: Icon, path }) => (
-            <Link
-              key={label}
-              to={path}
-              className={`flex items-center gap-3 px-6 py-3 w-full text-left transition-all duration-200 font-body ${
-                location.pathname === path
-                  ? "bg-[#009846]/20 text-[#A7E1B2] border-l-4 border-[#009846]"
-                  : "text-[#E6F4EC] hover:bg-[#009846]/10 hover:text-[#A7E1B2]"
-              } ${isCollapsed ? "justify-center" : ""}`}
-            >
-              <Icon size={18} />
-              {!isCollapsed && <span className="text-sm">{label}</span>}
-            </Link>
-          ))}
+  <Link
+    key={label}
+    to={path}
+    onClick={() => {
+      const token = sessionStorage.getItem("accessToken");
+      if (!token) return;
+
+      activityApi
+        .log({
+          type: path,      // ✅ use path as type (unique + consistent)
+          title: label,
+          route: path,
+        })
+        .then(() => {
+          // ✅ refresh recent activity in SAME TAB
+          window.dispatchEvent(new Event("activity_refresh"));
+        })
+        .catch((err) => {
+          console.error("SIDEBAR ACTIVITY LOG FAILED:", err?.response?.status, err?.response?.data);
+        });
+    }}
+    className={`flex items-center gap-3 px-6 py-3 w-full text-left transition-all duration-200 font-body ${
+      location.pathname === path
+        ? "bg-[#009846]/20 text-[#A7E1B2] border-l-4 border-[#009846]"
+        : "text-[#E6F4EC] hover:bg-[#009846]/10 hover:text-[#A7E1B2]"
+    } ${isCollapsed ? "justify-center" : ""}`}
+  >
+    <Icon size={18} />
+    {!isCollapsed && <span className="text-sm">{label}</span>}
+  </Link>
+))}
+
         </nav>
       </div>
 

@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
+import { usersApi } from "../../services/users";
 export default function AddCoursePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-
+  const [teacherOptions, setTeacherOptions] = useState([]);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([""]);
   const [isCollapsed, setIsCollapsed] = useState(false);
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // All form states
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -30,6 +32,16 @@ const [loading, setLoading] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
 
   const sidebarWidth = isCollapsed ? 80 : 256;
+ useEffect(() => {
+  (async () => {
+    try {
+      const res = await usersApi.listTeachers();
+      setTeacherOptions(res.data.teachers || []);
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to load teachers", "error");
+    }
+  })();
+}, []);
 
   const handleAddProfessor = () => {
     setProfessors([...professors, ""]);
@@ -61,21 +73,29 @@ const [loading, setLoading] = useState(false);
     try {
       setLoading(true);
 
-      const payload = {
-        title,
-        category,
-        short,
-        description,
-        duration,
-        info,
-        professors: professors.filter((p) => p.trim() !== ""),
-        price: Number(price || 0),
-        discount: Number(discount || 0),
-        tax: Number(tax || 0),
-        date,
-        img,
-        tags,
-      };
+      const teacherIds = selectedTeacherIds.filter(Boolean);
+
+const professorNames = teacherIds
+  .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
+  .filter(Boolean);
+
+const payload = {
+  title,
+  category,
+  short,
+  description,
+  duration,
+  info,
+  professors: professorNames,        // optional display
+  assignedTeachers: teacherIds,      // ✅ real linkage
+  price: Number(price || 0),
+  discount: Number(discount || 0),
+  tax: Number(tax || 0),
+  date,
+  img,
+  tags,
+};
+
 
        await coursesApi.create(payload);
 
@@ -188,26 +208,39 @@ const [loading, setLoading] = useState(false);
               </div>
 
               {/* Professors */}
-              <div>
-                <label className="font-medium text-gray-700">Professors</label>
-                {professors.map((prof, i) => (
-                  <input
-                    key={i}
-                    type="text"
-                    value={prof}
-                    onChange={(e) => handleProfessorChange(i, e.target.value)}
-                    className="w-full mt-2 p-2 border rounded"
-                  />
-                ))}
+              {/* Professors */}
+<div>
+  <label className="font-medium text-gray-700">Professors</label>
 
-                <button
-                  type="button"
-                  onClick={handleAddProfessor}
-                  className="mt-2 text-sm text-[#124734] underline"
-                >
-                  + Add another professor
-                </button>
-              </div>
+  {selectedTeacherIds.map((tid, i) => (
+    <select
+      key={i}
+      value={tid}
+      onChange={(e) => {
+        const updated = [...selectedTeacherIds];
+        updated[i] = e.target.value;
+        setSelectedTeacherIds(updated);
+      }}
+      className="w-full mt-2 p-2 border rounded"
+    >
+      <option value="">Select Teacher</option>
+      {teacherOptions.map((t) => (
+        <option key={t._id} value={t._id}>
+          {t.fullName}
+        </option>
+      ))}
+    </select>
+  ))}
+
+  <button
+    type="button"
+    onClick={() => setSelectedTeacherIds([...selectedTeacherIds, ""])}
+    className="mt-2 text-sm text-[#124734] underline"
+  >
+    + Add another professor
+  </button>
+</div>
+
 
               {/* Pricing */}
               <div>

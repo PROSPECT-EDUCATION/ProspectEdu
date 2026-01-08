@@ -5,23 +5,18 @@ import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
 import CourseCard from "../Courses/CourseCard";
 import { publicCoursesApi } from "../../services/publicCourses";
+import { publicCategoriesApi } from "../../services/publicCategories";
 
 export default function AllCourses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(false);
 
-  const [coursesByCategory, setCoursesByCategory] = useState({
-    all: [],
-    engineering: [],
-    management: [],
-    law: [],
-    medical: [],
-  });
+ const [coursesByCategory, setCoursesByCategory] = useState({ all: [] });
 
   const navigate = useNavigate();
   const sidebarWidthPx = isCollapsed ? 80 : 256;
-
+  const [categories, setCategories] = useState([]); 
   // ✅ NOINDEX
   useEffect(() => {
     const meta = document.createElement("meta");
@@ -33,46 +28,65 @@ export default function AllCourses() {
   }, []);
 
   // ================= FETCH COURSES =================
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
+useEffect(() => {
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
 
-        const mapToUI = (courses) =>
-          courses.map((c) => ({
-            _id: c._id,
-            slug: c.slug,
-            title: c.title,
-            image: c.img,
-            mode: c.short,
-            startDate: c.date,
-            price: c.price,
-          }));
+      const mapToUI = (courses) =>
+        courses.map((c) => ({
+          _id: c._id,
+          slug: c.slug,
+          title: c.title,
+          image: c.img,
+          mode: c.short,
+          startDate: c.date,
+          price: c.price,
+        }));
 
-        const [all, eng, mgmt, law, med] = await Promise.all([
-          publicCoursesApi.listAll(),
-          publicCoursesApi.listByCategory("engineering"),
-          publicCoursesApi.listByCategory("management"),
-          publicCoursesApi.listByCategory("law"),
-          publicCoursesApi.listByCategory("medical"),
-        ]);
+      // 1) Fetch categories from API
+      const catRes = await publicCategoriesApi.list();
+      const catList = catRes.data.categories || catRes.data.data || [];
 
-        setCoursesByCategory({
-          all: mapToUI(all.data.courses || []),
-          engineering: mapToUI(eng.data.courses || []),
-          management: mapToUI(mgmt.data.courses || []),
-          law: mapToUI(law.data.courses || []),
-          medical: mapToUI(med.data.courses || []),
-        });
-      } catch (err) {
-        console.error("Failed to load courses", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // normalize categories (depends on your backend response)
+      const normalizedCats = catList
+        .map((cat) => ({
+          slug: (cat.slug || cat.key || cat.name || "").toLowerCase(),
+          name: cat.name || cat.title || cat.slug || "Category",
+        }))
+        .filter((c) => c.slug);
 
-    fetchCourses();
-  }, []);
+      setCategories(normalizedCats);
+
+      // 2) Fetch ALL courses
+      const allRes = await publicCoursesApi.listAll();
+
+      // 3) Fetch courses for each category dynamically
+      const categoryCalls = await Promise.all(
+        normalizedCats.map((c) => publicCoursesApi.listByCategory(c.slug))
+      );
+
+      // 4) Build state object
+      const next = { all: mapToUI(allRes.data.courses || []) };
+
+      normalizedCats.forEach((c, idx) => {
+        const res = categoryCalls[idx];
+        next[c.slug] = mapToUI(res.data.courses || []);
+      });
+
+      setCoursesByCategory(next);
+    } catch (err) {
+      console.error("Failed to load courses", err);
+      setCoursesByCategory({ all: [] });
+      setCategories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCourses();
+}, []);
+
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -119,17 +133,13 @@ export default function AllCourses() {
             </span>{" "}
             / <span className="text-[#124734] font-medium">All Courses</span>
           </p>
-          </div>
-
+</div>
           {/* Tabs */}
           <div className="flex flex-wrap gap-4 border-b border-[#E6F4EC]">
             {[
-              ["all", "All Courses"],
-              ["engineering", "Engineering Courses"],
-              ["management", "Management Courses"],
-              ["law", "Law Courses"],
-              ["medical", "Medical Courses"],
-            ].map(([id, label]) => (
+  ["all", "All Courses"],
+  ...categories.map((c) => [c.slug, `${c.name} Courses`]),
+].map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}

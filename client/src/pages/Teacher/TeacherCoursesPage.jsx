@@ -108,13 +108,6 @@ export default function TeacherCoursesPage() {
                 My Courses
               </h2>
             </div>
-
-            <button
-              onClick={() => navigate("/teacher/create-course")}
-              className="bg-[#009846] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-[#007a39]"
-            >
-              <Plus size={18} /> Create Course
-            </button>
           </div>
 
           {/* Courses Grid */}

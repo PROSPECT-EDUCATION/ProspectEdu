@@ -12,4 +12,8 @@ export const authApi = {
     api.post("/auth/logout", null, {
       headers: { Authorization: `Bearer ${accessToken}` },
     }),
+    changePassword(payload) {
+    return api.patch("/auth/change-password", payload);
+  },
+
 };

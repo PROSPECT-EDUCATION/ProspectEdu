@@ -23,7 +23,6 @@ import OrdersPage from './pages/Student/OrdersPage';
 import Doubts from './pages/Student/Doubts';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import TeacherCoursesPage from './pages/Teacher/TeacherCoursesPage';
-import CreateCourse from './pages/Teacher/CreateCourse';
 import AddModulesPage from './pages/Teacher/AddModulesPage';
 import PublishCoursePage from './pages/Teacher/PublishCoursePage';
 import CourseManagement from './pages/Teacher/CourseManagement';
@@ -141,7 +140,6 @@ function App() {
       <Route path="/student/doubts" element={<Doubts/>}/>
       <Route path="/teacher-dashboard" element={<TeacherDashboard/>}/>
       <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
-      <Route path="/teacher/create-course" element={<CreateCourse/>}/>
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
       <Route path= "/teacher/publish-course" element ={<PublishCoursePage/>}/>
       <Route path="/teacher/course/:courseId" element={<CourseManagement />} />
