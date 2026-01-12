@@ -11,15 +11,11 @@ import {
   X
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { uploadsApi } from "../../../services/uploads"; // adjust path
+import { courseContentApi } from "../../../services/courseContent"; // adjust path
 
-export default function ModuleCard({
-  module,
-  index,
-  onDelete,
-  onEdit,
-  onAddLesson,     // (moduleIndex, lessonObj)
-  onDeleteLesson,  // (moduleIndex, lessonIndex)
-}) {
+export default function ModuleCard({ module, index, viewOnly = false })
+{
   const [open, setOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [lessonTitle, setLessonTitle] = useState("");
@@ -54,44 +50,57 @@ const [editTitle, setEditTitle] = useState(module.title);
   };
 const isSubmittingRef = useRef(false);
 
-const submitAddLesson = () => {
-  // Prevent double submit in React Strict Mode
+const submitAddLesson = async () => {
   if (isSubmittingRef.current) return;
   isSubmittingRef.current = true;
 
-  if (!lessonTitle.trim()) {
-    alert("Enter lesson title");
+  try {
+    if (!lessonTitle.trim()) {
+      alert("Enter lesson title");
+      return;
+    }
+    const file = filePreview?.file;
+    if (!file) {
+      alert("Please choose a file to upload");
+      return;
+    }
+
+    // 1) upload file to cloudinary via backend
+    const up = await uploadsApi.uploadLessonFile(file);
+
+    // 2) decide type
+    const isVideo = file.type.startsWith("video/");
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const type = isVideo ? "video" : ext === "pdf" ? "pdf" : "doc";
+
+    // 3) create lesson in DB
+    await courseContentApi.createLesson(String(module._id), {
+      title: lessonTitle.trim(),
+      type,
+      contentUrl: up.data.url,
+      filePublicId: up.data.publicId,
+      fileName: up.data.originalName,
+      mimeType: up.data.mimeType,
+      isPublished: true,
+    });
+
+    // 4) reset UI
+    setLessonTitle("");
+    setLessonType("video");
+    setShowAddForm(false);
+    setFilePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = null;
+
+    // 5) refresh modules from DB
+    if (onLessonCreated) await onLessonCreated();
+  } catch (err) {
+    console.log(err);
+    alert(err?.response?.data?.message || "Failed to upload/create lesson");
+  } finally {
     isSubmittingRef.current = false;
-    return;
   }
-  if (!filePreview) {
-    alert("Please choose a file to upload");
-    isSubmittingRef.current = false;
-    return;
-  }
-
-  const lesson = {
-    id: Date.now() + Math.random(),
-    title: lessonTitle,
-    type: lessonType,
-    name: filePreview.name,
-    url: filePreview.url,
-  };
-
-  onAddLesson(index, lesson);
-
-  // Reset form
-  setLessonTitle("");
-  setLessonType("video");
-  setShowAddForm(false);
-  setFilePreview(null);
-  if (fileInputRef.current) fileInputRef.current.value = null;
-
-  // Release lock
-  setTimeout(() => {
-    isSubmittingRef.current = false;
-  }, 300);
 };
+
 
   const handleDeleteLesson = (li) => {
     // also revoke url if blob
@@ -206,7 +215,7 @@ const submitAddLesson = () => {
                       <span className="text-sm">{lesson.type === "video" ? "🎥" : "📄"}</span>
                       <div>
                         <div className="font-medium text-[#124734]">{lesson.title}</div>
-                        <div className="text-xs text-[#5B7065]">{lesson.name}</div>
+                        <div className="text-xs text-[#5B7065]">{lesson.fileName || ""}</div>
                       </div>
                     </div>
 
@@ -214,14 +223,14 @@ const submitAddLesson = () => {
                       {lesson.type === "video" ? (
                         <button
                           className="flex items-center gap-2 text-[#124734]"
-                          onClick={() => setPlayUrl(lesson.url)}
+                          onClick={() => setPlayUrl(lesson.contentUrl)}
                           title="Play video"
                         >
                           <Play size={16} />
                         </button>
                       ) : (
                         <a
-                          href={lesson.url}
+                         href={lesson.contentUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="text-[#124734] underline text-sm"
@@ -262,6 +271,7 @@ const submitAddLesson = () => {
                 >
                   <option value="video">Video</option>
                   <option value="pdf">PDF</option>
+                  <option value="doc">DOC / DOCX</option>
                 </select>
               </div>
 
@@ -272,7 +282,14 @@ const submitAddLesson = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept={lessonType === "video" ? "video/*" : "application/pdf"}
+                    accept={
+  lessonType === "video"
+    ? "video/*"
+    : lessonType === "pdf"
+    ? "application/pdf"
+    : ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+}
+
                     hidden
                     onChange={handleFileChange}
                   />

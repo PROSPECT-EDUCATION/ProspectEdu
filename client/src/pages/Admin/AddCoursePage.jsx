@@ -5,6 +5,7 @@ import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
+import { uploadsApi } from "../../services/uploads";
 export default function AddCoursePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -25,7 +26,7 @@ export default function AddCoursePage() {
   const [tax, setTax] = useState("");
   const [date, setDate] = useState("");
   const [img, setImg] = useState("");
-
+  const [uploadingImg, setUploadingImg] = useState(false);
   // Tags
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
@@ -46,7 +47,21 @@ export default function AddCoursePage() {
   const handleAddProfessor = () => {
     setProfessors([...professors, ""]);
   };
+const handlePickImage = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
+  try {
+    setUploadingImg(true);
+    const res = await uploadsApi.uploadCourseImage(file);
+    setImg(res.data.url); // ✅ this is what will be saved in DB
+    showToast("Image uploaded!", "success");
+  } catch (err) {
+    showToast(err?.response?.data?.message || "Image upload failed", "error");
+  } finally {
+    setUploadingImg(false);
+  }
+};
   const handleProfessorChange = (index, value) => {
     const updated = [...professors];
     updated[index] = value;
@@ -324,15 +339,34 @@ const payload = {
               </div>
 
               {/* Image URL */}
-              <div>
-                <label className="font-medium text-gray-700">Course Image URL</label>
-                <input
-                  type="text"
-                  value={img}
-                  onChange={(e) => setImg(e.target.value)}
-                  className="w-full mt-2 p-2 border rounded"
-                />
-              </div>
+              {/* Image Upload */}
+<div>
+  <label className="font-medium text-gray-700">Course Image</label>
+
+  <div className="mt-2 flex items-center gap-3">
+    <input type="file" accept="image/*" onChange={handlePickImage} />
+    {uploadingImg && <span className="text-sm text-gray-500">Uploading...</span>}
+  </div>
+
+  {/* Preview */}
+  <div className="mt-3">
+    <img
+      src={img || "/placeholder-course.png"}
+      alt="course"
+      className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
+    />
+  </div>
+
+  {/* Optional: keep URL visible (debug) */}
+  <input
+    type="text"
+    value={img}
+    onChange={(e) => setImg(e.target.value)}
+    className="w-full mt-3 p-2 border rounded"
+    placeholder="Image URL will appear here after upload"
+  />
+</div>
+
 
               {/* BUTTONS */}
               <div className="flex gap-4 mt-6">

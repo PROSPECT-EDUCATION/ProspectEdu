@@ -18,6 +18,8 @@ export default function ChangePasswordForm() {
     confirm: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const toggle = (field) =>
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
 
@@ -25,148 +27,127 @@ export default function ChangePasswordForm() {
     setPasswords((p) => ({ ...p, [field]: value }));
 
   const handleSubmit = async () => {
-  if (!passwords.old || !passwords.new || !passwords.confirm) {
-    showToast("Please fill all fields", "error");
-    return;
-  }
+    if (loading) return;
 
-  if (passwords.new !== passwords.confirm) {
-    showToast("New passwords do not match", "error");
-    return;
-  }
+    if (!passwords.old || !passwords.new || !passwords.confirm) {
+      showToast("Please fill all fields", "error");
+      return;
+    }
 
-  if (passwords.new.length < 6) {
-    showToast("Password must be at least 6 characters", "error");
-    return;
-  }
+    if (passwords.new !== passwords.confirm) {
+      showToast("New passwords do not match", "error");
+      return;
+    }
 
-  try {
-    await authApi.changePassword({
-      oldPassword: passwords.old,
-      newPassword: passwords.new,
-    });
+    if (passwords.new.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return;
+    }
 
-    showToast("Password updated successfully! Please login again.", "success");
+    try {
+      setLoading(true);
 
-    // clear token + redirect (recommended because refresh cookie cleared too)
-    sessionStorage.removeItem("accessToken");
-    window.location.href = "/login"; // or use navigate if you pass it
+      await authApi.changePassword({
+        oldPassword: passwords.old,
+        newPassword: passwords.new,
+      });
 
-    setPasswords({ old: "", new: "", confirm: "" });
-  } catch (err) {
-    const msg =
-      err?.response?.data?.message ||
-      "Failed to update password. Please try again.";
-    showToast(msg, "error");
-  }
-};
+      showToast(
+        "Password updated successfully! Please login again.",
+        "success"
+      );
+
+      // 🔐 logout user (backend already cleared refresh token)
+      sessionStorage.removeItem("accessToken");
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1200);
+
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to update password. Please try again.";
+      showToast(msg, "error");
+    } finally {
+      setLoading(false);
+      setPasswords({ old: "", new: "", confirm: "" });
+    }
+  };
 
   return (
-    <div className="
-      bg-white border border-[#E6F4EC] rounded-xl shadow-sm 
-      p-6 sm:p-8 
-      w-full max-w-full sm:max-w-3xl 
-      mx-auto
-    ">
+    <div className="bg-white border border-[#E6F4EC] rounded-xl shadow-sm p-6 sm:p-8 w-full sm:max-w-3xl mx-auto">
       <h2 className="text-xl sm:text-2xl font-heading text-[#124734] mb-2">
         Change Password
       </h2>
       <p className="text-sm text-[#5B7065] mb-6">
-        Edit your Password Details
+        Update your account password
       </p>
 
       <div className="space-y-6">
 
         {/* OLD PASSWORD */}
-        <div>
-          <label className="block text-sm mb-1 text-[#124734]">
-            * Old Password
-          </label>
-          <div className="relative">
-            <input
-              type={show.old ? "text" : "password"}
-              placeholder="Please enter your old password"
-              value={passwords.old}
-              onChange={(e) => handleChange("old", e.target.value)}
-              className="
-                w-full border border-[#A7E1B2] rounded-lg 
-                px-4 py-2 outline-none text-sm sm:text-base
-              "
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-[#5B7065]"
-              onClick={() => toggle("old")}
-            >
-              {show.old ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
-          </div>
-        </div>
+        <PasswordInput
+          label="Old Password"
+          value={passwords.old}
+          show={show.old}
+          onToggle={() => toggle("old")}
+          onChange={(v) => handleChange("old", v)}
+        />
 
         {/* NEW PASSWORD */}
-        <div>
-          <label className="block text-sm mb-1 text-[#124734]">
-            * New Password
-          </label>
-          <div className="relative">
-            <input
-              type={show.new ? "text" : "password"}
-              placeholder="Please enter your new password"
-              value={passwords.new}
-              onChange={(e) => handleChange("new", e.target.value)}
-              className="
-                w-full border border-[#A7E1B2] rounded-lg 
-                px-4 py-2 outline-none text-sm sm:text-base
-              "
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-[#5B7065]"
-              onClick={() => toggle("new")}
-            >
-              {show.new ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
-          </div>
-        </div>
+        <PasswordInput
+          label="New Password"
+          value={passwords.new}
+          show={show.new}
+          onToggle={() => toggle("new")}
+          onChange={(v) => handleChange("new", v)}
+        />
 
         {/* CONFIRM PASSWORD */}
-        <div>
-          <label className="block text-sm mb-1 text-[#124734]">
-            * Confirm New Password
-          </label>
-          <div className="relative">
-            <input
-              type={show.confirm ? "text" : "password"}
-              placeholder="Please enter your new password again"
-              value={passwords.confirm}
-              onChange={(e) => handleChange("confirm", e.target.value)}
-              className="
-                w-full border border-[#A7E1B2] rounded-lg 
-                px-4 py-2 outline-none text-sm sm:text-base
-              "
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-[#5B7065]"
-              onClick={() => toggle("confirm")}
-            >
-              {show.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
-          </div>
-        </div>
+        <PasswordInput
+          label="Confirm New Password"
+          value={passwords.confirm}
+          show={show.confirm}
+          onToggle={() => toggle("confirm")}
+          onChange={(v) => handleChange("confirm", v)}
+        />
 
-        {/* SUBMIT BUTTON */}
         <button
+          disabled={loading}
           onClick={handleSubmit}
-          className="
-            mt-6 w-full sm:w-auto 
-            px-6 py-3 
-            bg-[#009846] text-white 
-            rounded-md shadow-sm 
-            hover:bg-[#007d39] 
-            transition text-sm font-medium
-          "
+          className={`
+            mt-6 px-6 py-3 rounded-md text-white font-medium
+            ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#009846] hover:bg-[#007d39]"}
+          `}
         >
-          Update Password
+          {loading ? "Updating..." : "Update Password"}
         </button>
+      </div>
+    </div>
+  );
+}
 
+/* 🔁 Reusable Password Input */
+function PasswordInput({ label, value, show, onToggle, onChange }) {
+  return (
+    <div>
+      <label className="block text-sm mb-1 text-[#124734]">
+        * {label}
+      </label>
+      <div className="relative">
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2"
+        />
+        <span
+          className="absolute right-3 top-2.5 cursor-pointer text-[#5B7065]"
+          onClick={onToggle}
+        >
+          {show ? <EyeOff size={18} /> : <Eye size={18} />}
+        </span>
       </div>
     </div>
   );

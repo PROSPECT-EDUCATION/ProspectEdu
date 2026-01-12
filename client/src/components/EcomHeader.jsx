@@ -11,7 +11,7 @@ import {
   EnginneringProducts,
   LawProducts,
   ManagementProducts,
-} from "../data/ProductData";
+} from "../data/productData";
 
 const AUTH_KEY = "isLoggedIn";
 

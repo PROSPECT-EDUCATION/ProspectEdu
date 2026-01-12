@@ -20,4 +20,7 @@ export const coursesApi = {
   // Admin: assign teachers
   adminAssignTeachers: (courseId, teacherIds) =>
     api.patch(`/courses/admin/${courseId}/assign-teachers`, { teacherIds }),
+
+  teacherMyCourses: () => api.get("/courses/teacher/my-courses"),
+  getTeacherCourseById: (id) => api.get(`/courses/${id}`), 
 };

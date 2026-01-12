@@ -1,73 +1,98 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
-import { FiEdit2 } from "react-icons/fi";
-import { RiDeleteBin6Line } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-import profileImg from "../../assets/profile.webp";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { usersApi } from "../../services/users";
+import { useToast } from "../../context/ToastContext";
+
 export default function AdminStudentsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const navigate = useNavigate();
   const sidebarWidth = isCollapsed ? 80 : 256;
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
   const [confirmOpen, setConfirmOpen] = useState(false);
- const [selectedStudent, setSelectedStudent] = useState(null);
-
-
-  const handleConfirmDelete = () => {
-  console.log("Student removed:", selectedStudent);
-  setConfirmOpen(false);
-};
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [actionType, setActionType] = useState(null); // "block" | "unblock"
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const students = [
-    {
-      profile:  profileImg,
-      roll: "01",
-      name: "Tiger Nixon",
-      education: "M.COM., P.H.D.",
-      mobile: "123 456 7890",
-      email: "info@example.com",
-      admission: "2011/04/25",
-    },
-    {
-      profile:  profileImg,
-      roll: "02",
-      name: "Garrett Winters",
-      education: "M.COM., P.H.D.",
-      mobile: "987 654 3210",
-      email: "info@example.com",
-      admission: "2011/07/25",
-    },
-    {
-      profile:  profileImg,
-      roll: "03",
-      name: "Ashton Cox",
-      education: "B.COM., M.COM.",
-      mobile: "(123) 4567 890",
-      email: "info@example.com",
-      admission: "2009/01/12",
-    },
-    {
-      profile:  profileImg,
-      roll: "04",
-      name: "Cedric Kelly",
-      education: "B.COM., M.COM.",
-      mobile: "123 456 7890",
-      email: "info@example.com",
-      admission: "2012/03/29",
-    },
-  ];
+  const formatDate = (d) =>
+    d ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—";
 
-  // ✅ SEARCH FILTER LOGIC (added)
-  const filteredStudents = students.filter((s) =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.roll.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.education.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.mobile.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const formatDateTime = (d) =>
+    d
+      ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+      : "—";
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await usersApi.listStudentsAdmin();
+      setStudents(res.data.students || []);
+    } catch (e) {
+      console.log(e);
+      showToast?.(e?.response?.data?.message || "Failed to load students", "error");
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filteredStudents = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return students;
+
+    return students.filter((s) => {
+      const fields = [
+        s.fullName,
+        s.email,
+        s.phone,
+        s.state,
+        s.city,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return fields.includes(q);
+    });
+  }, [students, searchQuery]);
+
+  const openConfirm = (student, type) => {
+    setSelectedStudent(student);
+    setActionType(type);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedStudent?._id || !actionType) return;
+
+    try {
+      if (actionType === "block") {
+        await usersApi.blockUser(selectedStudent._id);
+        showToast?.("Student blocked", "success");
+      } else {
+        await usersApi.unblockUser(selectedStudent._id);
+        showToast?.("Student unblocked", "success");
+      }
+      setConfirmOpen(false);
+      setSelectedStudent(null);
+      setActionType(null);
+      await load();
+    } catch (e) {
+      console.log(e);
+      showToast?.(e?.response?.data?.message || "Action failed", "error");
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -77,19 +102,13 @@ export default function AdminStudentsPage() {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      {/* MAIN AREA */}
+      {/* MAIN */}
       <div
         className="flex flex-col flex-1 transition-all duration-300"
-        style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth}px)`,
-        }}
+        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
       >
         {/* TOPBAR */}
         <div
@@ -118,32 +137,26 @@ export default function AdminStudentsPage() {
           {/* Title + Add Button */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#124734]">All Students List</h2>
-           <button
-  onClick={() => navigate("/admin/students/add")}
-  className="bg-[#124734] text-white px-4 py-2 rounded-md hover:bg-[#0f3a24] transition"
->
-  + Add New
-</button>
+            <button
+              onClick={() => navigate("/admin/students/add")}
+              className="bg-[#124734] text-white px-4 py-2 rounded-md hover:bg-[#0f3a24] transition"
+            >
+              + Add New
+            </button>
           </div>
 
           {/* Controls */}
           <div className="flex justify-between items-center mb-4">
-            {/* Left: Show Entries */}
             <div className="flex items-center gap-2 text-sm">
               <span>Show</span>
-
-              <select
-                className="border px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-[#124734] focus:border-[#124734]"
-              >
+              <select className="border px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-[#124734] focus:border-[#124734]">
                 <option>10</option>
                 <option>20</option>
                 <option>50</option>
               </select>
-
               <span>entries</span>
             </div>
 
-            {/* Right: Search */}
             <input
               type="text"
               placeholder="Search"
@@ -159,74 +172,88 @@ export default function AdminStudentsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-100 text-left border-b text-gray-600">
-                  <th className="py-3 px-2">Profile</th>
-                  <th className="py-3 px-2 ">Roll No.</th>
-                  <th className="py-3 px-2 pl-12">Name</th>
-                  <th className="py-3 px-2 pl-12">Education</th>
-                  <th className="py-3 px-2 pl-12">Mobile</th>
-                  <th className="py-3 px-2 pl-14">Email</th>
-                  <th className="py-3 px-2 pl-12">Admission Date</th>
-                  <th className="py-3 px-2 ">Action</th>
+                  <th className="py-3 px-2 pl-4">Name</th>
+                  <th className="py-3 px-2">Mobile No</th>
+                  <th className="py-3 px-2">Email</th>
+                  <th className="py-3 px-2">State</th>
+                  <th className="py-3 px-2">City</th>
+                  <th className="py-3 px-2">Join Date</th>
+                  <th className="py-3 px-2">Last Active</th>
+                  <th className="py-3 px-2">Action</th>
                 </tr>
               </thead>
 
               <tbody>
-                {/* 🔥 UPDATED — using filteredStudents */}
-                {filteredStudents.map((s, i) => (
-                  <tr key={i} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <img
-                        src={s.profile}
-                        alt=""
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    </td>
-                    <td className="py-3 px-1">{s.roll}</td>
-                    <td className="py-3 px-1">{s.name}</td>
-                    <td className="py-3 px-1">{s.education}</td>
-                    <td className="py-3 px-1">{s.mobile}</td>
-                    <td className="py-3 px-1">{s.email}</td>
-                    <td className="py-3 px-1">{s.admission}</td>
-                    <td className="py-3 px-1 flex gap-3">
-                     <button
-  className="text-green-600 hover:text-green-800"
-  onClick={() =>
-    navigate("/admin/students/edit", {
-      state: { student: s },   // pass the student object
-    })
-  }
->
-  <FiEdit2 size={18} />
-</button>
-
-                     <button
-  className="text-red-600 hover:text-red-800"
-  onClick={() => {
-    setSelectedStudent(s);
-    setConfirmOpen(true);
-  }}
->
-  <RiDeleteBin6Line size={18} />
-</button>
-
+                {loading ? (
+                  <tr>
+                    <td className="py-6 px-4 text-gray-500" colSpan={8}>
+                      Loading...
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                ) : filteredStudents.length === 0 ? (
+                  <tr>
+                    <td className="py-6 px-4 text-gray-500" colSpan={8}>
+                      No students found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((s) => {
+                    const lastActive = s.lastLoginAt || s.updatedAt || null;
 
+                    return (
+                      <tr
+                        key={s._id}
+                        className="border-b hover:bg-gray-50 cursor-pointer"
+                        onClick={() => navigate(`/admin/students/${s._id}`)} // ✅ details page
+                      >
+                        <td className="py-3 px-4">{s.fullName || s.email || "—"}</td>
+                        <td className="py-3 px-2">{s.phone || "—"}</td>
+                        <td className="py-3 px-2">{s.email || "—"}</td>
+                        <td className="py-3 px-2">{s.state || "—"}</td>
+                        <td className="py-3 px-2">{s.city || "—"}</td>
+                        <td className="py-3 px-2">{formatDate(s.createdAt)}</td>
+                        <td className="py-3 px-2">{formatDateTime(lastActive)}</td>
+
+                        {/* ✅ stop row click for buttons */}
+                        <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
+                          {s.isActive ? (
+                            <button
+                              onClick={() => openConfirm(s, "block")}
+                              className="px-3 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50"
+                            >
+                              Block
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openConfirm(s, "unblock")}
+                              className="px-3 py-1 rounded-md border border-green-300 text-green-600 hover:bg-green-50"
+                            >
+                              Unblock
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
             </table>
           </div>
 
+          {/* CONFIRM */}
+          <ConfirmDialog
+            open={confirmOpen}
+            title={actionType === "block" ? "Block Student" : "Unblock Student"}
+            message={
+              actionType === "block"
+                ? `Are you sure you want to block ${selectedStudent?.fullName || selectedStudent?.email}?`
+                : `Are you sure you want to unblock ${selectedStudent?.fullName || selectedStudent?.email}?`
+            }
+            onCancel={() => setConfirmOpen(false)}
+            onConfirm={handleConfirm}
+          />
         </div>
       </div>
-      <ConfirmDialog
-  open={confirmOpen}
-  title="Remove Student"
-  message={`Are you sure you want to delete ${selectedStudent?.name}?`}
-  onCancel={() => setConfirmOpen(false)}
-  onConfirm={handleConfirmDelete}
-/>
-
     </div>
   );
 }

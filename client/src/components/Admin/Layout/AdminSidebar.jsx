@@ -31,7 +31,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: Users,
       children: [
         { label: "All Students", path: "/admin/students" },
-        { label: "Add Student", path: "/admin/students/add" },
       ],
     },
 
@@ -40,7 +39,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: GraduationCap,
       children: [
         { label: "All Teachers", path: "/admin/teachers" },
-        { label: "Add Teacher", path: "/admin/teachers/add" },
       ],
     },
 

@@ -3,18 +3,20 @@ import { useToast } from "../../../context/ToastContext";
 import ConfirmDialog from "../../ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { coursesApi } from "../../../services/courses";
+import { useLocation } from "react-router-dom";
 
 
 export default function CourseDetail({ courseId }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [openDelete, setOpenDelete] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
- useEffect(() => {
+useEffect(() => {
   const fetchCourse = async () => {
     try {
       setLoading(true);
@@ -29,7 +31,7 @@ export default function CourseDetail({ courseId }) {
   };
 
   if (courseId) fetchCourse();
-}, [courseId]);
+}, [courseId, location.key]); // ✅ add location.key
 
 
   const cost = useMemo(() => {
@@ -103,12 +105,15 @@ export default function CourseDetail({ courseId }) {
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             <p className="text-gray-500">Professor(s)</p>
             <div className="font-medium flex flex-col">
-              {course.professors?.length
-                ? course.professors.map((pro, i) => (
-                    <span key={i} className="leading-tight">• {pro}</span>
-                  ))
-                : "N/A"}
-            </div>
+  {course.assignedTeachers?.length
+    ? course.assignedTeachers.map((t, i) => (
+        <span key={t._id || i} className="leading-tight">
+          • {t.fullName}
+        </span>
+      ))
+    : "N/A"}
+</div>
+
 
             <p className="text-gray-500">Price</p>
             <p className="font-medium">₹{cost.price.toLocaleString()}</p>

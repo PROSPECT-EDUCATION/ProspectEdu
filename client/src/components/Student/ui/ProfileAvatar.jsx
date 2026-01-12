@@ -86,25 +86,33 @@ const toggle = () => {
 };
 
 const handleNavigate = async (path, title) => {
-  try {
-    const token = sessionStorage.getItem("accessToken");
-    if (token) {
-      await activityApi.log({
-        type: path,                 // ✅ use path as type (unique)
-        title: title || "Profile",  // ✅ readable
-        route: path,
-      });
+  // ✅ Only students should log activity
+  if (role === "student") {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      if (token) {
+        await activityApi.log({
+          type: path,                 // unique
+          title: title || "Profile",  // readable
+          route: path,
+        });
 
-      // ✅ refresh RecentActivity in same tab
-      window.dispatchEvent(new Event("activity_refresh"));
+        // refresh RecentActivity in same tab
+        window.dispatchEvent(new Event("activity_refresh"));
+      }
+    } catch (e) {
+      console.error(
+        "ProfileAvatar activity log failed:",
+        e?.response?.status,
+        e?.response?.data
+      );
     }
-  } catch (e) {
-    console.error("ProfileAvatar activity log failed:", e?.response?.status, e?.response?.data);
   }
 
   navigate(path);
   setOpen(false);
 };
+
 
   // 🔥 MENU LIST BASED ON ROLE
   const MENU_ITEMS =
@@ -112,7 +120,6 @@ const handleNavigate = async (path, title) => {
       ? [
           { label: "Edit Profile", path: "/teacher/edit-profile" },
           { label: "Change Password", path: "/teacher/change-password" },
-          { label: "Orders", path: "/teacher/orders" },
           { label: "Doubts", path: "/teacher/queries/doubts" },
         ]
       : role === "parent"

@@ -131,13 +131,18 @@ const handleBuyNow = () => {
 
                 <div className="grid grid-cols-2 gap-y-3 text-sm">
                   <p className="text-gray-500">Professor(s)</p>
-                  <div className="font-medium flex flex-col">
-                    {course.professors?.length
-                      ? course.professors.map((pro, i) => (
-                          <span key={i}>• {pro}</span>
-                        ))
-                      : "N/A"}
-                  </div>
+<div className="font-medium flex flex-col">
+  {course.assignedTeachers?.length
+    ? course.assignedTeachers.map((t, i) => (
+        <span key={t._id || i}>• {t.fullName}</span>
+      ))
+    : course.professors?.length
+    ? course.professors.map((pro, i) => (
+        <span key={i}>• {pro}</span>
+      ))
+    : "N/A"}
+</div>
+
 
                   <p className="text-gray-500">Start Date</p>
                   <p className="font-medium">{course.date || "—"}</p>

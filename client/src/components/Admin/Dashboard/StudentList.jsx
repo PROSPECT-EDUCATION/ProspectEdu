@@ -1,45 +1,57 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import { UserCircle2 } from "lucide-react";
+import { usersApi } from "../../../services/users";
+import { useToast } from "../../../context/ToastContext";
 
 export default function StudentList() {
-  const students = [
-    {
-      name: "Angelica Ramos",
-      coach: "Ashton Cox",
-      date: "12 August 2021",
-      time: "10:15",
-    },
-    {
-      name: "Bradley Greer",
-      coach: "Brenden Wagner",
-      date: "11 July 2021",
-      time: "10:00",
-    },
-    {
-      name: "Cedric Kelly",
-      coach: "Brielle Williamson",
-      date: "10 May 2021",
-      time: "09:45",
-    },
-    {
-      name: "Caesar Vance",
-      coach: "Herrod Chandler",
-      date: "09 April 2021",
-      time: "09:30",
-    },
-    {
-      name: "Rhona Davidson",
-      coach: "Sonya Frost",
-      date: "08 March 2021",
-      time: "09:15",
-    },
-  ];
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [blockingId, setBlockingId] = useState(null);
+  const { showToast } = useToast();
 
-const toggleMenu = (index) => {
-  setOpenMenuIndex(openMenuIndex === index ? null : index);
-};
+  const formatDate = (d) =>
+    d
+      ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "medium" })
+      : "—";
 
+  const formatDateTime = (d) =>
+    d
+      ? new Date(d).toLocaleString("en-IN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "—";
+
+  const load = async () => {
+    try {
+      const res = await usersApi.listStudents();
+      setStudents(res.data.students || []);
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to load students", "error");
+      setStudents([]);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBlock = async (userId) => {
+    if (!confirm("Block this student?")) return;
+
+    try {
+      setBlockingId(userId);
+      await usersApi.blockUser(userId);
+      showToast?.("Student blocked", "success");
+      await load();
+    } catch (e) {
+      console.log(e);
+      showToast?.(e?.response?.data?.message || "Block failed", "error");
+    } finally {
+      setBlockingId(null);
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-6 w-full">
@@ -47,60 +59,63 @@ const toggleMenu = (index) => {
         Student List
       </h2>
 
-      <div className="overflow-x-auto">
+      {/* ✅ Vertical scroll area (shows ~5 rows) */}
+      <div className="overflow-x-auto max-h-[310px] overflow-y-auto">
         <table className="w-full text-left">
-          <thead>
+          <thead className="sticky top-0 bg-white z-10">
             <tr className="border-b text-[#124734]">
               <th className="py-3 px-3"></th>
-              <th className="py-3 px-3 font-semibold">Student Name</th>
-              <th className="py-3 px-3 font-semibold">Assigned Coach</th>
-              <th className="py-3 px-3 font-semibold">Date</th>
-              <th className="py-3 px-3 font-semibold">Time</th>
+              <th className="py-3 px-3 font-semibold">Name</th>
+              <th className="py-3 px-3 font-semibold">Phone No</th>
+              <th className="py-3 px-3 font-semibold">Joined</th>
+              <th className="py-3 px-3 font-semibold">Last Active</th>
               <th className="py-3 px-3 font-semibold">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {students.map((s, idx) => (
-              <tr
-                key={idx}
-                className="border-b hover:bg-[#F1F7F4] transition"
-              >
-                <td className="py-3 px-3">
-                  <input type="checkbox" className="cursor-pointer accent-[#124734]" />
+            {students.map((s, idx) => {
+              const lastActive = s.lastLoginAt || s.updatedAt || null;
+
+              return (
+                <tr
+                  key={s._id || idx}
+                  className="border-b hover:bg-[#F1F7F4] transition"
+                >
+                  <td className="py-3 px-3">
+                    <UserCircle2
+                      size={28}
+                      className="text-[#124734]"
+                      aria-label="profile"
+                    />
+                  </td>
+
+                  <td className="py-3 px-3">{s.fullName || s.email || "—"}</td>
+                  <td className="py-3 px-3">{s.phone || "—"}</td>
+                  <td className="py-3 px-3">{formatDate(s.createdAt)}</td>
+                  <td className="py-3 px-3">{formatDateTime(lastActive)}</td>
+
+                  {/* ✅ Direct Block button */}
+                  <td className="py-3 px-3">
+                    <button
+                      disabled={blockingId === s._id}
+                      onClick={() => handleBlock(s._id)}
+                      className="px-4 py-2 rounded-md border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {blockingId === s._id ? "Blocking..." : "Block"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+
+            {students.length === 0 && (
+              <tr>
+                <td className="py-6 px-3 text-gray-500" colSpan={6}>
+                  No students found
                 </td>
-
-                <td className="py-3 px-3">{s.name}</td>
-                <td className="py-3 px-3">{s.coach}</td>
-                <td className="py-3 px-3">{s.date}</td>
-                <td className="py-3 px-3">{s.time}</td>
-
-               <td className="py-3 px-3 relative">
-  <span
-    onClick={() => toggleMenu(idx)}
-    className="text-gray-600 cursor-pointer text-xl select-none"
-  >
-    ⋮
-  </span>
-
-  {/* DROPDOWN MENU */}
-  {openMenuIndex === idx && (
-    <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-lg border border-gray-200 z-50">
-      <button className="w-full text-left px-4 py-2 hover:bg-[#F1F7F4] text-[#124734]">
-        Accept
-      </button>
-      <button className="w-full text-left px-4 py-2 hover:bg-[#F1F7F4] text-[#124734]">
-        Detail
-      </button>
-      <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-500">
-        Cancel
-      </button>
-    </div>
-  )}
-</td>
-
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

@@ -4,7 +4,8 @@ import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses"; // ✅ adjust path if needed
-
+import { usersApi } from "../../services/users";
+import { uploadsApi } from "../../services/uploads";
 export default function EditCoursePage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -15,10 +16,12 @@ export default function EditCoursePage() {
 
   const [tagInput, setTagInput] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
-
+  const [uploadingImg, setUploadingImg] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [teacherOptions, setTeacherOptions] = useState([]);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([""]);
 
   // Form fields
   const [title, setTitle] = useState("");
@@ -33,6 +36,16 @@ export default function EditCoursePage() {
   const [date, setDate] = useState("");
   const [tags, setTags] = useState([]);
   const [img, setImg] = useState("");
+useEffect(() => {
+  (async () => {
+    try {
+      const res = await usersApi.listTeachers();
+      setTeacherOptions(res.data.teachers || []);
+    } catch (e) {
+      showToast(e?.response?.data?.message || "Failed to load teachers", "error");
+    }
+  })();
+}, []);
 
   // ✅ Fetch course from backend
   useEffect(() => {
@@ -42,6 +55,11 @@ export default function EditCoursePage() {
         setError("");
         const res = await coursesApi.adminGet(courseId);
         const course = res.data.course;
+        setSelectedTeacherIds(
+  course.assignedTeachers?.length
+    ? course.assignedTeachers.map((t) => (typeof t === "string" ? t : t._id))
+    : [""]
+);
 
         setTitle(course.title || "");
         setCategory(course.category || "");
@@ -65,6 +83,21 @@ export default function EditCoursePage() {
     if (courseId) fetchCourse();
   }, [courseId]);
 
+const handlePickImage = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    setUploadingImg(true);
+    const res = await uploadsApi.uploadCourseImage(file);
+    setImg(res.data.url); // ✅ this is what will be saved in DB
+    showToast("Image uploaded!", "success");
+  } catch (err) {
+    showToast(err?.response?.data?.message || "Image upload failed", "error");
+  } finally {
+    setUploadingImg(false);
+  }
+};
   // Tags
   const handleAddTag = () => setShowTagInput(true);
 
@@ -97,25 +130,37 @@ export default function EditCoursePage() {
     try {
       setSaving(true);
 
-      const payload = {
-        title,
-        category,
-        short,
-        info,
-        description,
-        professors: professors.map((p) => p.trim()).filter(Boolean),
-        price: Number(price || 0),
-        discount: Number(discount || 0),
-        tax: Number(tax || 0),
-        date,
-        tags,
-        img,
-      };
+     const teacherIds = selectedTeacherIds.filter(Boolean);
+
+const professorNames = teacherIds
+  .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
+  .filter(Boolean);
+
+const payload = {
+  title,
+  category,
+  short,
+  info,
+  description,
+  professors: professorNames,        // optional display
+  assignedTeachers: teacherIds,      // ✅ real linkage
+  price: Number(price || 0),
+  discount: Number(discount || 0),
+  tax: Number(tax || 0),
+  date,
+  tags,
+  img,
+};
+
 
       await coursesApi.adminUpdate(courseId, payload);
 
-      showToast("Course updated successfully!", "success");
-      navigate(`/admin/courses/${courseId}`); // go back to detail page
+showToast("Course updated successfully!", "success");
+
+window.dispatchEvent(new Event("course_refresh")); // ✅ add this
+
+navigate(`/admin/courses/${courseId}`);
+// go back to detail page
     } catch (e) {
       showToast(e?.response?.data?.message || "Failed to update course", "error");
     } finally {
@@ -219,24 +264,52 @@ export default function EditCoursePage() {
 
               {/* Professors */}
               <div>
-                <label className="font-medium text-gray-700">Professors</label>
-                {professors.map((pro, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={pro}
-                    onChange={(e) => handleProfessorChange(index, e.target.value)}
-                    className="w-full mt-2 p-2 border rounded"
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddProfessor}
-                  className="mt-2 text-sm text-[#124734] underline"
-                >
-                  + Add another professor
-                </button>
-              </div>
+  <label className="font-medium text-gray-700">Professors</label>
+
+  {selectedTeacherIds.map((tid, index) => (
+    <div key={index} className="w-full mt-2 flex gap-2">
+      <select
+        value={tid}
+        onChange={(e) => {
+          const updated = [...selectedTeacherIds];
+          updated[index] = e.target.value;
+          setSelectedTeacherIds(updated);
+        }}
+        className="flex-1 p-2 border rounded"
+      >
+        <option value="">Select Teacher</option>
+        {teacherOptions.map((t) => (
+          <option key={t._id} value={t._id}>
+            {t.fullName}
+          </option>
+        ))}
+      </select>
+
+      {/* Remove button (only show if more than 1 row) */}
+      {selectedTeacherIds.length > 1 && (
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedTeacherIds(selectedTeacherIds.filter((_, i) => i !== index));
+          }}
+          className="px-3 border rounded hover:bg-gray-100"
+          title="Remove"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  ))}
+
+  <button
+    type="button"
+    onClick={() => setSelectedTeacherIds([...selectedTeacherIds, ""])}
+    className="mt-2 text-sm text-[#124734] underline"
+  >
+    + Add another professor
+  </button>
+</div>
+
 
               {/* Price */}
               <div>
@@ -320,15 +393,34 @@ export default function EditCoursePage() {
               </div>
 
               {/* Image URL */}
-              <div>
-                <label className="font-medium text-gray-700">Course Image URL</label>
-                <input
-                  type="text"
-                  value={img}
-                  onChange={(e) => setImg(e.target.value)}
-                  className="w-full mt-2 p-2 border rounded"
-                />
-              </div>
+           {/* Image Upload */}
+<div>
+  <label className="font-medium text-gray-700">Course Image</label>
+
+  <div className="mt-2 flex items-center gap-3">
+    <input type="file" accept="image/*" onChange={handlePickImage} />
+    {uploadingImg && <span className="text-sm text-gray-500">Uploading...</span>}
+  </div>
+
+  {/* Preview */}
+  <div className="mt-3">
+    <img
+      src={img || "/placeholder-course.png"}
+      alt="course"
+      className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
+    />
+  </div>
+
+  {/* Optional: keep URL visible (debug) */}
+  <input
+    type="text"
+    value={img}
+    onChange={(e) => setImg(e.target.value)}
+    className="w-full mt-3 p-2 border rounded"
+    placeholder="Image URL will appear here after upload"
+  />
+</div>
+
 
               {/* Buttons */}
               <div className="flex gap-4 mt-6">

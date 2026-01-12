@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { uploadsApi } from "../../services/uploads";
+import { assignmentsApi } from "../../services/assignments";
+import { useParams } from "react-router-dom";
+import { useToast } from "../../context/ToastContext"; // if you have it
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
@@ -9,6 +13,51 @@ export default function CreateAssignmentPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [fileName, setFileName] = useState("");
   const navigate = useNavigate();
+  // ✅ your route should include :courseId
+const { showToast } = useToast();
+const { courseId } = useParams();
+
+const [title, setTitle] = useState("");
+const [instructions, setInstructions] = useState("");
+const [dueDate, setDueDate] = useState("");
+const [maxMarks, setMaxMarks] = useState("");
+const [file, setFile] = useState(null);
+const [submitting, setSubmitting] = useState(false);
+const handleCreate = async () => {
+  if (!courseId) return showToast("CourseId missing", "error");
+  if (!title.trim()) return showToast("Title is required", "error");
+
+  try {
+    setSubmitting(true);
+
+    // ✅ SEND AS FORMDATA (IMPORTANT)
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("instructions", instructions.trim());
+    fd.append("dueDate", dueDate);
+    fd.append("maxMarks", maxMarks);
+
+    // ✅ attach file directly
+    if (file) {
+      fd.append("file", file);
+    }
+
+    // ✅ ONE request only
+    await assignmentsApi.create(courseId, fd);
+
+    showToast("Assignment created!", "success");
+    navigate(-1);
+  } catch (e) {
+    console.log(e);
+    showToast(
+      e?.response?.data?.message || "Failed to create assignment",
+      "error"
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
@@ -73,16 +122,22 @@ export default function CreateAssignmentPage() {
 
             {/* Assignment Title */}
             <input
-              className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
-              placeholder="Assignment Title"
-            />
+  className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
+  placeholder="Assignment Title"
+  value={title}
+  onChange={(e) => setTitle(e.target.value)}
+/>
+
 
             {/* Instructions */}
             <textarea
-              className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
-              placeholder="Instructions..."
-              rows={4}
-            />
+  className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
+  placeholder="Instructions..."
+  rows={4}
+  value={instructions}
+  onChange={(e) => setInstructions(e.target.value)}
+/>
+
 
             {/* Upload file */}
             <label
@@ -93,7 +148,12 @@ export default function CreateAssignmentPage() {
               <input
                 type="file"
                 hidden
-                onChange={(e) => setFileName(e.target.files[0]?.name || "")}
+                onChange={(e) => {
+  const f = e.target.files?.[0];
+  setFile(f || null);
+  setFileName(f?.name || "");
+}}
+
               />
             </label>
 
@@ -104,25 +164,46 @@ export default function CreateAssignmentPage() {
             {/* Due date */}
             <label className="text-[#124734] font-medium">Due Date</label>
             <input
-              type="date"
-              className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
-            />
+  type="date"
+  className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
+  value={dueDate}
+  onChange={(e) => setDueDate(e.target.value)}
+/>
 
             {/* Max Marks */}
             <input
-              type="number"
-              className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
-              placeholder="Maximum Marks"
-            />
+  type="number"
+  className="w-full border border-[#A7E1B2] px-3 py-2 rounded-md mb-4"
+  placeholder="Maximum Marks"
+  value={maxMarks}
+  onChange={(e) => setMaxMarks(e.target.value)}
+/>
 
             {/* Create Button */}
-            <button className="bg-[#009846] text-white px-6 py-3 rounded-md hover:bg-[#0d3a28] w-full">
-              Create Assignment
-            </button>
+            <button
+  disabled={submitting}
+  onClick={handleCreate}
+  className={`bg-[#009846] text-white px-6 py-3 rounded-md w-full
+    ${submitting ? "opacity-60 cursor-not-allowed" : "hover:bg-[#0d3a28]"}`}
+>
+  {submitting ? "Creating..." : "Create Assignment"}
+</button>
+
+  <button
+  type="button"
+  onClick={() => navigate(`/teacher/assessment/assignments/${courseId}`)}
+  className="mt-3 border border-[#A7E1B2] text-[#124734] px-6 py-3 rounded-md w-full hover:bg-[#F2FBF6]"
+>
+  Show Assignments
+</button>
+
           </div>
 </div>
         </div>
       </div>
+    
+
     </div>
+    
   );
 }
