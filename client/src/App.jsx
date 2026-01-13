@@ -17,7 +17,6 @@ import Practice from './pages/Student/Practice';
 import AllTestSeries from './pages/Student/AllTestSeries';
 import AllCourses from './pages/Student/AllCourses';
 import StorePage from './pages/Store/StorePage';
-import EditProfile from "./pages/Student/EditProfile";
 import ChangePassword from './pages/Student/ChangePassword';
 import OrdersPage from './pages/Student/OrdersPage';
 import Doubts from './pages/Student/Doubts';
@@ -28,7 +27,7 @@ import PublishCoursePage from './pages/Teacher/PublishCoursePage';
 import CourseManagement from './pages/Teacher/CourseManagement';
 import AssessmentDashboardPage from './pages/Teacher/AssessmentDashboardPage';
 import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
-
+import EditProfile from './pages/Student/EditProfile';
 import CreateQuizPage from './pages/Teacher/CreateQuizPage';
 import TeacherQuizzesPage from './pages/Teacher/TeacherQuizzesPage';
 import TeacherQuizDetailsPage from './pages/Teacher/TeacherQuizDetailsPage';
@@ -51,10 +50,8 @@ import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
-import AdminEditStudentPage from './pages/Admin/AdminEditStudentPage';
 import AdminAllTeachersPage from './pages/Admin/AdminAllTeachersPage';
-import AdminAddTeacherPage from './pages/Admin/AdminAddTeacherPage';
-import AdminEditTeacherPage from './pages/Admin/AdminEditTeacherPage';
+import AdminConfirmTeacherPage from "./pages/Admin/AdminConfirmTeacherPage";
 import FeesCollectionPage from './pages/Admin/FeesCollectionPage';
 import AddFeesPage from './pages/Admin/AddFeesPage';
 import FeesReceiptPage from './pages/Admin/FeesReceiptPage';
@@ -64,14 +61,13 @@ import AdminCoursesPage from './pages/Admin/AdminCoursesPage';
 import AdminCourseDetailPage from './pages/Admin/AdminCourseDetailPage';
 import EditCoursePage from './pages/Admin/EditCoursePage';
 import AddCoursePage from './pages/Admin/AddCoursePage';
-import EnrollStudentsPage from './pages/Admin/EnrollStudentsPage';
+
 import EcomOrdersPage from './pages/Admin/Ecom/EcomOrdersPage';
 import OrderDetailsPage from './pages/Admin/Ecom/OrderDetailsPage';
 import CustomersPage from './pages/Admin/Ecom/CustomersPage';
 import CustomerDetailsPage from './pages/Admin/Ecom/CustomerDetailsPage';
 import CategoriesPage from './pages/Admin/Ecom/CategoriesPage';
 import TransactionsPage from './pages/Admin/Ecom/TransactionsPage';
-import AdminEditProfile from './pages/Admin/AdminEditProfile';
 import AdminChangePassword from './pages/Admin/AdminChangePassword';
 import SettingsPage from './pages/Admin/SettingsPage';
 import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
@@ -160,7 +156,7 @@ function App() {
       <Route path= "/teacher/queries/doubts" element = {<QueriesDoubtsPage/>}/>
       <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
       <Route path="/teacher/course/:courseId/module/:moduleId" element={<TeacherModuleContentPage />}/>
-
+      <Route path="/admin/confirmTeacher" element={<AdminConfirmTeacherPage />} />
       <Route path="/teacher/edit-profile" element = {<EditProfilePage/>}/>
       <Route path="/parent-dashboard" element = {<ParentDashboard/>}/>
       <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
@@ -172,10 +168,9 @@ function App() {
       <Route path="/parent/change-password" element={<ParentChangePasswordPage/>}/>
       <Route path="/admin-dashboard" element = {<AdminDashboardPage/>}/>
       <Route path="/admin/students" element= {<AdminAllStudentsPage/>}/>
-      <Route path="/admin/students/edit" element={<AdminEditStudentPage/>}/>
+    
       <Route path="/admin/teachers" element={<AdminAllTeachersPage/>}/>
-      <Route path="/admin/teachers/add" element={<AdminAddTeacherPage/>}/>
-      <Route path = "/admin/teachers/edit" element={<AdminEditTeacherPage/>}/>
+    
       <Route path="/admin/fees/collection" element={<FeesCollectionPage/>}/>
       <Route path="admin/fees/addfees" element={<AddFeesPage/>}/>
       <Route path="/admin/fees/receipt/:receiptId" element={<FeesReceiptPage />} />
@@ -185,14 +180,13 @@ function App() {
       <Route path="/admin/courses/:courseId" element={<AdminCourseDetailPage />} />
       <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage/>}/>
       <Route path="/admin/courses/add" element={<AddCoursePage/>}/>
-      <Route path="/admin/courses/enroll" element = {<EnrollStudentsPage/>}/>
       <Route path="/admin/ecom/orders" element={<EcomOrdersPage />} />
       <Route path="/admin/ecom/orders/:id" element={<OrderDetailsPage />} />
       <Route path="/admin/ecom/customers" element={<CustomersPage/>}/>
       <Route path="/admin/ecom/customers/:id" element={<CustomerDetailsPage/>}/>
       <Route path="/admin/ecom/categories" element={<CategoriesPage/>}/>
       <Route path="/admin/ecom/transaction" element={<TransactionsPage/>}/>
-      <Route path="/admin/edit-profile" element={<AdminEditProfile/>}/>
+      
       <Route path="/admin/change-password" element={<AdminChangePassword/>}/>
       <Route path="/admin/settings" element={<SettingsPage/>}/>
       <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>

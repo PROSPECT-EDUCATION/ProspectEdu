@@ -5,7 +5,7 @@ import AdminStatsGrid from "../../components/Admin/Dashboard/AdminStatsGrid";
 import IncomeExpenseChart from "../../components/Admin/Dashboard/IncomeExpenseChart";
 import ProfessorsList from "../../components/Admin/Dashboard/ProfessorsList";
 import StudentList from "../../components/Admin/Dashboard/StudentList";
-import SalaryStatus from "../../components/Admin/Dashboard/SalaryStatus";
+
 import { adminDashboardApi } from "../../services/adminDashboard";
 import { useToast } from "../../context/ToastContext";
 
@@ -114,8 +114,6 @@ export default function AdminDashboardPage() {
             <ProfessorsList />
             <StudentList />
           </div>
-
-          <SalaryStatus />
         </div>
       </div>
     </div>

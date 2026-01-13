@@ -6,7 +6,8 @@ import { authApi } from "../../services/auth";
 export default function SignupForm() {
   const navigate = useNavigate();
   const location = useLocation();
-const [toastError, setToastError] = useState("");
+
+  const [toastError, setToastError] = useState("");
   const role = location.state?.role || "I'm a Learner";
 
   const [formData, setFormData] = useState({
@@ -18,93 +19,107 @@ const [toastError, setToastError] = useState("");
     state: "",
     city: "",
   });
-const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-const mapRoleToBackend = (uiRole) => {
-  if (uiRole === "I'm an Admin") return "admin";
-  if (uiRole === "I'm a Teacher") return "teacher";
-  if (uiRole === "I'm a Learner") return "student";
-  if (uiRole === "I'm a Parent/Organisation") return "parent";
-  return "student";
-};
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const mapRoleToBackend = (uiRole) => {
+    if (uiRole === "I'm an Admin") return "admin";
+    if (uiRole === "I'm a Teacher") return "teacher";
+    if (uiRole === "I'm a Learner") return "student";
+    if (uiRole === "I'm a Parent/Organisation") return "parent";
+    return "student";
+  };
 
-if (formData.password.length < 6 || formData.confirmPassword.length < 6) {
-  setToastError("Password must be at least 6 characters long");
-  return;
-}
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-if (formData.password !== formData.confirmPassword) {
-  setToastError("Passwords do not match");
-  return;
-}
+    if (formData.password.length < 6 || formData.confirmPassword.length < 6) {
+      setToastError("Password must be at least 6 characters long");
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const backendRole = mapRoleToBackend(role);
+    if (formData.password !== formData.confirmPassword) {
+      setToastError("Passwords do not match");
+      return;
+    }
 
-    const payload = {
-      fullName: formData.name,
-      email: formData.email,     // keep email for now
-      phone: formData.phone,
-      password: formData.password,
-      state: formData.state,
-      city: formData.city,
-      role: backendRole,
-    };
-console.log("PAYLOAD:", payload);
-    const res = await authApi.register(payload);
- 
+    setLoading(true);
+    try {
+      const backendRole = mapRoleToBackend(role);
 
-    const { accessToken, user } = res.data;
+      const payload = {
+        fullName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        state: formData.state,
+        city: formData.city,
+        role: backendRole,
+      };
 
-    // store access token (same approach as login)
-    sessionStorage.setItem("accessToken", accessToken);
-    sessionStorage.setItem("user", JSON.stringify(user));
-  setToastError("");
-    // route according to your app
-    if (backendRole === "student") navigate("/student-dashboard");
-    else if (backendRole === "teacher") navigate("/teacher-dashboard");
-    else if (backendRole === "parent") navigate("/parent-dashboard");
-    else if (backendRole === "admin") navigate("/admin-dashboard");
-    else navigate("/");
-  }catch (err) {
-  const status = err.response?.status;
-  const backendMsg = err.response?.data?.message; // ✅ read backend message
+      const res = await authApi.register(payload);
 
-  if (status === 409) {
-    // backendMsg will be: "Email already in use" OR "phone already in use"
-    setToastError(backendMsg || "Email/Phone already registered");
-  } else if (status === 422) {
-    setToastError(backendMsg || "Invalid input");
-  } else {
-    setToastError(backendMsg || "Something went wrong");
-  }
-} finally {
-  setLoading(false);
-}
-};
+      // ✅ NEW: Teacher pending approval flow
+      if (backendRole === "teacher" && res.data?.pendingApproval) {
+        // make sure nothing is stored
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("user");
 
+        setToastError(
+          res.data?.message || "Your teacher account is pending admin approval."
+        );
 
-  return (
+        // send them to login page
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const { accessToken, user } = res.data;
+
+      sessionStorage.setItem("accessToken", accessToken);
+      sessionStorage.setItem("user", JSON.stringify(user));
+      setToastError("");
+
+      if (backendRole === "student") navigate("/student-dashboard");
+      else if (backendRole === "teacher") navigate("/teacher-dashboard");
+      else if (backendRole === "parent") navigate("/parent-dashboard");
+      else if (backendRole === "admin") navigate("/admin-dashboard");
+      else navigate("/");
+        } catch (err) {
+      const status = err.response?.status;
+      const backendMsg = err.response?.data?.message;
+
+      // ✅ If teacher tries login later and it's pending (403), your Login page should show backendMsg
+      if (status === 409) {
+        setToastError(backendMsg || "Email/Phone already registered");
+      } else if (status === 422) {
+        setToastError(backendMsg || "Invalid input");
+      } else if (status === 403) {
+        setToastError(backendMsg || "Access denied");
+      } else {
+        setToastError(backendMsg || "Something went wrong");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+return (
     <>
-    {toastError && (
-  <ErrorToast
-    message={toastError}
-    onClose={() => setToastError("")}
-  />
-)}
+      {toastError && (
+        <ErrorToast message={toastError} onClose={() => setToastError("")} />
+      )}
 
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4"
-      aria-label="Signup form"
-      autoComplete="on"
-    >
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        aria-label="Signup form"
+        autoComplete="on"
+      >
       
       <fieldset className="space-y-4">
         <legend className="sr-only">Create your ProspectEdu account</legend>

@@ -130,7 +130,6 @@ const handleNavigate = async (path, title) => {
         ]
       : role === "admin"
       ? [
-          { label: "Edit Profile", path: "/admin/edit-profile" },
           { label: "Change Password", path: "/admin/change-password" },
         ]
       : [

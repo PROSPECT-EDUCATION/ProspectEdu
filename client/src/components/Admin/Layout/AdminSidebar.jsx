@@ -39,6 +39,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: GraduationCap,
       children: [
         { label: "All Teachers", path: "/admin/teachers" },
+        { label: "Confirm Teacher", path: "/admin/confirmTeacher" },
       ],
     },
 
@@ -49,7 +50,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
         { label: "Category", path: "/admin/courses/category" },
-        { label: "Enroll Students", path: "/admin/courses/enroll" },
         {label: "Course Purchase List", path: "/admin/courses/purchaseList"},
       ],
     },
