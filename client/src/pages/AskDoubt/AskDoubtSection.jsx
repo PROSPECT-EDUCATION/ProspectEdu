@@ -3,6 +3,8 @@ import questionIllustration from "../../assets/question.webp";
 import HeaderSection from "../../components/HeaderSection";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
+import { api } from "../../lib/api";
+
 const AskDoubtSection = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -29,34 +31,45 @@ const AskDoubtSection = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    let newErrors = {};
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  let newErrors = {};
 
-    if (!formData.name) newErrors.name = "Full Name is required";
-    if (!formData.email) newErrors.email = "Email Address is required";
-    if (!formData.phone) newErrors.phone = "Phone Number is required";
-    else if (formData.phone.length !== 10)
-      newErrors.phone = "Phone Number must be 10 digits";
-    if (!formData.doubt) newErrors.doubt = "Please enter your doubt";
+  if (!formData.name) newErrors.name = "Full Name is required";
+  if (!formData.email) newErrors.email = "Email Address is required";
+  if (!formData.phone) newErrors.phone = "Phone Number is required";
+  else if (formData.phone.length !== 10) newErrors.phone = "Phone Number must be 10 digits";
+  if (!formData.doubt) newErrors.doubt = "Please enter your doubt";
 
-    setErrors(newErrors);
+  setErrors(newErrors);
+  if (Object.keys(newErrors).length !== 0) return;
 
-    if (Object.keys(newErrors).length === 0) {
-      alert("Your doubt has been submitted!");
+  try {
+    const fd = new FormData();
+    fd.append("name", formData.name);
+    fd.append("email", formData.email);
+    fd.append("phone", formData.phone);
+    fd.append("doubtType", formData.doubtType);
+    fd.append("doubt", formData.doubt);
+    if (formData.image) fd.append("image", formData.image);
 
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        doubtType: "Batch Related",
-        doubt: "",
-        image: null,
-      });
+    await api.post("/doubts", fd); // public
 
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
+    alert("✅ Your doubt has been submitted! You will receive answer on email.");
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      doubtType: "Batch Related",
+      doubt: "",
+      image: null,
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  } catch (err) {
+    alert(err?.response?.data?.message || "Failed to submit doubt");
+  }
+};
+
 
   return (
    

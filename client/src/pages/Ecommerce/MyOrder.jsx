@@ -1,10 +1,8 @@
-/* --- RESPONSIVE MyOrder.jsx (ONLY layout fixes, no logic changes) --- */
-
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
-import { useOrders } from "../../context/OrderContext";
 import Footer from "../../components/Footer";
+import { api } from "../../lib/api";
 
 const orderOptions = [
   "All Orders",
@@ -13,7 +11,60 @@ const orderOptions = [
   "ON THE WAY",
   "CANCELED",
   "REJECTED",
+  "DELIVERED",
 ];
+
+const prettyDate = (iso) => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  } catch {
+    return iso;
+  }
+};
+
+// backend enum -> UI label
+const uiStatus = (s) => {
+  if (!s) return "CONFIRMED";
+  return String(s).replaceAll("_", " ").toUpperCase();
+};
+
+const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+
+const statusPillStyle = (label) => {
+  const base = { color: "#124734" };
+  if (label === "ORDER RECEIVED") return { ...base, backgroundColor: "#C2F8C5" };
+  if (label === "ON THE WAY") return { ...base, backgroundColor: "#C2E0FF" };
+  if (label === "REJECTED") return { ...base, backgroundColor: "#F8C2C2" };
+  if (label === "CONFIRMED") return { ...base, backgroundColor: "#FFE9B1" };
+  if (label === "DELIVERED") return { ...base, backgroundColor: "#DFF5E1" };
+  if (label === "CANCELED") return { ...base, backgroundColor: "#E5E5E5" };
+  return { ...base, backgroundColor: "#E5E5E5" };
+};
+
+// If multi-item order has mixed statuses, show a smart label.
+// (You can change this logic if you want.)
+const deriveOrderStatus = (items = []) => {
+  const set = new Set((items || []).map((it) => uiStatus(it.status)));
+  const arr = [...set];
+
+  if (arr.length === 0) return "ORDER RECEIVED";
+  if (arr.length === 1) return arr[0];
+
+  // ✅ If ALL items rejected/canceled => show REJECTED
+  const allRejected = (items || []).every((it) => {
+    const s = uiStatus(it.status);
+    return s === "REJECTED" || s === "CANCELED";
+  });
+  if (allRejected) return "REJECTED";
+
+  // otherwise show highest-progress
+  if (set.has("ON THE WAY")) return "ON THE WAY";
+  if (set.has("CONFIRMED")) return "CONFIRMED";
+  if (set.has("DELIVERED")) return "DELIVERED";
+  return "ORDER RECEIVED";
+};
+
 
 const MyOrder = () => {
   const [activeTab, setActiveTab] = useState("orders");
@@ -21,6 +72,8 @@ const MyOrder = () => {
 
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+
+  // ✅ selectedOrder is now the full order card (not a single item)
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [orderFilter, setOrderFilter] = useState("All Orders");
@@ -29,11 +82,8 @@ const MyOrder = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const fakeUser = {
-    name: "Akshat Agrawal",
-    phone: "9407307073",
-    email: "akshat.shubhit15@gmail.com",
-  };
+  // ✅ DB orders state
+  const [orders, setOrders] = useState([]);
 
   const [newAddress, setNewAddress] = useState({
     name: "",
@@ -79,19 +129,81 @@ const MyOrder = () => {
     });
   };
 
-  // ⭐ Orders sorted latest → oldest
-  const { orders } = useOrders();
-  const sortedOrders = [...orders].sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
+  useEffect(() => {
+    if (activeTab === "account") setActiveTab("orders");
+  }, [activeTab]);
 
+  // ✅ Load orders from backend
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        if (!token) {
+          setOrders([]);
+          return;
+        }
+        const res = await api.get("/orders/mine");
+        setOrders(res?.data?.orders || []);
+      } catch (err) {
+        console.log("Load orders error:", err);
+        setOrders([]);
+      }
+    };
+    load();
+  }, []);
+
+  // ✅ Build UI cards: 1 card per ORDER
+  const uiOrders = useMemo(() => {
+    const mapped = (orders || []).map((o) => {
+      const items = (o.items || []).map((it) => {
+        const qty = Number(it.quantity || 1);
+        const price = Number(it.price || 0);
+        const subTotal = price * qty;
+
+        return {
+          itemId: it._id,
+          status: uiStatus(it.status),
+          productImg: it.img || "https://via.placeholder.com/120",
+          productName: it.title,
+          qty,
+          price,
+          subTotal,
+        };
+      });
+
+      // Prefer backend totals if present
+      const totalMRP = Number(o.totalMRP ?? 0);
+      const totalPrice = Number(o.totalPrice ?? items.reduce((s, x) => s + x.subTotal, 0));
+      const discount = Number(o.discount ?? Math.max(0, totalMRP - totalPrice));
+      const shipping = Number(o.shipping ?? (totalPrice < 500 ? 99 : 0));
+      const grandTotal = Number(o.grandTotal ?? (totalPrice + shipping));
+
+      return {
+        id: o.orderId,
+        createdAt: o.createdAt,
+        date: prettyDate(o.createdAt),
+        status: deriveOrderStatus(o.items || []),
+        items,
+        totals: {
+          totalMRP,
+          totalPrice,
+          discount,
+          shipping,
+          grandTotal,
+        },
+        address: o.address,
+      };
+    });
+
+    // newest first
+    return mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [orders]);
+
+  // ✅ Filter: if user selects a status, show orders where ANY item matches that status
   const filteredOrders =
     orderFilter === "All Orders"
-      ? sortedOrders
-      : sortedOrders.filter(
-          (order) =>
-            order.status.toUpperCase() === orderFilter.toUpperCase()
-        );
+      ? uiOrders
+      : uiOrders.filter((o) => (o.items || []).some((it) => it.status.toUpperCase() === orderFilter.toUpperCase()));
 
   return (
     <section className=" pt-36">
@@ -123,8 +235,8 @@ const MyOrder = () => {
                 onClick={() => setActiveTab("orders")}
                 className={`border px-4 py-2 rounded-lg font-semibold w-full
                 ${activeTab === "orders"
-                  ? "bg-[#A7E1B2] text-[#124734]"
-                  : "text-gray-700 hover:text-[#124734]"}
+                    ? "bg-[#A7E1B2] text-[#124734]"
+                    : "text-gray-700 hover:text-[#124734]"}
               `}
               >
                 My Orders
@@ -134,22 +246,11 @@ const MyOrder = () => {
                 onClick={() => setActiveTab("addresses")}
                 className={`border px-4 py-2 rounded-lg font-semibold w-full
                 ${activeTab === "addresses"
-                  ? "bg-[#A7E1B2] text-[#124734]"
-                  : "text-gray-700 hover:text-[#124734]"}
+                    ? "bg-[#A7E1B2] text-[#124734]"
+                    : "text-gray-700 hover:text-[#124734]"}
               `}
               >
                 My Addresses
-              </button>
-
-              <button
-                onClick={() => setActiveTab("account")}
-                className={`border px-4 py-2 rounded-lg font-semibold w-full
-                ${activeTab === "account"
-                  ? "bg-[#A7E1B2] text-[#124734]"
-                  : "text-gray-700 hover:text-[#124734]"}
-              `}
-              >
-                My Account
               </button>
             </div>
           </div>
@@ -170,7 +271,7 @@ const MyOrder = () => {
                   </button>
 
                   {showFilterMenu && (
-                    <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-2xl overflow-hidden border">
+                    <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-2xl overflow-hidden border z-10">
                       {orderOptions.map((opt) => (
                         <div
                           key={opt}
@@ -179,11 +280,10 @@ const MyOrder = () => {
                             setShowFilterMenu(false);
                           }}
                           className={`px-5 py-3 cursor-pointer transition text-sm
-                          ${
-                            orderFilter === opt
+                          ${orderFilter === opt
                               ? "bg-[#A7E1B2] text-[#124734] font-bold"
                               : "hover:bg-[#DFF5E1]"
-                          }
+                            }
                         `}
                         >
                           {opt}
@@ -198,86 +298,122 @@ const MyOrder = () => {
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="border border-[#A7E1B2] rounded-xl p-4 md:p-6 shadow-sm bg-white"
+                      className="border border-[#A7E1B2] rounded-2xl p-4 md:p-6 shadow-sm bg-white hover:shadow-md transition"
                     >
-                      {/* Top Row */}
+                      {/* Header */}
                       <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0">
-                        <p className="text-lg font-semibold text-[#124734]">
-                          Order ID: {order.id}
-                        </p>
+                        <div>
+                          <p className="text-lg font-semibold text-[#124734]">
+                            Order ID: {order.id}
+                          </p>
+                          <p className="text-gray-600 text-sm mt-1">
+                            Ordered on: <b>{order.date}</b> • Items: <b>{order.items.length}</b>
+                          </p>
+                        </div>
 
                         <span
                           className="px-4 py-1 rounded-full text-sm font-semibold self-start md:self-center"
-                          style={{
-                            backgroundColor:
-                              order.status === "ORDER RECEIVED"
-                                ? "#C2F8C5"
-                                : order.status === "ON THE WAY"
-                                ? "#C2E0FF"
-                                : order.status === "REJECTED"
-                                ? "#F8C2C2"
-                                : order.status === "CONFIRMED"
-                                ? "#FFE9B1"
-                                : "#E5E5E5",
-                            color: "#124734",
-                          }}
+                          style={statusPillStyle(order.status)}
                         >
                           {order.status}
                         </span>
                       </div>
 
-                      {/* Product Row */}
-                      <div className="flex flex-col md:flex-row gap-4 md:gap-6 mt-4">
-                        <img
-                          src={order.productImg}
-                          className="w-20 h-20 object-contain bg-[#A7E1B2]/20 p-3 rounded-xl"
-                        />
+                      {/* Items (compact list) */}
+                      <div className="mt-5 space-y-4">
+                        {order.items.map((it) => (
+                          <div
+                            key={it.itemId}
+                            className="flex gap-4 md:gap-5 items-center p-3 rounded-xl bg-[#A7E1B2]/15"
+                          >
+                            <img
+                              src={it.productImg}
+                              className="w-16 h-16 object-contain bg-white p-2 rounded-xl"
+                              alt=""
+                            />
 
-                        <div className="flex-1">
-                          <p className="text-xl font-semibold text-[#124734]">
-                            {order.productName}
-                          </p>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[16px] md:text-lg font-semibold text-[#124734] truncate">
+                                {it.productName}
+                              </p>
+                              <p className="text-gray-600 text-sm mt-1">
+                                Qty: {it.qty} • {money(it.price)} each
+                              </p>
 
-                          <p className="text-gray-600 text-sm mt-1">
-                            Qty: {order.qty} • ₹{order.price} each
-                          </p>
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <span
+                                  className="px-3 py-1 rounded-full text-xs font-semibold"
+                                  style={statusPillStyle(it.status)}
+                                >
+                                  {it.status}
+                                </span>
+                              </div>
+                            </div>
 
-                          <p className="text-lg font-semibold text-[#124734] mt-1">
-                            Total: ₹{order.total}
-                          </p>
-                        </div>
+                            <div className="text-right">
+                              <p className="text-gray-600 text-xs md:text-sm">Subtotal</p>
+                              <p className="text-[#124734] font-extrabold text-base md:text-lg">
+                                {money(it.subTotal)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
-                      {/* Bottom */}
-                      <div className="flex flex-col md:flex-row justify-between mt-4 pt-4 border-t gap-3 md:gap-0">
-                        <p className="text-gray-600 text-sm">
-                          Ordered on: <b>{order.date}</b>
-                        </p>
+                      {/* Totals Strip */}
+                      <div className="mt-6 rounded-2xl bg-gradient-to-r from-[#A7E1B2]/40 to-[#DFF5E1]/60 border border-[#A7E1B2]/50 p-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm md:text-base">
+                          <div>
+                            <p className="text-gray-600">Items Total</p>
+                            <p className="font-bold text-[#124734]">{money(order.totals.totalPrice)}</p>
+                          </div>
 
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="text-[#124734] font-semibold hover:underline"
-                        >
-                          View Details
-                        </button>
+                          <div>
+                            <p className="text-gray-600">Shipping</p>
+                            <p className="font-bold text-[#124734]">
+                              {order.totals.shipping === 0 ? "Free" : money(order.totals.shipping)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-gray-600">Discount</p>
+                            <p className="font-bold text-green-700">- {money(order.totals.discount)}</p>
+                          </div>
+
+                          <div>
+                            <p className="text-gray-600">Grand Total</p>
+                            <p className="font-extrabold text-[#124734] text-lg md:text-xl">
+                              {money(order.totals.grandTotal)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end mt-4">
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="px-5 py-2 rounded-full bg-[#124734] text-white font-semibold shadow hover:bg-[#0f3a23] transition"
+                          >
+                            View Details
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 {/* EMPTY ORDERS NOTE */}
-               {filteredOrders.length === 0 && (
-  <div className="flex flex-col items-center mt-16">
-    <img
-      src="https://cdn-icons-png.flaticon.com/512/17009/17009305.png"
-      className="w-32 md:w-52 opacity-70"
-    />
-    <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">
-      No Orders
-    </p>
-  </div>
-)}
-
+                {filteredOrders.length === 0 && (
+                  <div className="flex flex-col items-center mt-16">
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/17009/17009305.png"
+                      className="w-32 md:w-52 opacity-70"
+                      alt=""
+                    />
+                    <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">
+                      No Orders
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -414,30 +550,6 @@ const MyOrder = () => {
                 )}
               </div>
             )}
-
-            {/* ACCOUNT TAB */}
-            {activeTab === "account" && (
-              <div className="p-6 md:p-8 rounded-xl border shadow max-w-3xl">
-                <div className="flex items-center gap-4">
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/12259/12259264.png"
-                    className="w-10 h-10"
-                  />
-                  <h2 className="text-xl md:text-2xl font-bold text-[#124734]">
-                    {fakeUser.name}
-                  </h2>
-                </div>
-
-                <div className="mt-4 flex flex-col md:flex-row gap-4 md:gap-16 text-gray-700 text-lg">
-                  <p>
-                    <b>Contact - </b> {fakeUser.phone}
-                  </p>
-                  <p>
-                    <b>Email ID - </b> {fakeUser.email}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -474,117 +586,188 @@ const MyOrder = () => {
         </div>
       )}
 
-      {/* ORDER DETAILS MODAL */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl md:text-2xl font-bold text-[#124734]">
-                Order Details
-              </h2>
+      {/* ORDER DETAILS MODAL (FULL ORDER) */}
+{selectedOrder && (
+  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 md:p-6">
+    {/* Modal Shell */}
+    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      {/* Header (fixed) */}
+      <div className="bg-[#124734] text-white px-4 md:px-6 py-4 flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs md:text-sm opacity-90">Order Details</p>
+          <h2 className="text-lg md:text-2xl font-extrabold mt-1 truncate">
+            {selectedOrder.id}
+          </h2>
+          <p className="text-xs md:text-sm mt-1 opacity-90">
+            Date: <b>{selectedOrder.date}</b> • Items:{" "}
+            <b>{selectedOrder.items.length}</b>
+          </p>
+        </div>
 
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="text-gray-600 text-xl hover:text-black"
-              >
-                ✕
-              </button>
+        <button
+          onClick={() => setSelectedOrder(null)}
+          className="ml-3 shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Scrollable Body */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5">
+        {/* Status + Summary row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <span
+            className="px-4 py-1 rounded-full text-sm font-semibold w-fit"
+            style={statusPillStyle(selectedOrder.status)}
+          >
+            {selectedOrder.status}
+          </span>
+
+          <div className="text-sm text-gray-600">
+            Items Total:{" "}
+            <b className="text-[#124734]">{money(selectedOrder.totals.totalPrice)}</b>
+            {"  "}•{"  "}
+            Shipping:{" "}
+            <b className="text-[#124734]">
+              {selectedOrder.totals.shipping === 0
+                ? "Free"
+                : money(selectedOrder.totals.shipping)}
+            </b>
+          </div>
+        </div>
+
+        {/* ✅ Shipping Address */}
+        <div className="border rounded-2xl p-4 bg-[#A7E1B2]/10 mb-5">
+          <p className="text-[#124734] font-bold text-sm md:text-base mb-2">
+            Shipping Address
+          </p>
+
+          {selectedOrder?.address ? (
+            <div className="text-sm md:text-[15px] text-gray-700 leading-relaxed">
+              <p className="font-semibold text-gray-900">
+                {selectedOrder.address?.name || "Customer"}
+                {selectedOrder.address?.phone ? ` • ${selectedOrder.address.phone}` : ""}
+              </p>
+
+              {/* address line */}
+              <p className="mt-1">
+                {selectedOrder.address?.address}
+                {selectedOrder.address?.city ? `, ${selectedOrder.address.city}` : ""}
+                {selectedOrder.address?.state ? `, ${selectedOrder.address.state}` : ""}
+              </p>
+
+              <p className="mt-1">
+                {selectedOrder.address?.pincode ? `Pincode: ${selectedOrder.address.pincode}` : ""}
+                {selectedOrder.address?.country ? ` • ${selectedOrder.address.country}` : ""}
+              </p>
             </div>
-
-            {/* Order ID + Date */}
-            <p className="text-gray-700 text-sm mb-1">
-              <b>Order ID:</b> {selectedOrder.id}
+          ) : (
+            <p className="text-sm text-gray-600">
+              Address not found for this order.
             </p>
+          )}
+        </div>
 
-            <p className="text-gray-700 text-sm mb-4">
-              <b>Date:</b> {selectedOrder.date}
-            </p>
-
-            {/* Status */}
-            <div className="mb-6">
-              <span
-                className="px-4 py-1 rounded-full text-sm font-semibold"
-                style={{
-                  backgroundColor:
-                    selectedOrder.status === "ORDER RECEIVED"
-                      ? "#C2F8C5"
-                      : selectedOrder.status === "ON THE WAY"
-                      ? "#C2E0FF"
-                      : selectedOrder.status === "REJECTED"
-                      ? "#F8C2C2"
-                      : selectedOrder.status === "CONFIRMED"
-                      ? "#FFE9B1"
-                      : "#E5E5E5",
-                  color: "#124734",
-                }}
-              >
-                {selectedOrder.status}
-              </span>
-            </div>
-
-            {/* Product Card */}
-            <div className="flex gap-4 p-4 bg-[#A7E1B2]/20 rounded-xl">
+        {/* Items List */}
+        <div className="space-y-3">
+          {selectedOrder.items.map((it) => (
+            <div
+              key={it.itemId}
+              className="border rounded-2xl p-3 md:p-4 flex gap-3 md:gap-4 items-center"
+            >
               <img
-                src={selectedOrder.productImg}
-                className="w-20 h-20 bg-white p-2 rounded-xl"
+                src={it.productImg}
+                className="w-14 h-14 md:w-16 md:h-16 object-contain bg-[#A7E1B2]/20 p-2 rounded-xl shrink-0"
+                alt=""
               />
 
-              <div className="flex-1">
-                <p className="text-lg font-semibold text-[#124734]">
-                  {selectedOrder.productName}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[#124734] truncate">
+                  {it.productName}
+                </p>
+                <p className="text-gray-600 text-sm mt-0.5">
+                  {money(it.price)} × {it.qty}
                 </p>
 
-                <p className="text-gray-600 text-sm mt-1">
-                  Qty: {selectedOrder.qty}
-                </p>
+                <span
+                  className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold"
+                  style={statusPillStyle(it.status)}
+                >
+                  {it.status}
+                </span>
+              </div>
 
-                <p className="text-[#124734] font-semibold text-md mt-1">
-                  Price: ₹{selectedOrder.price}
+              <div className="text-right shrink-0">
+                <p className="text-gray-500 text-xs">Subtotal</p>
+                <p className="font-extrabold text-[#124734]">
+                  {money(it.subTotal)}
                 </p>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* Price Summary */}
-            <div className="mt-6 border-t pt-4">
-              {(() => {
-                const total = selectedOrder.price * selectedOrder.qty;
-                const shipping = total < 1000 ? 99 : 0;
+        {/* Billing Summary */}
+        <div className="mt-6 border-t pt-5">
+          <p className="text-[#124734] font-extrabold text-base md:text-lg mb-3">
+            Price Details
+          </p>
 
-                return (
-                  <>
-                    <p className="flex justify-between text-gray-700 mb-2 text-sm">
-                      <span>Item Total</span>
-                      <b>₹{total}</b>
-                    </p>
-
-                    <p className="flex justify-between text-gray-700 mb-2 text-sm">
-                      <span>Shipping</span>
-                      <b>₹{shipping}</b>
-                    </p>
-
-                    <p className="flex justify-between text-[#124734] text-lg font-bold mt-4">
-                      <span>Total Amount</span>
-                      <span>₹{total + shipping}</span>
-                    </p>
-                  </>
-                );
-              })()}
+          <div className="space-y-2 text-sm md:text-base">
+            <div className="flex justify-between text-gray-700">
+              <span>Total MRP</span>
+              <b>{money(selectedOrder.totals.totalMRP)}</b>
             </div>
 
-            {/* Close */}
-            <div className="text-center mt-6">
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="bg-[#124734] text-white px-8 py-2 rounded-lg shadow hover:bg-[#0f3a23]"
-              >
-                Close
-              </button>
+            <div className="flex justify-between text-gray-700">
+              <span>Items Total</span>
+              <b>{money(selectedOrder.totals.totalPrice)}</b>
+            </div>
+
+            <div className="flex justify-between text-gray-700">
+              <span>Discount</span>
+              <b className="text-green-700">- {money(selectedOrder.totals.discount)}</b>
+            </div>
+
+            <div className="flex justify-between text-gray-700">
+              <span>Shipping</span>
+              <b>
+                {selectedOrder.totals.shipping === 0
+                  ? "Free"
+                  : money(selectedOrder.totals.shipping)}
+              </b>
             </div>
           </div>
+
+          <div className="mt-4 p-4 rounded-2xl bg-[#A7E1B2]/25 flex justify-between items-center">
+            <span className="text-[#124734] font-extrabold text-lg">
+              Grand Total
+            </span>
+            <span className="text-[#124734] font-extrabold text-xl">
+              {money(selectedOrder.totals.grandTotal)}
+            </span>
+          </div>
         </div>
-      )}
-      <div className="pt-10"> <Footer /></div>
+      </div>
+
+      {/* Footer (fixed) */}
+      <div className="px-4 md:px-6 py-4 border-t bg-white">
+        <button
+          onClick={() => setSelectedOrder(null)}
+          className="w-full bg-[#124734] text-white py-3 rounded-full font-semibold shadow hover:bg-[#0f3a23] transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

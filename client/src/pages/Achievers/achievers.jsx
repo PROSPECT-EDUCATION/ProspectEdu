@@ -3,13 +3,16 @@ import achieversImg from "../../assets/acheivers.avif";
 import HeaderSection from "../../components/HeaderSection";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
-import { achieversData } from "../../data/achievers";
+import { api } from "../../lib/api";
+import { useEffect } from "react";
+
 
 const Achievers = () => {
   const [search, setSearch] = useState("");
   const [course, setCourse] = useState("All");
   const [year, setYear] = useState("All");
   const [openFaq, setOpenFaq] = useState(null);
+  const [achieversData, setAchieversData] = useState([]);
 
   // ✅ FILTER LOGIC
   const filteredAchievers = achieversData.filter((a) => {
@@ -18,6 +21,16 @@ const Achievers = () => {
     const matchYear = year === "All" || a.year === year;
     return matchName && matchCourse && matchYear;
   });
+  useEffect(() => {
+  (async () => {
+    try {
+      const res = await api.get("/achievers");
+      setAchieversData(res.data?.data || []);
+    } catch {
+      setAchieversData([]);
+    }
+  })();
+}, []);
 
   const faqs = [
     {
@@ -88,7 +101,7 @@ const Achievers = () => {
             className="bg-white rounded-2xl shadow-md p-6 text-center hover:shadow-xl transition"
           >
             <img
-              src={a.img}
+              src={a.imgUrl}
               alt={a.name}
               className="w-24 h-24 rounded-full mx-auto border-4 border-[#A7E1B2]"
             />

@@ -77,6 +77,18 @@ import SettingsPage from './pages/Admin/SettingsPage';
 import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
 import CoursePurchaseList from './pages/Admin/CoursePurchaseList';
 import EcomProductList from './pages/Admin/Ecom/EcomPurchaseList';
+import AdminScholarshipPage from "./pages/Admin/Scholarship/AdminScholarshipPage";
+import AdminAchieversPage from "./pages/Admin/Achievers/AdminAchieversPage";
+import AdminDonationsPage from "./pages/Admin/Donations/AdminDonationsPage";
+import AdminDoubtsPage from "./pages/Admin/Doubts/AdminDoubtsPage";
+import AdminResearchPage from "./pages/Teacher/Research/TeacherResearchPage";
+import AdminContactsPage from "./pages/Admin/Contacts/AdminContactsPage";
+import TeacherNewsPage from "./pages/Teacher/News/TeacherNewsPage";
+import TeacherTestLearning from "./pages/Teacher/TeacherTestLearning";
+import CheckoutTestLearning from './pages/Test&Learning/CheckoutTestLearning';
+import TeacherBlogs from "./pages/Teacher/Blogs/TeacherBlogs";
+
+
 
 
 import AskDoubtSection from "./pages/AskDoubt/AskDoubtSection";
@@ -110,7 +122,17 @@ import Supplier from "./pages/Ecommerce/Supplier/Supplier";
 import AddProduct from "./pages/Ecommerce/Supplier/AddProduct";
 import ProductList from "./pages/Ecommerce/Supplier/ProductList";
 import Orders from "./pages/Ecommerce/Supplier/Orders";
+import SupplierApply from './pages/Ecommerce/Supplier/SupplierApply';
+import SupplierChangePassword from './pages/Ecommerce/Supplier/ChangePassword';
+import SupplierEditProfile from './pages/Ecommerce/Supplier/EditProfile';
+import OrderConfirmation from './pages/Ecommerce/OrderConfirmation';
 import Achievers from './pages/Achievers/achievers';
+import TestLearning from "./pages/Student/StudentTestDetails";
+import TeacherSeriesTests from "./pages/Teacher/TeacherSeriesTests";
+import TeacherTestQuestions from "./pages/Teacher/TeacherTestQuestions";
+import LiveTest from "./pages/Student/LiveTest";
+
+
 
 
 
@@ -195,6 +217,20 @@ function App() {
       <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>
       <Route path="/admin/courses/purchaseList" element={<CoursePurchaseList/>}/>
       <Route path="/admin/ecom/products/purchase" element = {<EcomProductList/>}/>
+      <Route path="/admin/scholarship" element={<AdminScholarshipPage />} />
+      <Route path="/teacher/research" element={<AdminResearchPage />} />
+      <Route path="/admin/donations" element={<AdminDonationsPage />} />  
+      <Route path="/admin/doubts" element={<AdminDoubtsPage />} />
+      <Route path="/admin/achievers" element={<AdminAchieversPage />} />
+      <Route path="/admin/contacts" element={<AdminContactsPage />} />
+      <Route path="/teacher/news" element={<TeacherNewsPage />} />
+      <Route path="/teacher/test-learning" element={<TeacherTestLearning />} />
+        <Route path="/checkout-test-learning/:id" element={<CheckoutTestLearning />} />
+        <Route path="/studenttest-learning/:id" element={<TestLearning />} />
+         <Route path="/teacher/series-tests/:id" element={<TeacherSeriesTests />} />
+      <Route path="/teacher/series-tests/:id/tests/:testId/questions" element={<TeacherTestQuestions />} />
+      <Route path="/student/series/:seriesId/tests/:testId/live" element={<LiveTest />} />
+
 
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />
@@ -228,7 +264,13 @@ function App() {
         <Route path="/supplier/add-product" element={<AddProduct />} />
         <Route path="/supplier/product-list" element={<ProductList />} />
         <Route path="/supplier/orders" element={<Orders />} />
+        <Route path="/supplier/apply" element={<SupplierApply />} />
+        <Route path="/supplier/change-password" element={<SupplierChangePassword />} />
+        <Route path="/supplier/edit-profile" element={<SupplierEditProfile />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/achievers" element={<Achievers />} />
+        <Route path="/teacher/blogs" element={<TeacherBlogs />} />
+
 
 
       </Routes> 

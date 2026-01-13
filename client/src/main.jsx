@@ -7,10 +7,12 @@ import { WishlistProvider } from "./context/WishlistContext";
 import { CartProvider } from "./context/CartContext";
 import { AddressProvider } from "./context/AddressContext";
 import { OrderProvider } from "./context/OrderContext";
+import { AuthProvider } from "./context/AuthContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+    <AuthProvider>
     <OrderProvider>
   <WishlistProvider>
     <CartProvider>
@@ -20,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </CartProvider>
   </WishlistProvider>
   </OrderProvider>
+  </AuthProvider>
 </BrowserRouter>
 
   </React.StrictMode>

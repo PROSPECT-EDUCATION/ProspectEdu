@@ -33,6 +33,8 @@ const EcomHeader = () => {
     localStorage.getItem(AUTH_KEY) !== "false"
   );
 
+  const [userName, setUserName] = useState("");
+
   const allProducts = [
     ...trendingProducts,
     ...EnginneringProducts,
@@ -60,6 +62,23 @@ const EcomHeader = () => {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUserName("");
+      return;
+    }
+
+    const u = sessionStorage.getItem("user");
+    if (u) {
+      try {
+        const parsed = JSON.parse(u);
+        setUserName(parsed?.fullName || parsed?.name || "");
+      } catch {
+        setUserName("");
+      }
+    }
+  }, [isLoggedIn]);
 
   return (
     <header
@@ -156,7 +175,7 @@ const EcomHeader = () => {
                 className="flex items-center gap-1 bg-[#A7E1B2] px-4 py-2 rounded-full"
               >
                 <IoPersonCircle size={22} />
-                <span>Akshat</span>
+                <span>{userName || "User"}</span>
                 <span>▼</span>
               </button>
 
@@ -170,7 +189,7 @@ const EcomHeader = () => {
             </div>
           ) : (
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/login", { state: { from: "ecom-header" } })}
               className="flex items-center gap-2 bg-[#124734] text-white px-5 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
             >
               Login
@@ -270,7 +289,7 @@ const EcomHeader = () => {
                 <button
                   onClick={() => {
                     setMobileMenu(false);
-                    navigate("/login");
+                    navigate("/login", { state: { from: "ecom-header" } });
                   }}
                   className="mt-2 bg-[#124734] text-white py-2 rounded-xl"
                 >
@@ -301,6 +320,8 @@ const EcomHeader = () => {
               <button
                 onClick={() => {
                   localStorage.setItem(AUTH_KEY, "false");
+                  sessionStorage.removeItem("accessToken");
+                  sessionStorage.removeItem("user");
                   setIsLoggedIn(false);
                   setShowLogoutPopup(false);
                   setOpenMenu(false);

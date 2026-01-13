@@ -9,16 +9,11 @@ import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
 import Footer from "../../components/Footer";
 
+import { api } from "../../lib/api"; // ✅ ADDED
 
 import {
   trendingProducts,
-  merchandiseProducts,
-  EnginneringProducts,
-  LawProducts,
-  ManagementProducts,
-  MedicalProducts
-} from "../../data/productData";
-
+} from "../../data/ProductData";
 
 const categories = [
   { name: "Merchandise", color: "#800040", icon: "👕" },
@@ -28,8 +23,7 @@ const categories = [
   { name: "Civil Books", color: "#7A0900", icon: "🏗️" },
   { name: "Law Books", color: "#054C29", icon: "⚖️" },
   { name: "Medical Books", color: "#660000", icon: "🩺" },
-  { name: "Management Books", color: "#005566", icon: "📊" 
-  }
+  { name: "Management Books", color: "#005566", icon: "📊" },
 ];
 
 const Ecommerce = () => {
@@ -49,6 +43,13 @@ const Ecommerce = () => {
     (_, i) => categories[(start + i) % categories.length]
   );
 
+  // ✅ BACKEND PRODUCTS FOR HOME SLIDERS
+  const [engineeringProducts, setEngineeringProducts] = useState([]);
+  const [lawProducts, setLawProducts] = useState([]);
+  const [medicalProducts, setMedicalProducts] = useState([]);
+  const [merchandiseProducts, setMerchandiseProducts] = useState([]);
+  const [managementProducts, setManagementProducts] = useState([]);
+
   // Auto slide banner
   useEffect(() => {
     const slide = setInterval(() => {
@@ -60,6 +61,77 @@ const Ecommerce = () => {
 
   const goToSlide = (index) => setCurrent(index);
 
+  // ✅ Load products for Engineering/Law/Medical sliders
+  useEffect(() => {
+    let mounted = true;
+
+    const loadHomeSliders = async () => {
+      try {
+        const res = await api.get("/products"); // /api/v1/products
+        const products = res?.data?.products || [];
+
+        const mapped = products.map((p) => {
+          const price = Number(p.price || 0);
+          const offer = Number(p.offerPrice || 0);
+          const oldPrice = price;
+          const finalPrice = offer > 0 ? offer : price;
+
+          return {
+            id: p._id,
+            title: p.name,
+            description: p.description || "",
+            img:
+              (Array.isArray(p.images) && p.images[0]) ||
+              "https://via.placeholder.com/300x300?text=Product",
+            images: Array.isArray(p.images) ? p.images : [],
+            oldPrice,
+            price: finalPrice,
+            save: Math.max(0, oldPrice - finalPrice),
+            outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
+            category: (p.category || "").trim(),
+            customCategory: p.customCategory || "",
+          };
+        });
+
+        const isCat = (prod, cat) =>
+          (prod.category || "").toLowerCase() === cat.toLowerCase();
+
+        const eng = mapped.filter(
+          (p) =>
+            isCat(p, "IT Books") ||
+            isCat(p, "Electrical Books") ||
+            isCat(p, "Civil Books")
+        );
+
+        const law = mapped.filter((p) => isCat(p, "Law Books"));
+        const med = mapped.filter((p) => isCat(p, "Medical Books"));
+        const merch = mapped.filter((p) => isCat(p, "Merchandise"));
+        const manage = mapped.filter((p) => isCat(p, "Management Books"));
+
+        if (!mounted) return;
+        setEngineeringProducts(eng);
+        setLawProducts(law);
+        setMedicalProducts(med);
+        setMerchandiseProducts(merch);
+        setManagementProducts(manage);
+      } catch (e) {
+        console.error("Failed to load home slider products:", e);
+        if (!mounted) return;
+        setEngineeringProducts([]);
+        setLawProducts([]);
+        setMedicalProducts([]);
+        setMerchandiseProducts([]);
+        setManagementProducts([]);
+      }
+    };
+
+    loadHomeSliders();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <section className=" pt-36">
       <EcomHeader />
@@ -67,7 +139,6 @@ const Ecommerce = () => {
       <section className="max-w-7xl mx-auto px-4 mt-5 pb-20 text-left">
         {/* ---------- CAROUSEL ---------- */}
         <div className="relative w-full overflow-hidden rounded-2xl shadow-lg">
-
           <div
             className="flex transition-all duration-700"
             style={{ transform: `translateX(-${current * 100}%)` }}
@@ -97,7 +168,6 @@ const Ecommerce = () => {
 
         {/* ---------- CATEGORIES ---------- */}
         <div className="max-w-7xl mx-auto px-4 mt-10 mb-20">
-
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#2E2E2E]">
               Browse By Categories
@@ -115,7 +185,7 @@ const Ecommerce = () => {
                 onClick={nextSlide}
                 className="w-10 h-10 flex items-center justify-center border rounded-full text-[#124734] text-2xl hover:bg-[#A7E1B2]"
               >
-                → 
+                →
               </button>
             </div>
           </div>
@@ -156,16 +226,23 @@ const Ecommerce = () => {
 
         {/* ---------- PRODUCT SLIDERS ---------- */}
         <ProductSlider title="Trending Products" products={trendingProducts} navigate={navigate} />
-        <ProductSlider title="Engineering Products" products={EnginneringProducts} navigate={navigate} />
-        <ProductSlider title="Law Products" products={LawProducts} navigate={navigate} />
-        <ProductSlider title="Management Products" products={ManagementProducts} navigate={navigate} />
-        <ProductSlider title="Medical Products" products={MedicalProducts} navigate={navigate} />
+
+        {/* ✅ CHANGED: Engineering = IT + Electrical + Civil (from backend) */}
+        <ProductSlider title="Engineering Products" products={engineeringProducts} navigate={navigate} />
+
+        {/* ✅ CHANGED: Law (from backend) */}
+        <ProductSlider title="Law Products" products={lawProducts} navigate={navigate} />
+
+        <ProductSlider title="Management Products" products={managementProducts} navigate={navigate} />
+
+        {/* ✅ CHANGED: Medical (from backend) */}
+        <ProductSlider title="Medical Products" products={medicalProducts} navigate={navigate} />
+
         <ProductSlider title="Merchandise Products" products={merchandiseProducts} navigate={navigate} />
 
         {/* ---------- ASK QUESTIONS SECTION ---------- */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="bg-[#A7E1B2]/30 shadow-md rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between border">
-
             {/* Left */}
             <div className="w-full md:w-1/2">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#124734] leading-snug">
@@ -188,7 +265,6 @@ const Ecommerce = () => {
             <div className="w-full md:w-1/2 flex justify-center mt-8 md:mt-0">
               <img src={contact} alt="Ask Questions" className="w-48 sm:w-60 md:w-80" />
             </div>
-
           </div>
         </div>
 
@@ -202,14 +278,32 @@ const Ecommerce = () => {
           </p>
 
           <button
-            onClick={() => navigate("/supplier")}
+            onClick={() => {
+              const accessToken = sessionStorage.getItem("accessToken");
+              const user = JSON.parse(sessionStorage.getItem("user") || "null");
+
+              // ✅ pehle check login hai ya nahi
+              if (!accessToken || !user) {
+                // login page redirect + mark that user came from become supplier
+                return navigate("/login", { state: { from: "become-supplier" } });
+              }
+
+              // ✅ agar login hai toh role check
+              if (user.role === "supplier") {
+                return navigate("/supplier");
+              }
+
+              return navigate("/supplier/apply");
+            }}
             className="px-7 py-3 bg-[#124734] text-white font-semibold rounded-xl shadow hover:bg-[#0f3928] transition"
           >
             Become a Supplier
           </button>
         </div>
       </section>
-    <div className="pt-10"> <Footer /></div>
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

@@ -36,20 +36,25 @@ const ProductNoSlider = ({ products, columns = 3 }) => {
                 {/* CART BUTTON */}
                 {!p.outOfStock && (
                   <button
-                    onClick={() => addToCart(p)}
+                    onClick={() =>  
+                      {const accessToken = sessionStorage.getItem("accessToken");
+    if (!accessToken) return navigate("/login");   // ✅ not logged in -> login page
+                      addToCart({ ...p, quantity: 1},navigate)}}
                     className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
                   >
-                    {cart.some((item) => item.id === p.id) ? (
+
+                   {cart.some((item) => String(item.id) === String(p.id)) ? (
                       <FaShoppingCart size={20} className="text-green-600" />
                     ) : (
                       <FiShoppingCart size={20} className="text-[#124734]" />
                     )}
+
                   </button>
                 )}
 
                 {/* WISHLIST BUTTON */}
                 <button
-                  onClick={() => toggleWishlist(p)}
+                  onClick={() => toggleWishlist(p,navigate)}
                   className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
                 >
                   {wishlist.some((item) => item.id === p.id) ? (

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useToast } from "../../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../../ui/ConfirmDialog";
+import { api } from "../../../lib/api";
 
 export default function AddAnnouncementForm() {
   const { showToast } = useToast();
@@ -10,12 +11,22 @@ export default function AddAnnouncementForm() {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [category, setCategory] = useState("General");
-  const [status, setStatus] = useState("Active");
-  const [attachment, setAttachment] = useState(null);
+
+  // ✅ recipients multi-select
+  const [recipients, setRecipients] = useState(["student"]);
 
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const toggleRecipient = (value) => {
+    setRecipients((prev) =>
+      prev.includes(value)
+        ? prev.filter((r) => r !== value)
+        : [...prev, value]
+    );
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!title || !desc) {
@@ -23,11 +34,30 @@ export default function AddAnnouncementForm() {
       return;
     }
 
-    showToast("Announcement created successfully!", "success");
+    if (recipients.length === 0) {
+      showToast("Please select at least one recipient!", "error");
+      return;
+    }
 
-    setTimeout(() => {
+    try {
+      setLoading(true);
+
+      await api.post("/announcements", {
+        title,
+        description: desc,
+        recipients,
+      });
+
+      showToast("Announcement created successfully!", "success");
       navigate("/admin/announcements");
-    }, 700);
+    } catch (err) {
+      showToast(
+        err?.response?.data?.message || "Announcement not saved",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,7 +66,9 @@ export default function AddAnnouncementForm() {
 
         {/* Title */}
         <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Title *</label>
+          <label className="font-medium text-gray-700 mb-1">
+            Title *
+          </label>
           <input
             type="text"
             value={title}
@@ -48,19 +80,23 @@ export default function AddAnnouncementForm() {
 
         {/* Description */}
         <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Description *</label>
+          <label className="font-medium text-gray-700 mb-1">
+            Description *
+          </label>
           <textarea
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             rows={4}
             placeholder="Enter announcement details..."
             className="border border-gray-300 rounded-lg px-4 py-2"
-          ></textarea>
+          />
         </div>
 
-        {/* Category */}
+        {/* Category (UI only) */}
         <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Category</label>
+          <label className="font-medium text-gray-700 mb-1">
+            Category
+          </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -73,36 +109,39 @@ export default function AddAnnouncementForm() {
           </select>
         </div>
 
-        {/* Status */}
+        {/* Send To */}
         <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2"
-          >
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-        </div>
+          <label className="font-medium text-gray-700 mb-2">
+            Send To *
+          </label>
 
-        {/* Attachment */}
-        <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Attachment (Optional)</label>
-          <input
-            type="file"
-            onChange={(e) => setAttachment(e.target.files[0])}
-            className="border border-gray-300 rounded-lg px-4 py-2"
-          />
+          <div className="flex gap-4">
+            {["student", "teacher", "parent"].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => toggleRecipient(r)}
+                className={`px-4 py-2 rounded-lg border transition
+                  ${
+                    recipients.includes(r)
+                      ? "bg-[#124734] text-white border-[#124734]"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+              >
+                {r.charAt(0).toUpperCase() + r.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            className="bg-[#124734] text-white px-6 py-2 rounded-md hover:bg-[#0E3A2B] transition"
+            disabled={loading}
+            className="bg-[#124734] text-white px-6 py-2 rounded-md hover:bg-[#0E3A2B] transition disabled:opacity-60"
           >
-            Publish Announcement
+            {loading ? "Saving..." : "Publish Announcement"}
           </button>
 
           <button
@@ -115,7 +154,6 @@ export default function AddAnnouncementForm() {
         </div>
       </form>
 
-      {/* Confirm Cancel Dialog */}
       <ConfirmDialog
         open={confirmCancel}
         title="Cancel Announcement?"

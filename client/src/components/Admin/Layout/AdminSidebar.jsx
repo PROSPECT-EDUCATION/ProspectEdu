@@ -9,6 +9,10 @@ import {
   Settings,
   LogOut,
   Boxes,
+  Award,
+  Trophy ,
+  Inbox,
+  PhoneCall,
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
@@ -62,6 +66,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Fees Collection", path: "/admin/fees/collection" },
       ],
     },
+    { title: "Scholarship", icon: Award, path: "/admin/scholarship" },
 
     {
       title: "E-Commerce",
@@ -87,7 +92,13 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Create Announcement", path: "/admin/announcements/create" },
       ],
     },
+    
+    { title: "Achievers", icon: Trophy, path: "/admin/achievers" },
+    { title: "Doubts", icon: Inbox, path: "/admin/doubts" },
+    { title: "Contacts", icon: PhoneCall, path: "/admin/contacts" },
+    { title: "Donations", icon: CreditCard, path: "/admin/donations" },
     { title: "Settings", icon: Settings, path: "/admin/settings" },
+    
   ];
 
   return (

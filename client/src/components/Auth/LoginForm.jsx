@@ -2,9 +2,17 @@ import { useState } from "react";
 import { Phone, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/auth";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  // ✅ REMOVED: this was causing "setState during render" warning
+  // window.dispatchEvent(new Event("authChange"));
+
   const [formData, setFormData] = useState({ phone: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -14,35 +22,60 @@ export default function LoginForm() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const res = await authApi.login({
-      phone: formData.phone,
-      password: formData.password,
-    });
+    try {
+      const res = await authApi.login({
+        phone: formData.phone,
+        password: formData.password,
+      });
 
-    const { accessToken, user } = res.data;
+      const { accessToken, user } = res.data;
 
-    // simplest working storage for now (we can move to Context later)
-    sessionStorage.setItem("accessToken", accessToken);
-    sessionStorage.setItem("user", JSON.stringify(user));
+      // ✅ FIX: use AuthContext instead of sessionStorage directly
+      login(accessToken);
+      sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("isLoggedIn", "true");
 
-    // role-based redirect (adjust paths to your actual routes)
-    if (user.role === "admin") navigate("/admin-dashboard");
-    else if (user.role === "teacher") navigate("/teacher-dashboard");
-    else if (user.role === "student") navigate("/student-dashboard");
-    else if (user.role === "parent") navigate("/parent-dashboard");
-    else if (user.role === "supplier") navigate("/supplier-dashboard");
-    else navigate("/");
-  } catch (err) {
-    setError(err?.response?.data?.message || "Login failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      // ✅ important: fire auth change AFTER successful login (safe)
+      window.dispatchEvent(new Event("authChange"));
+
+      // ✅ NEW: if user came from Test Purchase flow, go to checkout after login
+      const redirect = sessionStorage.getItem("postLoginRedirect");
+      if (redirect) {
+        sessionStorage.removeItem("postLoginRedirect");
+        return navigate(redirect, { replace: true });
+      }
+
+      // Ecommerce se login aaye toh wapas ecommerce page pe redirect karna hai
+      const fromHeader = location.state?.from === "ecom-header";
+      if (fromHeader) {
+        // ecommerce header se login hua => always ecommerce-home
+        return navigate("/ecommerce-home");
+      }
+
+      // ✅ If user came from "Become a Supplier" button
+      const fromBecomeSupplier = location.state?.from === "become-supplier";
+      if (fromBecomeSupplier) {
+        if (user.role === "supplier") return navigate("/supplier");
+        return navigate("/supplier/apply", { replace: true });
+      }
+
+      // role-based redirect (adjust paths to your actual routes)
+      if (user.role === "admin") navigate("/admin-dashboard");
+      else if (user.role === "teacher") navigate("/teacher-dashboard");
+      else if (user.role === "student") navigate("/student-dashboard");
+      else if (user.role === "parent") navigate("/parent-dashboard");
+      else if (user.role === "supplier") navigate("/supplier");
+      else navigate("/");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-md">
@@ -54,11 +87,10 @@ export default function LoginForm() {
         Please log in to access your account.
       </p>
       {error ? (
-  <div className="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded">
-    {error}
-  </div>
-) : null}
-
+        <div className="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded">
+          {error}
+        </div>
+      ) : null}
 
       {/* Form */}
       <form
@@ -148,14 +180,13 @@ export default function LoginForm() {
 
           {/* Submit */}
           <button
-  type="submit"
-  disabled={loading}
-  className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300 disabled:opacity-60"
-  aria-label="Log in to your ProspectEdu account"
->
-  {loading ? "Logging in..." : "Log In"}
-</button>
-
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#124734] text-white py-2 rounded-lg hover:bg-[#009846] transition-all duration-300 disabled:opacity-60"
+            aria-label="Log in to your ProspectEdu account"
+          >
+            {loading ? "Logging in..." : "Log In"}
+          </button>
 
           {/* Sign Up */}
           <p className="text-sm text-center text-[#5B7065] mt-4">

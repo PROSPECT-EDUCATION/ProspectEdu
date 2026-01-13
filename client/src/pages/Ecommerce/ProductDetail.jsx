@@ -22,8 +22,10 @@ const ProductDetail = () => {
   const { state: product } = useLocation();
 
   React.useEffect(() => {
-    setThumbnail(product?.img);
-  }, [product]);
+  const first = product?.images?.[0] || product?.img;
+  setThumbnail(first);
+}, [product]);
+
 
   const shareFacebook = () => {
     window.open(
@@ -65,7 +67,11 @@ const ProductDetail = () => {
     );
   }
 
-  const images = [product.img, product.img, product.img, logo];
+  const images =
+  product?.images && product.images.length > 0
+    ? product.images
+    : [product.img];
+
 
   const trendingProducts = [
     { id: 1, title: "IT Books", img: book, price: 299, oldPrice: 499, save: 200, outOfStock: false },
@@ -131,7 +137,7 @@ const ProductDetail = () => {
               <h1 className="text-2xl sm:text-3xl font-bold">{product.title}</h1>
 
               <button
-                onClick={() => toggleWishlist(product)}
+                onClick={() => toggleWishlist(product,navigate)}
                 className="p-2 rounded-full bg-[#A7E1B2]/40 hover:bg-[#A7E1B2] transition"
               >
                 {wishlist.some((item) => item.id === product.id) ? (
@@ -216,9 +222,12 @@ const ProductDetail = () => {
                 <>
                   <button
                     onClick={() => {
+                      const accessToken = sessionStorage.getItem("accessToken");
+                      if (!accessToken) return navigate("/login");
+
                       const exists = cart.some((item) => Number(item.id) === Number(product.id));
                       if (exists) return showToast("❗ Already in cart");
-                      addToCart({ ...product, quantity });
+                      addToCart({ ...product, quantity },navigate);
                       showToast("✅ Added to cart");
                     }}
                     className="w-full py-3 bg-[#A7E1B2] text-gray-800 rounded hover:bg-gray-300"

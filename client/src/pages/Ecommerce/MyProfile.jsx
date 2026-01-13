@@ -1,35 +1,27 @@
-/* --- RESPONSIVE MyProfile.jsx (same logic, only layout fixed) --- */
+/* --- RESPONSIVE MyProfile.jsx (same layout, only logic updated for AddressContext sync) --- */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
 import locationIcon from "../../assets/location.webp";
 import Footer from "../../components/Footer";
+import { useAddress } from "../../context/AddressContext"; // ✅ ADD
 
 const MyProfile = () => {
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      name: "Akshat Agrawal",
-      phone: "9407307073",
-      email: "akshat.shubhit15@gmail.com",
-      address: "Bhopal Bypass Road, bmhcrc, Bhopal",
-      state: "Madhya Pradesh",
-      pincode: "462038",
-      country: "India",
-    },
-  ]);
+  // ✅ context addresses
+  const { addresses, addAddress, removeAddress, fetchAddresses } = useAddress();
 
   const [newAddress, setNewAddress] = useState({
-    name: "Akshat Agrawal",
-    phone: "9407307073",
-    email: "akshat.shubhit15@gmail.com",
+    name: user?.fullName || user?.name || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
     address: "",
     city: "",
     pincode: "",
@@ -37,55 +29,79 @@ const MyProfile = () => {
     country: "India",
   });
 
-  const saveAddress = () => {
-    if (editingId) {
-      setAddresses(
-        addresses.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                name: newAddress.name,
-                phone: newAddress.phone,
-                email: newAddress.email,
-                address: `${newAddress.address}, ${newAddress.city}`,
-                state: newAddress.state,
-                pincode: newAddress.pincode,
-                country: newAddress.country,
-              }
-            : item
-        )
-      );
-      setEditingId(null);
-    } else {
-      const data = {
-        id: Date.now(),
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  // ✅ keep name/phone/email prefilled when user loads
+  useEffect(() => {
+    if (!user) return;
+    setNewAddress((prev) => ({
+      ...prev,
+      name: prev.name || user?.fullName || user?.name || "",
+      phone: prev.phone || user?.phone || "",
+      email: prev.email || user?.email || "",
+    }));
+  }, [user]);
+
+  const saveAddress = async () => {
+    try {
+      // ✅ same payload
+      const payload = {
         name: newAddress.name,
         phone: newAddress.phone,
         email: newAddress.email,
-        address: `${newAddress.address}, ${newAddress.city}`,
-        state: newAddress.state,
+        address: newAddress.address,
+        city: newAddress.city,
         pincode: newAddress.pincode,
+        state: newAddress.state,
         country: newAddress.country,
       };
-      setAddresses([...addresses, data]);
+
+      if (editingId) {
+        // ❗ If you have updateAddress in context, use that.
+        // Since your context currently has only add/remove, we do safe approach:
+        // delete old + add new (NO layout change). Better is update endpoint, but keeping minimal.
+        await removeAddress(editingId);
+        await addAddress(payload);
+        setEditingId(null);
+      } else {
+        await addAddress(payload);
+      }
+
+      await fetchAddresses(); // ✅ ensures latest list in both pages
+
+      setShowForm(false);
+
+      setNewAddress({
+        name: user?.fullName || user?.name || "Akshat Agrawal",
+        phone: user?.phone || "9407307073",
+        email: user?.email || "akshat.shubhit15@gmail.com",
+        address: "",
+        city: "",
+        pincode: "",
+        state: "",
+        country: "India",
+      });
+    } catch (err) {
+      console.log("Save address error:", err);
     }
-
-    setShowForm(false);
-
-    setNewAddress({
-      name: "Akshat Agrawal",
-      phone: "9407307073",
-      email: "akshat.shubhit15@gmail.com",
-      address: "",
-      city: "",
-      pincode: "",
-      state: "",
-      country: "India",
-    });
   };
 
-  const deleteAddress = (id) => {
-    setAddresses(addresses.filter((item) => item.id !== id));
+  const deleteAddress = async (id) => {
+    try {
+      await removeAddress(id);
+      await fetchAddresses();
+    } catch (err) {
+      console.log("Delete address error:", err);
+    }
   };
 
   return (
@@ -93,7 +109,6 @@ const MyProfile = () => {
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
-
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-5 text-sm md:text-base">
           <span
@@ -107,20 +122,19 @@ const MyProfile = () => {
 
         {/* Main Box */}
         <div className="bg-white shadow-md rounded-xl p-5 md:p-10 border border-gray-200">
-
           <h1 className="text-2xl md:text-3xl font-bold text-[#124734] mb-6">
-            Welcome Akshat Agrawal
+            Welcome {user?.fullName || user?.name || "User"}
           </h1>
 
           {/* Phone & Email */}
           <div className="flex flex-col md:flex-row md:items-center text-lg mb-8 gap-3 md:gap-20">
             <p>
-              <span className="font-semibold">Phone:</span> +91 9407307073
+              <span className="font-semibold">Phone:</span>{" "}
+              {user?.phone ? `+91 ${user.phone}` : "-"}
             </p>
 
             <p>
-              <span className="font-semibold">Email:</span>{" "}
-              akshat.shubhit15@gmail.com
+              <span className="font-semibold">Email:</span> {user?.email || "-"}
             </p>
           </div>
 
@@ -129,7 +143,7 @@ const MyProfile = () => {
 
           {addresses.map((addr) => (
             <div
-              key={addr.id}
+              key={addr._id || addr.id}
               className="bg-[#A7E1B2] p-4 md:p-6 rounded-xl flex flex-col md:flex-row justify-between gap-4 border border-[#A7E1B2] mb-5"
             >
               {/* LEFT */}
@@ -144,7 +158,7 @@ const MyProfile = () => {
                   <p className="text-gray-700 text-sm mt-1">
                     {addr.phone}, {addr.email}
                     <br />
-                    {addr.address}, {addr.state}, {addr.country}
+                    {addr.address}, {addr.city}, {addr.state}, {addr.country}
                   </p>
 
                   <p className="text-gray-800 font-medium mt-2">
@@ -157,14 +171,14 @@ const MyProfile = () => {
               <div className="flex items-center gap-4 self-end md:self-center">
                 <button
                   onClick={() => {
-                    setEditingId(addr.id);
+                    setEditingId(addr._id || addr.id);
                     setShowForm(true);
                     setNewAddress({
                       name: addr.name,
                       phone: addr.phone,
                       email: addr.email,
-                      address: addr.address.split(",")[0],
-                      city: addr.address.split(",")[1]?.trim() || "",
+                      address: addr.address,
+                      city: addr.city,
                       pincode: addr.pincode,
                       state: addr.state,
                       country: addr.country,
@@ -176,7 +190,7 @@ const MyProfile = () => {
                 </button>
 
                 <button
-                  onClick={() => deleteAddress(addr.id)}
+                  onClick={() => deleteAddress(addr._id || addr.id)}
                   className="text-red-600 hover:text-red-800"
                 >
                   <FiTrash2 size={20} />
@@ -313,7 +327,9 @@ const MyProfile = () => {
           )}
         </div>
       </div>
-       <div className="pt-10"> <Footer /></div>
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

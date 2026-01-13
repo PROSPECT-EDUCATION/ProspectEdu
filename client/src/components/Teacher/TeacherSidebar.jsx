@@ -9,7 +9,10 @@ import {
   FolderKanban,
   ArrowLeft,
   ArrowRight,
-  ClipboardList
+  ClipboardList,
+  Boxes,
+  Newspaper,
+ PenTool,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
@@ -50,6 +53,13 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
       icon: MessageSquareReply,
       path: "/teacher/queries/doubts",
     },
+    
+    { label: "Research", icon: Boxes, path: "/teacher/research" },
+    { label: "Blog", icon: PenTool, path: "/teacher/blogs" },
+    { label: "News", icon: Newspaper, path: "/teacher/news" },
+    { label: "Test & Learning", icon: ClipboardList, path: "/teacher/test-learning" },
+
+
   ];
 
   return (

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 
 import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
-import { parentAnnouncements } from "../../data/parentAnnouncements";
+import { api } from "../../lib/api";
 
 export default function ParentAnnouncementsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -12,36 +12,55 @@ export default function ParentAnnouncementsPage() {
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    try {
+      setLoading(true);
+
+      // ✅ Parent will receive only those announcements where recipients includes "parent"
+      const res = await api.get("/announcements/me/for-me");
+      setItems(res?.data?.data || []);
+    } catch (e) {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-
       {/* SIDEBAR */}
       <div
         className="fixed top-0 left-0 h-full transition-all duration-300"
         style={{ width: sidebarWidth }}
       >
-        <ParentSidebar 
-          isCollapsed={isCollapsed} 
-          setIsCollapsed={setIsCollapsed} 
-        />
+        <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* MAIN */}
-      <div 
-        className="flex-1 flex flex-col"
-        style={{ marginLeft: sidebarWidth }}
-      >
+      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <ParentTopbar pageTitle="Announcements" showStudentSwitcher={false} />
 
-        <div className="p-6 space-y-4 overflow-y-auto">
-
-          {parentAnnouncements.map((a) => (
-            <AnnouncementCard
-              key={a.id}
-              a={a}
-              onClick={setSelectedAnnouncement}
-            />
-          ))}
+        <div className="p-6 space-y-4 overflow-y-auto text-left">
+          {loading ? (
+            <p className="text-gray-500">Loading...</p>
+          ) : items.length === 0 ? (
+            <p className="text-gray-500">No announcements.</p>
+          ) : (
+            items.map((a) => (
+              <AnnouncementCard
+                key={a._id}
+                a={{ ...a, id: a._id }} // ✅ keep compatibility if card uses a.id
+                onClick={(announcement) => setSelectedAnnouncement(announcement)} // ✅ NO redirect, opens modal only
+              />
+            ))
+          )}
         </div>
       </div>
 

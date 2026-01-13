@@ -2,17 +2,13 @@ import React, { useState } from "react";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import AddAnnouncementForm from "../../components/Admin/Announcements/AddAnnouncementForm";
-import { useNavigate } from "react-router-dom";
 
 export default function AddAnnouncementPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const navigate = useNavigate();
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-
-      {/* SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-full transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
@@ -24,10 +20,12 @@ export default function AddAnnouncementPage() {
         />
       </div>
 
-      {/* MAIN */}
       <div
         className="flex flex-col flex-1 transition-all duration-300"
-        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        style={{
+          marginLeft: sidebarWidth,
+          width: `calc(100vw - ${sidebarWidth}px)`,
+        }}
       >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
@@ -37,26 +35,6 @@ export default function AddAnnouncementPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
-          {/* Breadcrumb */}
-          <div className="text-gray-600 text-sm mb-4">
-            <span
-              className="cursor-pointer hover:text-[#124734]"
-              onClick={() => navigate("/admin-dashboard")}
-            >
-              Dashboard
-            </span>
-            {" / "}
-            <span
-              className="cursor-pointer hover:text-[#124734]"
-              onClick={() => navigate("/admin/announcements")}
-            >
-              Announcements
-            </span>
-            {" / "}
-            <span className="text-[#124734] font-semibold">Create</span>
-          </div>
-
-          {/* Form */}
           <AddAnnouncementForm />
         </div>
       </div>

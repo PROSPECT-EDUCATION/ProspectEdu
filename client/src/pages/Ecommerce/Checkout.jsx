@@ -1,21 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
 import { useCart } from "../../context/CartContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Footer from "../../components/Footer";
+import { api } from "../../lib/api";
 
 const Checkout = () => {
-  const { addresses, addAddress } = useAddress();
+  const { addresses, addAddress, fetchAddresses } = useAddress();
   const { cart } = useCart();
   const { state } = useLocation();
+  const navigate = useNavigate();
 
   const product = state?.product || null;
   const checkoutItems = product ? [product] : cart;
 
-  const [selectedAddress, setSelectedAddress] = useState(
-    addresses.length > 0 ? addresses[0].id : null
-  );
+  const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // ✅ addresses DB se load karwa do + selectedAddress auto set
+  useEffect(() => {
+    fetchAddresses?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!selectedAddress && addresses.length > 0) {
+      setSelectedAddress(addresses[0]._id || addresses[0].id);
+    }
+  }, [addresses, selectedAddress]);
 
   const [showForm, setShowForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
@@ -29,7 +41,7 @@ const Checkout = () => {
     country: "India",
   });
 
-  const saveAddress = () => {
+  const saveAddress = async () => {
     if (
       !newAddress.name.trim() ||
       !newAddress.phone.trim() ||
@@ -43,15 +55,18 @@ const Checkout = () => {
       return;
     }
 
-    addAddress({
+    await addAddress({
       name: newAddress.name,
       phone: newAddress.phone,
       email: newAddress.email,
-      address: `${newAddress.address}, ${newAddress.city}`,
+      address: newAddress.address,
+      city: newAddress.city,
       state: newAddress.state,
       pincode: newAddress.pincode,
       country: newAddress.country,
     });
+
+    await fetchAddresses?.(); // ✅ ensure updated list arrives
 
     setShowForm(false);
 
@@ -78,8 +93,72 @@ const Checkout = () => {
   );
 
   const discount = totalMRP - totalPrice;
-  const shipping = totalPrice < 500 ? 99 : 0;
+  const shipping = totalPrice < 1000 ? 99 : 0;
   const grandTotal = totalPrice + shipping;
+
+  // ✅ PAY NOW: create order in DB
+   const handlePayNow = async () => {
+  try {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/login", { state: { from: "ecom-header" } });
+      return;
+    }
+
+    if (!checkoutItems || checkoutItems.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    const selected = addresses.find(
+      (a) => (a._id || a.id) === selectedAddress
+    );
+
+    if (!selected) {
+      alert("Please select an address.");
+      return;
+    }
+
+    const payload = {
+      items: checkoutItems.map((p) => ({
+        productId: p.id,
+        quantity: Number(p.quantity || 1),
+      })),
+      address: {
+        name: selected.name,
+        phone: selected.phone,
+        email: selected.email,
+        address: selected.address,
+        city: selected.city,
+        state: selected.state,
+        pincode: selected.pincode,
+        country: selected.country || "India",
+      },
+    };
+
+    const res = await api.post("/orders", payload);
+
+    if (!res?.data?.success) {
+      alert(res?.data?.message || "Failed to place order");
+      return;
+    }
+
+    const orderId = res?.data?.order?.orderId;
+
+    if (!orderId) {
+      navigate("/my-order");
+      return;
+    }
+
+    navigate(`/order-confirmation/${orderId}`, {
+      state: { forcedStatus: "CONFIRMED" },
+    });
+  } catch (err) {
+    console.error("PayNow error:", err);
+    alert(err?.response?.data?.message || "Failed to place order");
+  }
+}; // ✅ VERY IMPORTANT semicolon
+
 
   return (
     <section className=" pt-36">
@@ -96,23 +175,26 @@ const Checkout = () => {
 
           <p className="font-semibold mb-4">Select Shipping Address</p>
 
-          {addresses.map((addr) => (
-            <label
-              key={addr.id}
-              className="flex gap-3 mb-4 items-start cursor-pointer"
-            >
-              <input
-                type="radio"
-                checked={selectedAddress === addr.id}
-                onChange={() => setSelectedAddress(addr.id)}
-                className="mt-1 accent-[#124734]"
-              />
-              <p className="text-sm md:text-base leading-relaxed">
-                {addr.name}, {addr.phone} <br />
-                {addr.address}, {addr.state}, {addr.country}
-              </p>
-            </label>
-          ))}
+          {addresses.map((addr) => {
+            const aid = addr._id || addr.id; // ✅ fix
+            return (
+              <label
+                key={aid}
+                className="flex gap-3 mb-4 items-start cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  checked={selectedAddress === aid}
+                  onChange={() => setSelectedAddress(aid)}
+                  className="mt-1 accent-[#124734]"
+                />
+                <p className="text-sm md:text-base leading-relaxed">
+                  {addr.name}, {addr.phone} <br />
+                  {addr.address}, {addr.state}, {addr.country}
+                </p>
+              </label>
+            );
+          })}
 
           <button
             onClick={() => setShowForm(!showForm)}
@@ -252,9 +334,7 @@ const Checkout = () => {
               <img src={item.img} className="w-16 h-20 object-contain rounded" />
 
               <div className="flex-1">
-                <p className="font-semibold text-base md:text-lg">
-                  {item.title}
-                </p>
+                <p className="font-semibold text-base md:text-lg">{item.title}</p>
                 <p className="text-gray-600 text-sm">
                   ₹{item.price} × {item.quantity}
                 </p>
@@ -300,12 +380,18 @@ const Checkout = () => {
             </p>
           </div>
 
-          <button className="w-full mt-6 bg-[#124734] text-white py-3 rounded-lg text-lg">
+          <button
+            onClick={handlePayNow}
+            className="w-full mt-6 bg-[#124734] text-white py-3 rounded-lg text-lg"
+          >
             Pay Now
           </button>
         </div>
       </div>
-      <div className="pt-10"> <Footer /></div>
+
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

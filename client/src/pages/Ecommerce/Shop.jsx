@@ -1,17 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
 import Footer from "../../components/Footer";
-
-// DATA
-import {
-  merchandiseProducts,
-  EnginneringProducts,
-  LawProducts,
-  ManagementProducts,
-  MedicalProducts,
-} from "../../data/ProductData";
+import { api } from "../../lib/api";
 
 const Shop = () => {
   const navigate = useNavigate();
@@ -19,16 +11,7 @@ const Shop = () => {
   const urlParams = new URLSearchParams(location.search);
   const initialCategory = urlParams.get("category");
 
-  // All products merged
-  const allProducts = [
-    ...EnginneringProducts,
-    ...LawProducts,
-    ...MedicalProducts,
-    ...ManagementProducts,
-    ...merchandiseProducts,
-  ];
-
-  // Filters
+  // ✅ same as backend predefined + Other
   const categories = [
     "IT Books",
     "Electrical Books",
@@ -37,6 +20,7 @@ const Shop = () => {
     "Medical Books",
     "Management Books",
     "Merchandise",
+    "Other",
   ];
 
   const [selectedCategories, setSelectedCategories] = useState(
@@ -46,25 +30,55 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState([1, 5000]);
   const [sortOption, setSortOption] = useState("Latest");
 
-  // Cart & Wishlist
-  const [cartItems, setCartItems] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
+  // ✅ products from backend
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Add to Cart
-  const handleCart = (p) => {
-    if (!cartItems.includes(p.id)) {
-      setCartItems([...cartItems, p.id]);
-    }
-  };
+  // ✅ Fetch products for everyone
+  useEffect(() => {
+    let mounted = true;
 
-  // Wishlist
-  const handleWishlist = (p) => {
-    if (wishlist.includes(p.id)) {
-      setWishlist(wishlist.filter((id) => id !== p.id));
-    } else {
-      setWishlist([...wishlist, p.id]);
-    }
-  };
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/products"); // => /api/v1/products (based on your api baseURL)
+
+        const products = (res?.data?.products || []).map((p) => {
+          const price = Number(p.price || 0);
+          const offer = Number(p.offerPrice || 0);
+
+          // oldPrice show as price, and offer as current (like your UI)
+          const oldPrice = price;
+          const finalPrice = offer > 0 ? offer : price;
+
+          return {
+            id: p._id,
+            title: p.name,
+            img: (p.images && p.images[0]) || "https://via.placeholder.com/300x300?text=Product",
+            images: Array.isArray(p.images) ? p.images : [],
+            oldPrice: oldPrice,
+            price: finalPrice,
+            save: Math.max(0, oldPrice - finalPrice),
+            outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
+            category: (p.category || "").trim(), // predefined OR "Other"
+            customCategory: p.customCategory || "",
+            description: p.description || "",
+          };
+        });
+
+        if (mounted) setAllProducts(products);
+      } catch (e) {
+        console.error("Failed to load products:", e);
+        if (mounted) setAllProducts([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Category toggle
   const toggleCategory = (cat) => {
@@ -75,33 +89,33 @@ const Shop = () => {
     }
   };
 
-  // Filtering
-  let filtered = allProducts.filter((p) => {
-    const matchCategory =
-      selectedCategories.length === 0 ||
-      selectedCategories.some(
-        (cat) => p.category.trim().toLowerCase() === cat.trim().toLowerCase()
-      );
+  const filtered = useMemo(() => {
+    let list = allProducts.filter((p) => {
+      const matchCategory =
+        selectedCategories.length === 0 ||
+        selectedCategories.some(
+          (cat) => (p.category || "").toLowerCase() === cat.toLowerCase()
+        );
 
-    const matchPrice = p.price <= priceRange[1];
+      const matchPrice = Number(p.price || 0) <= priceRange[1];
+      return matchCategory && matchPrice;
+    });
 
-    return matchCategory && matchPrice;
-  });
+    if (sortOption === "HighToLow") {
+      list = [...list].sort((a, b) => b.price - a.price);
+    }
+    if (sortOption === "LowToHigh") {
+      list = [...list].sort((a, b) => a.price - b.price);
+    }
 
-  // ---- SORTING ----
-  if (sortOption === "HighToLow") {
-    filtered = [...filtered].sort((a, b) => b.price - a.price);
-  }
-  if (sortOption === "LowToHigh") {
-    filtered = [...filtered].sort((a, b) => a.price - b.price);
-  }
+    return list;
+  }, [allProducts, selectedCategories, priceRange, sortOption]);
 
   return (
-    <section className=" pt-36">
+    <section className="pt-36">
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-left pb-20">
-
         {/* Breadcrumb */}
         <p className="text-gray-600 text-sm sm:text-md mb-4 sm:mb-5">
           <span
@@ -132,14 +146,16 @@ const Shop = () => {
 
         {/* LAYOUT GRID */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
           {/* SIDEBAR */}
           <div className="border rounded-xl p-4 sm:p-6 shadow bg-[#A7E1B2] h-fit md:sticky md:top-36">
             <h2 className="text-lg sm:text-xl font-bold mb-4">Category</h2>
 
             <div className="space-y-2">
               {categories.map((cat) => (
-                <label key={cat} className="flex gap-2 items-center text-sm sm:text-base">
+                <label
+                  key={cat}
+                  className="flex gap-2 items-center text-sm sm:text-base"
+                >
                   <input
                     type="checkbox"
                     checked={selectedCategories.includes(cat)}
@@ -169,18 +185,18 @@ const Shop = () => {
 
           {/* PRODUCTS */}
           <div className="md:col-span-3">
-            <ProductNoSlider
-              products={filtered}
-              cartItems={cartItems}
-              wishlist={wishlist}
-              onCart={handleCart}
-              onWishlist={handleWishlist}
-              columns={3}
-            />
+            {loading ? (
+              <div className="p-6 text-[#124734] font-semibold">Loading products...</div>
+            ) : (
+              <ProductNoSlider products={filtered} columns={3} />
+            )}
           </div>
         </div>
       </div>
-       <div className="pt-10"> <Footer /></div>
+
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

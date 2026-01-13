@@ -1,106 +1,90 @@
 // src/pages/Student/AllTestSeries.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
+import { fetchPublicTestSeries } from "../../lib/testSeriesApi";
 
 export default function AllTestSeries() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
   const tabs = [
     { key: "all", label: "All Test Series" },
     { key: "online", label: "Online Test Series" },
-    { key: "both", label: "Online + Offline Test Series" },
     { key: "offline", label: "Offline Test Series" },
+    { key: "both", label: "Online + Offline Test Series" }, // (optional tab)
   ];
 
-  // ✅ Prevent indexing of student dashboard pages
   useEffect(() => {
     const meta = document.createElement("meta");
     meta.name = "robots";
     meta.content = "noindex, follow";
     document.head.appendChild(meta);
-
     return () => document.head.removeChild(meta);
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await fetchPublicTestSeries();
+        setItems(data);
+      } catch (e) {
+        console.error(e);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (activeTab === "all" || activeTab === "both") return items;
+    if (activeTab === "online") return items.filter((x) => x.type === "Online");
+    if (activeTab === "offline") return items.filter((x) => x.type === "Offline");
+    return items;
+  }, [items, activeTab]);
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-
-      {/* Sidebar */}
-      <aside
-        className={`${
-          isCollapsed ? "w-20" : "w-64"
-        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
-      >
-        <StudentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+        <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
-      {/* Main Section */}
       <div
         className="flex flex-col flex-1 h-screen transition-all duration-300"
-        style={{
-          marginLeft: sidebarWidthPx,
-          width: `calc(100vw - ${sidebarWidthPx}px)`,
-        }}
+        style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
       >
-        {/* Topbar */}
-        <header
-          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
-          style={{ left: sidebarWidthPx, right: 0 }}
-        >
+        <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="Test Series" />
         </header>
 
-        {/* Breadcrumb + Tabs */}
-        <nav
-          className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] py-3"
-          aria-label="Student test series navigation"
-          style={{ left: sidebarWidthPx }}
-        >
+        <nav className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] py-3" aria-label="Student test series navigation">
           <div className="w-full flex flex-col items-start pl-5">
-
-            {/* Breadcrumb */}
             <p className="text-sm text-[#5B7065] mb-2">
-              <span
-                className="hover:underline hover:text-[#009846] cursor-pointer"
-                onClick={() => navigate("/student-dashboard")}
-              >
+              <span className="hover:underline hover:text-[#009846] cursor-pointer" onClick={() => navigate("/student-dashboard")}>
                 Home
               </span>{" "}
               /{" "}
-              <span
-                className="hover:underline hover:text-[#009846] cursor-pointer"
-                onClick={() => navigate("/student/all-test-series")}
-              >
+              <span className="hover:underline hover:text-[#009846] cursor-pointer" onClick={() => navigate("/student/all-test-series")}>
                 Recommended Test Series
               </span>{" "}
-              /{" "}
-              <span className="text-[#124734] font-medium">
-                All Test Series
-              </span>
+              / <span className="text-[#124734] font-medium">All Test Series</span>
             </p>
 
-            {/* Tabs */}
-            <div
-              className="flex flex-wrap gap-2 w-full"
-              role="tablist"
-              aria-label="Test series filters"
-            >
+            <div className="flex flex-wrap gap-2 w-full" role="tablist" aria-label="Test series filters">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   role="tab"
                   aria-selected={activeTab === tab.key}
-                  aria-current={activeTab === tab.key ? "true" : undefined}
                   onClick={() => setActiveTab(tab.key)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                     activeTab === tab.key
@@ -112,23 +96,59 @@ export default function AllTestSeries() {
                 </button>
               ))}
             </div>
-
           </div>
         </nav>
 
-        {/* Page Body */}
-        <main
-          className="flex-1 overflow-y-auto px-6 py-8"
-          style={{ marginTop: "128px" }}
-          aria-labelledby="student-test-series-heading"
-        >
-          {/* Hidden H1 for semantics */}
-          <h1 id="student-test-series-heading" className="sr-only">
-            All Test Series for Students
-          </h1>
-
+        <main className="flex-1 overflow-y-auto px-6 py-8" style={{ marginTop: "128px" }}>
           <div className="w-full max-w-6xl mx-auto">
-            <RefreshComponent message="No test series available." />
+            {loading ? (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E6F4EC]">Loading...</div>
+            ) : filtered.length === 0 ? (
+              <RefreshComponent message="No test series available." />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((t) => (
+                  <div
+                    key={t._id}
+                    className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition flex flex-col overflow-hidden"
+                  >
+                    <div className="relative">
+                      <img src={t.imageUrl || "/src/assets/test1.webp"} alt={t.title} className="w-full h-44 object-contain bg-[#F9FAFB]" />
+                      <span className={`absolute top-2 right-2 text-xs font-semibold px-3 py-1 rounded-md text-white ${
+                        t.type === "Online" ? "bg-[#1E5631]" : "bg-red-600"
+                      }`}>
+                        {t.type}
+                      </span>
+                    </div>
+
+                    <div className="p-5 flex flex-col flex-grow">
+                      <h3 className="font-semibold text-lg mb-3 text-center">{t.title}</h3>
+                      <hr className="my-3 border-gray-200" />
+
+                      <div className="grid grid-cols-2 gap-y-1 text-sm text-gray-700">
+                        <p><strong>Total Test:</strong> {t.totalTest}</p>
+                        <p><strong>Language:</strong> {t.language}</p>
+                        <p><strong>Total Question:</strong> {t.totalQuestion}</p>
+                        <p>
+                          <strong>Price:</strong>{" "}
+                          <b className="text-red-600">{Number(t.price || 0) === 0 ? "Free" : `₹${t.price}`}</b>
+                        </p>
+                        <p className="col-span-2"><strong>Question Type:</strong> {t.questionType}</p>
+                      </div>
+
+                      <div className="mt-6 text-center">
+                      <button
+                        onClick={() => navigate(`/checkout-test-learning/${t._id}`)}
+                        className="border border-[#1E5631] text-[#1E5631] font-medium px-6 py-2 rounded-full hover:bg-[#1E5631] hover:text-white transition"
+                      >
+                        Checkout
+                      </button>
+                    </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
