@@ -8,7 +8,7 @@ export const createCourseSchema = z.object({
   description: z.string().optional(),
   info: z.string().optional(),
 
-  professors: z.array(z.string()).optional(),
+  assignedTeachers: z.array(z.string()).optional(),
 
   price: z.coerce.number().optional(),
   discount: z.coerce.number().optional(),

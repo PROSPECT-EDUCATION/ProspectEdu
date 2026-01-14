@@ -141,7 +141,9 @@ export async function adminGetCourse(req, res, next) {
   try {
     if (!isAdmin(req)) return badRole(res);
 
-    const course = await Course.findById(req.params.id).select("-__v");
+    const course = await Course.findById(req.params.id)
+  .populate("assignedTeachers", "fullName")   // ✅ add this
+  .select("-__v");
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
 
     res.json({ success: true, course });
@@ -163,9 +165,14 @@ export async function adminUpdateCourse(req, res, next) {
     const update = { ...data };
 
     // normalize arrays if present
+
     if (data.professors) update.professors = normalizeStringArray(data.professors);
     if (data.tags) update.tags = normalizeTags(data.tags);
-
+if (data.assignedTeachers) {
+  update.assignedTeachers = (data.assignedTeachers || [])
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+}
     // coerce numbers if present
     if (data.price !== undefined) update.price = Number(data.price || 0);
     if (data.discount !== undefined) update.discount = Number(data.discount || 0);
@@ -339,7 +346,14 @@ export async function listPublishedCourses(req, res, next) {
 
 export async function getCourseById(req, res, next) {
   try {
-    const course = await Course.findOne({ _id: req.params.id, status: "published" }).select("-__v");
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+  return res.status(400).json({ success: false, message: "Invalid course id" });
+}
+
+    const course = await Course.findOne({ _id: req.params.id, status: "published" })
+  .populate("assignedTeachers", "fullName")
+  .select("-__v");
+
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
     res.json({ success: true, course });
   } catch (e) {
@@ -349,7 +363,10 @@ export async function getCourseById(req, res, next) {
 
 export async function getCourseBySlug(req, res, next) {
   try {
-    const course = await Course.findOne({ slug: req.params.slug, status: "published" }).select("-__v");
+   const course = await Course.findOne({ slug: req.params.slug, status: "published" })
+  .populate("assignedTeachers", "fullName")
+  .select("-__v");
+
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
     res.json({ success: true, course });
   } catch (e) {
@@ -382,6 +399,12 @@ export async function teacherMyCourses(req, res, next) {
 
 export async function teacherGetCourseForManagement(req, res, next) {
   try {
+      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course id",
+      });
+    }
     if (!isTeacher(req)) return badRole(res);
 
     const course = await Course.findById(req.params.courseId).select("-__v");

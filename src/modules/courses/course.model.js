@@ -48,6 +48,8 @@ courseSchema.pre("save", function (next) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
   }
+  next();
 });
+
 
 export const Course = mongoose.model("Course", courseSchema);

@@ -3,6 +3,7 @@ import { Course } from "./course.model.js";
 import { Enrollment } from "./enrollment.model.js";
 import { CourseModule } from "./module.model.js";
 import { Lesson } from "./lesson.model.js";
+import cloudinary from "../../config/cloudinary.js"; // adjust path if different
 
 /**
  * Helper: student must be enrolled to view content (for now)
@@ -105,16 +106,18 @@ export async function createLesson(req, res, next) {
   try {
     const { moduleId } = req.params;
     const {
-      title,
-      type = "video",
-      contentUrl = "",
-      contentText = "",
-      durationMinutes = 0,
-      order = 0,
-      isPreview = false,
-      isPublished = true,
-    } = req.body;
-
+  title,
+  type = "video",
+  contentUrl = "",
+  filePublicId = "",
+  fileName = "",
+  mimeType = "",
+  contentText = "",
+  durationMinutes = 0,
+  order = 0,
+  isPreview = false,
+  isPublished = true,
+} = req.body;
     if (!title) return res.status(422).json({ success: false, message: "Lesson title is required" });
 
     const mod = await CourseModule.findById(moduleId);
@@ -124,17 +127,21 @@ export async function createLesson(req, res, next) {
     await assertTeacherAssignedOrAdmin(req, mod.courseId);
 
     const lesson = await Lesson.create({
-      courseId: mod.courseId,
-      moduleId,
-      title,
-      type,
-      contentUrl,
-      contentText,
-      durationMinutes: Number(durationMinutes || 0),
-      order: Number(order || 0),
-      isPreview: !!isPreview,
-      isPublished: !!isPublished,
-    });
+  courseId: mod.courseId,
+  moduleId,
+  title,
+  type,
+  contentUrl,
+  filePublicId,
+  fileName,
+  mimeType,
+  contentText,
+  durationMinutes: Number(durationMinutes || 0),
+  order: Number(order || 0),
+  isPreview: !!isPreview,
+  isPublished: !!isPublished,
+});
+
 
     res.json({ success: true, lesson });
   } catch (e) {
@@ -167,3 +174,113 @@ export async function listLessons(req, res, next) {
     next(e);
   }
 }
+
+export async function teacherGetModulesWithLessons(req, res, next) {
+  try {
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId).select("_id assignedTeachers");
+    if (!course) return res.status(404).json({ success: false, message: "Course not found" });
+
+    await assertTeacherAssignedOrAdmin(req, courseId);
+
+    const modules = await CourseModule.find({ courseId })
+      .sort({ order: 1, createdAt: 1 })
+      .select("-__v")
+      .lean();
+
+    const moduleIds = modules.map((m) => m._id);
+
+    const lessons = await Lesson.find({ courseId, moduleId: { $in: moduleIds } })
+      .sort({ order: 1, createdAt: 1 })
+      .select("-__v")
+      .lean();
+
+    const map = new Map();
+    for (const l of lessons) {
+      const key = String(l.moduleId);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(l);
+    }
+
+    const result = modules.map((m) => ({
+      ...m,
+      lessons: map.get(String(m._id)) || [],
+    }));
+
+    return res.json({ success: true, modules: result });
+  } catch (e) {
+    next(e);
+  }
+}
+export async function deleteLesson(req, res, next) {
+  try {
+    const { lessonId } = req.params;
+
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ success: false, message: "Lesson not found" });
+    }
+
+    // Only assigned teacher/admin can delete
+    await assertTeacherAssignedOrAdmin(req, lesson.courseId);
+
+    // ✅ delete from Cloudinary (if filePublicId exists)
+    if (lesson.filePublicId) {
+      // decide resource_type based on mimeType/type
+      const isVideo =
+        lesson.type === "video" || (lesson.mimeType || "").startsWith("video/");
+      const resource_type = isVideo ? "video" : "raw"; // pdf/doc/docx should be raw
+
+      try {
+        await cloudinary.uploader.destroy(lesson.filePublicId, { resource_type });
+      } catch (err) {
+        // don't crash delete if cloudinary deletion fails
+        console.log("Cloudinary delete failed:", err?.message || err);
+      }
+    }
+
+    await Lesson.deleteOne({ _id: lessonId });
+
+    return res.json({ success: true, deleted: true });
+  } catch (e) {
+    next(e);
+  }
+}
+export async function updateLesson(req, res, next) {
+  try {
+    const { lessonId } = req.params;
+    const { title, fileName, isPublished, isPreview, order } = req.body || {};
+
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ success: false, message: "Lesson not found" });
+    }
+
+    // only assigned teacher/admin
+    await assertTeacherAssignedOrAdmin(req, lesson.courseId);
+
+    // ✅ allow editing title + filename
+    if (title !== undefined) lesson.title = String(title).trim();
+    if (fileName !== undefined) lesson.fileName = String(fileName).trim();
+
+    // optional fields
+    if (isPublished !== undefined) lesson.isPublished = !!isPublished;
+    if (isPreview !== undefined) lesson.isPreview = !!isPreview;
+    if (order !== undefined) lesson.order = Number(order || 0);
+
+    if (!lesson.title) {
+      return res.status(422).json({ success: false, message: "Title is required" });
+    }
+
+    await lesson.save();
+
+    return res.json({ success: true, lesson });
+  } catch (e) {
+    next(e);
+  }
+}
+
+
+
+
