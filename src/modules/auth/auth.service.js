@@ -129,4 +129,32 @@ export async function logoutUser({ userId }) {
   if (!userId) return;
   await User.updateOne({ _id: userId }, { $set: { refreshTokenHash: null } });
 }
+export async function changePassword({ userId, oldPassword, newPassword }) {
+  if (!userId) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const user = await User.findById(userId).select("+passwordHash +refreshTokenHash");
+  if (!user || !user.isActive) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const ok = await user.comparePassword(oldPassword);
+  if (!ok) {
+    const err = new Error("Old password is incorrect");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  user.refreshTokenHash = null; // ✅ revoke refresh after password change
+  await user.save();
+
+  return { success: true };
+}
+
 

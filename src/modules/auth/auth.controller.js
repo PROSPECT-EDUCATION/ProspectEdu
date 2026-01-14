@@ -1,6 +1,6 @@
-import { registerSchema, loginSchema } from "./auth.validators.js";
-import { registerUser, loginUser } from "./auth.service.js";
-import { refreshSession, logoutUser } from "./auth.service.js";
+import { registerSchema, loginSchema, changePasswordSchema } from "./auth.validators.js";
+import { registerUser, loginUser, refreshSession, logoutUser, changePassword } from "./auth.service.js";
+
 
 function setRefreshCookie(res, refreshToken) {
   // Local dev: secure false. In prod: secure true + sameSite "none" if cross-domain.
@@ -115,3 +115,28 @@ export async function logout(req, res, next) {
     next(e);
   }
 }
+export async function changeMyPassword(req, res, next) {
+  try {
+    const data = changePasswordSchema.parse(req.body);
+
+    await changePassword({
+      userId: req.user?.id, // ✅ requireAuth gives req.user.id
+      oldPassword: data.oldPassword,
+      newPassword: data.newPassword,
+    });
+
+    clearRefreshCookie(res);
+
+    return res.json({
+      success: true,
+      message: "Password changed successfully. Please login again.",
+    });
+  } catch (e) {
+    if (e?.name === "ZodError") {
+      e.statusCode = 422;
+      e.message = e.errors?.[0]?.message || "Invalid input";
+    }
+    next(e);
+  }
+}
+

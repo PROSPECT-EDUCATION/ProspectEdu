@@ -34,6 +34,20 @@ const userSchema = new Schema(
     // For refresh-token rotation (we’ll use this later in Auth module)
     refreshTokenHash: { type: String, select: false, default: null },
 
+        addresses: [
+      {
+        name: { type: String, required: true, trim: true },
+        phone: { type: String, required: true, trim: true },
+        email: { type: String, required: true, trim: true, lowercase: true },
+        address: { type: String, required: true, trim: true },
+        city: { type: String, required: true, trim: true },
+        pincode: { type: String, required: true, trim: true },
+        state: { type: String, required: true, trim: true },
+        country: { type: String, default: "India" },
+      },
+    ],
+
+
     lastLoginAt: { type: Date, default: null },
   },
   { timestamps: true }
