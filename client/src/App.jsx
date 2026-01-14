@@ -20,12 +20,10 @@ import StorePage from './pages/Store/StorePage';
 import ChangePassword from './pages/Student/ChangePassword';
 import OrdersPage from './pages/Student/OrdersPage';
 import Doubts from './pages/Student/Doubts';
-import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import TeacherCoursesPage from './pages/Teacher/TeacherCoursesPage';
 import AddModulesPage from './pages/Teacher/AddModulesPage';
 import PublishCoursePage from './pages/Teacher/PublishCoursePage';
 import CourseManagement from './pages/Teacher/CourseManagement';
-import AssessmentDashboardPage from './pages/Teacher/AssessmentDashboardPage';
 import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
 import EditProfile from './pages/Student/EditProfile';
 import CreateQuizPage from './pages/Teacher/CreateQuizPage';
@@ -48,9 +46,12 @@ import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
+
+
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
 import AdminAllTeachersPage from './pages/Admin/AdminAllTeachersPage';
+import AdminConfirmAdminPage from './pages/Admin/AdminConfirmAdminPage';
 import AdminConfirmTeacherPage from "./pages/Admin/AdminConfirmTeacherPage";
 import FeesCollectionPage from './pages/Admin/FeesCollectionPage';
 import AddFeesPage from './pages/Admin/AddFeesPage';
@@ -136,13 +137,11 @@ function App() {
       <Route path="/student/change-password" element = {<ChangePassword/>}/>
       <Route path="/student/orders" element={<OrdersPage />} />
       <Route path="/student/doubts" element={<Doubts/>}/>
-      <Route path="/teacher-dashboard" element={<TeacherDashboard/>}/>
-      <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
+      <Route path="/teacher-dashboard" element={<TeacherCoursesPage />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
       <Route path= "/teacher/publish-course" element ={<PublishCoursePage/>}/>
       <Route path="/teacher/course/:courseId" element={<CourseManagement />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
-      <Route path="/teacher/assessments" element={<AssessmentDashboardPage />} />
       <Route path="/teacher/assessment/assignment/:courseId" element={<CreateAssignmentPage />} />
       <Route path="/teacher/assessment/assignments/:courseId" element={<TeacherAssignmentsPage />} />
 
@@ -155,6 +154,7 @@ function App() {
       <Route path="/teacher/students/performance" element={<StudentsPerformancePage />} />
       <Route path= "/teacher/queries/doubts" element = {<QueriesDoubtsPage/>}/>
       <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
+      <Route path="/admin/confirm-admin" element={<AdminConfirmAdminPage/>}/>
       <Route path="/teacher/course/:courseId/module/:moduleId" element={<TeacherModuleContentPage />}/>
       <Route path="/admin/confirmTeacher" element={<AdminConfirmTeacherPage />} />
       <Route path="/teacher/edit-profile" element = {<EditProfilePage/>}/>

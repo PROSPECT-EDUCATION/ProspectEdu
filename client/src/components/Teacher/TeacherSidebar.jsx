@@ -22,17 +22,7 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
   // =====================
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/teacher-dashboard" },
-
-    {
-      label: "Courses",
-      icon: BookOpen,
-      path: "/teacher/courses",
-    },
-    {
-      label: "Assessments",
-      icon: ClipboardList,
-      path: "/teacher/assessments",
-    },
+    
     {
       label: "Review Submissions",
       icon: FilePlus2,

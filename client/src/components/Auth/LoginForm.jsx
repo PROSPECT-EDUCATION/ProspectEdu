@@ -31,7 +31,18 @@ export default function LoginForm() {
     sessionStorage.setItem("user", JSON.stringify(user));
 
     // role-based redirect (adjust paths to your actual routes)
-    if (user.role === "admin") navigate("/admin-dashboard");
+    if (user.role === "admin") {
+  const status = user.adminApproval?.status;
+  if (status && status !== "approved") {
+    // Should not happen because backend blocks login,
+    // but just in case:
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
+    setError("Admin account pending approval");
+    return;
+  }
+  navigate("/admin-dashboard");
+}
     else if (user.role === "teacher") navigate("/teacher-dashboard");
     else if (user.role === "student") navigate("/student-dashboard");
     else if (user.role === "parent") navigate("/parent-dashboard");

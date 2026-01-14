@@ -86,6 +86,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Create Announcement", path: "/admin/announcements/create" },
       ],
     },
+    { title: "Confirm Admin", icon: GraduationCap, path: "/admin/confirm-admin" },
     { title: "Settings", icon: Settings, path: "/admin/settings" },
   ];
 

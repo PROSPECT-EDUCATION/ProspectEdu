@@ -19,4 +19,15 @@ export const usersApi = {
   setTeacherSalary: (teacherId, salary) =>
     api.patch(`/users/teachers/${teacherId}/salary`, { salary }),
    getTeacherById: (teacherId) => api.get(`/users/teachers/${teacherId}`),
+   // ✅ NEW: admin approval workflow (admin)
+listAdminRequests: (status = "pending") =>
+  api.get("/users/admin-requests", { params: { status } }),
+
+approveAdmin: (adminId) =>
+  api.patch(`/users/admin-requests/${adminId}/approve`),
+
+rejectAdmin: (adminId, note = "") =>
+  api.patch(`/users/admin-requests/${adminId}/reject`, { note }),
+ listAdmins: (params = {}) => api.get("/users/admins", { params }),
+
 };

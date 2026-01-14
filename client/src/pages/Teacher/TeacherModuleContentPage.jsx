@@ -13,6 +13,9 @@ export default function TeacherModuleContentPage() {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+  const [viewerOpen, setViewerOpen] = useState(false);
+const [viewerSrc, setViewerSrc] = useState("");
+const [viewerTitle, setViewerTitle] = useState("");
 
   const [module, setModule] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,32 @@ export default function TeacherModuleContentPage() {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editFileName, setEditFileName] = useState("");
+const openLesson = (lesson) => {
+  const url = lesson.contentUrl;
+
+  // PDF -> show directly
+  if (lesson.type === "pdf" || (lesson.mimeType || "").includes("pdf")) {
+    setViewerSrc(url);
+    setViewerTitle(lesson.title || "PDF");
+    setViewerOpen(true);
+    return;
+  }
+
+  // DOC/DOCX -> Office viewer embed
+  if (lesson.type === "doc" || (lesson.mimeType || "").includes("word")) {
+    const officeUrl =
+      "https://view.officeapps.live.com/op/embed.aspx?src=" +
+      encodeURIComponent(url);
+
+    setViewerSrc(officeUrl);
+    setViewerTitle(lesson.title || "Document");
+    setViewerOpen(true);
+    return;
+  }
+
+  // fallback -> new tab
+  window.open(url, "_blank", "noreferrer");
+};
 
   const load = async () => {
     try {
@@ -292,14 +321,12 @@ export default function TeacherModuleContentPage() {
 
                         {/* Right actions */}
                         <div className="flex items-center gap-3">
-                          <a
-                            className="text-sm underline text-[#124734]"
-                            href={l.contentUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {l.type === "video" ? "Play" : "Open"}
-                          </a>
+                         <button
+  className="text-sm underline text-[#124734]"
+  onClick={() => openLesson(l)}
+>
+  {l.type === "video" ? "Play" : "Open"}
+</button>
 
                           <button
                             className="text-sm text-blue-600"
@@ -343,5 +370,6 @@ export default function TeacherModuleContentPage() {
         </div>
       </div>
     </div>
+    
   );
 }
