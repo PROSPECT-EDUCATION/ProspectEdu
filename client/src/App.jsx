@@ -14,11 +14,16 @@ import MyCourses from './pages/Student/MyCourses';
 import MyTestSeries from './pages/Student/MyTestSeries';
 import StudyMaterials from './pages/Student/StudyMaterials';
 import Practice from './pages/Student/Practice';
+import StudentAssignmentViewPage from './pages/Student/StudentAssignmentViewPage';
+import StudentQuizStartPage from './pages/Student/StudentQuizStartPage';
+import StudentQuizResultPage from './pages/Student/StudentQuizResultPage';
+import StudentQuizAttemptsPage from './pages/Student/StudentQuizAttempsPage';
 import AllTestSeries from './pages/Student/AllTestSeries';
 import AllCourses from './pages/Student/AllCourses';
 import StorePage from './pages/Store/StorePage';
 import ChangePassword from './pages/Student/ChangePassword';
-import OrdersPage from './pages/Student/OrdersPage';
+import StudentCourseModulesPage from "./pages/Student/StudentCourseModulesPage";
+import StudentModuleLessonsPage from "./pages/Student/StudentModuleLessonsPage";
 import Doubts from './pages/Student/Doubts';
 import TeacherCoursesPage from './pages/Teacher/TeacherCoursesPage';
 import AddModulesPage from './pages/Teacher/AddModulesPage';
@@ -129,14 +134,21 @@ function App() {
       <Route path="/student/my-courses" element={<MyCourses/>}/>
       <Route path="/student/test-series" element={<MyTestSeries/>}/>
       <Route path="/student/study-materials" element={<StudyMaterials/>}/>
-      <Route path="/student/practice" element={<Practice/>}/>
+      <Route path="/student/practice" element={<Practice />} />
+<Route path="/student/practice/:courseId" element={<Practice />} />
+      <Route path="/student/assignments/:assignmentId" element={<StudentAssignmentViewPage />} />
+<Route path="/student/quizzes/:quizId/start" element={<StudentQuizStartPage />} />
+<Route path="/student/quizzes/:quizId/result" element={<StudentQuizResultPage />} />
+<Route path="/student/quizzes/:quizId/attempts" element={<StudentQuizAttemptsPage />} />
       <Route path="/student/all-test-series" element={<AllTestSeries/>}/>
       <Route path="/student/all-courses" element={<AllCourses/>}/>
       <Route path="/student/edit-profile" element={<EditProfile />} />
       <Route path="/store" element={<StorePage/>}/>
       <Route path="/student/change-password" element = {<ChangePassword/>}/>
-      <Route path="/student/orders" element={<OrdersPage />} />
       <Route path="/student/doubts" element={<Doubts/>}/>
+      <Route path="/student/courses/:courseId/modules" element={<StudentCourseModulesPage />} />
+      <Route path="/student/courses/:courseId/modules/:moduleId" element={<StudentModuleLessonsPage />} />
+
       <Route path="/teacher-dashboard" element={<TeacherCoursesPage />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
       <Route path= "/teacher/publish-course" element ={<PublishCoursePage/>}/>
@@ -147,7 +159,7 @@ function App() {
 
       <Route path="/teacher/assessment/quiz/:courseId" element={<CreateQuizPage />} />
       <Route path="/teacher/assessment/quizzes/:courseId" element={<TeacherQuizzesPage />} />
-<Route path="/teacher/assessment/quizzes/view/:quizId" element={<TeacherQuizDetailsPage />} />
+      <Route path="/teacher/assessment/quizzes/view/:quizId" element={<TeacherQuizDetailsPage />} />
 
       <Route path="/teacher/assessment/submissions" element={<ViewSubmissionsPage />} />
       <Route path="/teacher/assessments/review" element={<ReviewSubmissionsPageWrapper />} />

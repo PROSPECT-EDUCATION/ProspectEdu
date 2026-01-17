@@ -40,7 +40,27 @@ export const courseContentApi = {
 
 deleteLesson: (lessonId) =>
   api.delete(`/content/lessons/${lessonId}`, { headers: authHeader() }),
+// ✅ stream lesson file inline (PDF opens in browser)
+lessonFileUrl: (lessonId) =>
+  `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1"}/content/lessons/${lessonId}/file`,
 
 updateLesson: (lessonId, payload) =>
   api.patch(`/content/lessons/${lessonId}`, payload, { headers: authHeader() }),
+
+// ✅ Student: course modules overview (stats + course header)
+studentModulesOverview: (courseId) =>
+  api.get(`/content/student/courses/${courseId}/modules-overview`, {
+    headers: authHeader(),
+  }),
+getLessonFileBlob: (lessonId) =>
+  api.get(`/content/lessons/${lessonId}/file`, {
+    headers: authHeader(),
+    responseType: "blob",
+  }),
+updateModule: (moduleId, payload) =>
+  api.patch(`/content/modules/${moduleId}`, payload, { headers: authHeader() }),
+
+deleteModule: (moduleId) =>
+  api.delete(`/content/modules/${moduleId}`, { headers: authHeader() }),
+
 };

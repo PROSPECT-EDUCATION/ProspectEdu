@@ -14,7 +14,7 @@ import { useState, useRef, useEffect } from "react";
 import { uploadsApi } from "../../../services/uploads"; // adjust path
 import { courseContentApi } from "../../../services/courseContent"; // adjust path
 
-export default function ModuleCard({ module, index, viewOnly = false })
+export default function ModuleCard({ module, index, viewOnly = false, onRefresh , onView})
 {
   const [open, setOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -22,9 +22,16 @@ export default function ModuleCard({ module, index, viewOnly = false })
   const [lessonType, setLessonType] = useState("video"); // 'video' or 'pdf'
   const [filePreview, setFilePreview] = useState(null); // { file, url, name }
   const [playUrl, setPlayUrl] = useState(null); // video url to play in modal
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(module.title || "");
 
+  const [savingModule, setSavingModule] = useState(false);
+  const [deletingModule, setDeletingModule] = useState(false);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    setEditTitle(module.title || "");
+  }, [module.title]);
   useEffect(() => {
     return () => {
       // cleanup preview url on unmount
@@ -34,8 +41,41 @@ export default function ModuleCard({ module, index, viewOnly = false })
     };
     // eslint-disable-next-line
   }, []);
-  const [isEditing, setIsEditing] = useState(false);
-const [editTitle, setEditTitle] = useState(module.title);
+
+  const saveModuleTitle = async () => {
+    const nextTitle = editTitle.trim();
+    if (!nextTitle) return alert("Module title is required");
+
+    try {
+      setSavingModule(true);
+      await courseContentApi.updateModule(String(module._id), { title: nextTitle });
+      setIsEditing(false);
+      if (onRefresh) await onRefresh();
+    } catch (err) {
+      console.log(err);
+      alert(err?.response?.data?.message || "Failed to update module");
+    } finally {
+      setSavingModule(false);
+    }
+  };
+
+  const deleteModule = async () => {
+    const ok = window.confirm(
+      `Delete "${module.title}"?\n\nThis will also delete all lessons inside this module.`
+    );
+    if (!ok) return;
+
+    try {
+      setDeletingModule(true);
+      await courseContentApi.deleteModule(String(module._id));
+      if (onRefresh) await onRefresh();
+    } catch (err) {
+      console.log(err);
+      alert(err?.response?.data?.message || "Failed to delete module");
+    } finally {
+      setDeletingModule(false);
+    }
+  };
 
 
   const handleFileChange = (e) => {
@@ -92,7 +132,8 @@ const submitAddLesson = async () => {
     if (fileInputRef.current) fileInputRef.current.value = null;
 
     // 5) refresh modules from DB
-    if (onLessonCreated) await onLessonCreated();
+  if (onRefresh) await onRefresh();
+
   } catch (err) {
     console.log(err);
     alert(err?.response?.data?.message || "Failed to upload/create lesson");
@@ -100,90 +141,116 @@ const submitAddLesson = async () => {
     isSubmittingRef.current = false;
   }
 };
+const handleDeleteLesson = async (li) => {
+  const lesson = module.lessons?.[li];
+  if (!lesson?._id) return;
 
+  const ok = window.confirm(`Delete lesson "${lesson.title}"?`);
+  if (!ok) return;
 
-  const handleDeleteLesson = (li) => {
-    // also revoke url if blob
-    const lesson = module.lessons?.[li];
-    if (lesson?.url?.startsWith("blob:")) {
-      try { URL.revokeObjectURL(lesson.url); } catch {}
-    }
-    onDeleteLesson(index, li);
-  };
+  try {
+    await courseContentApi.deleteLesson(String(lesson._id));
+    if (onRefresh) await onRefresh();
+  } catch (err) {
+    console.error(err);
+    alert(err?.response?.data?.message || "Failed to delete lesson");
+  }
+};
+
 
   return (
     <div className="border border-[#A7E1B2] rounded-xl p-4 bg-white shadow-sm">
       {/* Top Row */}
-    {/* Top Row */}
-<div className="flex justify-between items-center">
-  <div>
-    {isEditing ? (
-      <input
-        value={editTitle}
-        onChange={(e) => setEditTitle(e.target.value)}
-        className="border border-[#A7E1B2] px-2 py-1 rounded-md text-[#124734] font-medium"
-        autoFocus
-      />
-    ) : (
-      <h3 className="text-lg font-semibold text-[#124734]">
-        {module.title || `Module ${index + 1}`}
-      </h3>
-    )}
-
-    <p className="text-sm text-[#5B7065]">
-      {module.lessons?.length || 0} Lessons
-    </p>
-  </div>
-
-  <div className="flex items-center gap-3">
-    {isEditing ? (
-      <>
-        <Check
-          size={20}
-          className="cursor-pointer text-green-600 hover:text-green-800"
-          onClick={() => {
-            if (editTitle.trim()) onEdit(index, editTitle);
-            setIsEditing(false);
-          }}
-        />
-        <X
-          size={20}
-          className="cursor-pointer text-gray-500 hover:text-gray-700"
-          onClick={() => {
-            setEditTitle(module.title);
-            setIsEditing(false);
-          }}
-        />
-      </>
-    ) : (
-      <Edit
-        size={18}
-        className="cursor-pointer text-[#124734] hover:text-[#009846]"
-        onClick={() => setIsEditing(true)}
-      />
-    )}
-
-    <Trash
-      size={18}
-      className="cursor-pointer text-red-500 hover:text-red-700"
-      onClick={() => onDelete(index)}
+      <div
+  className="flex justify-between items-center cursor-pointer"
+  onClick={() => {
+    if (!isEditing && onView) onView();
+  }}
+>
+        <div
+  className="cursor-pointer"
+  onClick={() => {
+    if (!isEditing && onView) onView();
+  }}
+>
+  {isEditing ? (
+    <input
+      value={editTitle}
+      onChange={(e) => setEditTitle(e.target.value)}
+      className="border border-[#A7E1B2] px-2 py-1 rounded-md text-[#124734] font-medium"
+      autoFocus
+      disabled={savingModule}
+      onClick={(e) => e.stopPropagation()}
     />
+  ) : (
+    <h3 className="text-lg font-semibold text-[#124734]">
+      {module.title || `Module ${index + 1}`}
+    </h3>
+  )}
 
-    {open ? (
-      <ChevronUp
-        size={22}
-        className="cursor-pointer text-[#124734]"
-        onClick={() => setOpen(false)}
-      />
-    ) : (
-      <ChevronDown
-        size={22}
-        className="cursor-pointer text-[#124734]"
-        onClick={() => setOpen(true)}
-      />
-    )}
-  </div>
+  <p className="text-sm text-[#5B7065]">
+    {module.lessons?.length || 0} Lessons
+  </p>
 </div>
+
+        <div className="flex items-center gap-3">
+          {!viewOnly && (
+            <>
+              {isEditing ? (
+                <>
+                  <Check
+                    size={20}
+                    className={`cursor-pointer ${savingModule ? "opacity-50" : "text-green-600 hover:text-green-800"}`}
+                   onClick={(e) => {
+  e.stopPropagation();
+  if (!savingModule) saveModuleTitle();
+}}
+
+                    title="Save"
+                  />
+                  <X
+                    size={20}
+                    className="cursor-pointer text-gray-500 hover:text-gray-700"
+                   onClick={(e) => {
+  e.stopPropagation();
+  setEditTitle(module.title || "");
+  setIsEditing(false);
+}}
+
+                    title="Cancel"
+                  />
+                </>
+              ) : (
+               <Edit
+  size={18}
+  className="cursor-pointer text-[#124734] hover:text-[#009846]"
+  onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+/>
+              )}
+
+              <Trash
+  size={18}
+  className={`cursor-pointer ${deletingModule ? "opacity-50" : "text-red-500 hover:text-red-700"}`}
+  onClick={(e) => { e.stopPropagation(); if (!deletingModule) deleteModule(); }}
+/>
+            </>
+          )}
+
+          {open ? (
+            <ChevronUp size={22} className="cursor-pointer text-[#124734]"onClick={(e) => {
+  e.stopPropagation();
+  setOpen(false);
+}}
+ />
+          ) : (
+            <ChevronDown size={22} className="cursor-pointer text-[#124734]" onClick={(e) => {
+  e.stopPropagation();
+  setOpen(true);
+}}
+ />
+          )}
+        </div>
+      </div>
 
 
       {/* Expanded content */}
@@ -198,7 +265,11 @@ const submitAddLesson = async () => {
 
               <button
                 className="flex items-center gap-2 bg-[#009846] text-white px-3 py-1 rounded-md text-sm"
-                onClick={() => setShowAddForm((s) => !s)}
+                onClick={(e) => {
+  e.stopPropagation();
+  setShowAddForm((s) => !s);
+}}
+
               >
                 <Upload size={14} /> Add Lesson
               </button>

@@ -29,31 +29,30 @@ const [viewerTitle, setViewerTitle] = useState("");
   const [editTitle, setEditTitle] = useState("");
   const [editFileName, setEditFileName] = useState("");
 const openLesson = (lesson) => {
-  const url = lesson.contentUrl;
+  // ✅ use your service helper (this points to /api/v1/content/lessons/:id/file)
+  const fileUrl = courseContentApi.lessonFileUrl(lesson._id);
 
-  // PDF -> show directly
+  // PDF -> open directly in new tab
   if (lesson.type === "pdf" || (lesson.mimeType || "").includes("pdf")) {
-    setViewerSrc(url);
-    setViewerTitle(lesson.title || "PDF");
-    setViewerOpen(true);
+    window.open(fileUrl, "_blank", "noreferrer");
     return;
   }
 
-  // DOC/DOCX -> Office viewer embed
+  // DOC/DOCX -> Office viewer (needs a public URL)
   if (lesson.type === "doc" || (lesson.mimeType || "").includes("word")) {
     const officeUrl =
       "https://view.officeapps.live.com/op/embed.aspx?src=" +
-      encodeURIComponent(url);
+      encodeURIComponent(fileUrl);
 
-    setViewerSrc(officeUrl);
-    setViewerTitle(lesson.title || "Document");
-    setViewerOpen(true);
+    window.open(officeUrl, "_blank", "noreferrer");
     return;
   }
 
-  // fallback -> new tab
-  window.open(url, "_blank", "noreferrer");
+  // video or other -> fallback
+  window.open(lesson.contentUrl, "_blank", "noreferrer");
 };
+
+
 
   const load = async () => {
     try {
@@ -368,8 +367,8 @@ const openLesson = (lesson) => {
             </div>
           )}
         </div>
-      </div>
+         </div>
     </div>
-    
   );
+
 }

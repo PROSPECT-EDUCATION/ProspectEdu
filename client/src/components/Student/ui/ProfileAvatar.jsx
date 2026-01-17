@@ -136,7 +136,6 @@ const handleNavigate = async (path, title) => {
           // STUDENT
           { label: "Edit Profile", path: "/student/edit-profile" },
           { label: "Change Password", path: "/student/change-password" },
-          { label: "Orders", path: "/student/orders" },
           { label: "Doubts", path: "/student/doubts" },
         ];
 

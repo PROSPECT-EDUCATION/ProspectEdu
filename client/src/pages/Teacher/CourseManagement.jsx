@@ -68,7 +68,7 @@ useEffect(() => {
             /{" "}
             <span
               className="hover:text-[#009846] cursor-pointer hover:underline"
-              onClick={() => navigate("/teacher/courses")}
+              onClick={() => navigate("/teacher-dashboard")}
             >
               Courses
             </span>{" "}

@@ -52,14 +52,13 @@ export default function CourseCard({ course }) {
         </p>
 
         <div className=" mt-2 flex gap-3">
-  {course.isPurchased ? (
-    <button
-      onClick={() => navigate(`/courses/${course.slug}`)}
-      className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
-      aria-label={`View ${course.title}`}
-    >
-      View
-    </button>
+ {course.isPurchased ? (
+  <button
+    onClick={() => navigate(`/student/courses/${course._id}/modules`)}
+    className="w-28 px-4 py-1.5 text-xs rounded-full border border-[#009846] text-[#009846] hover:bg-[#009846] hover:text-white transition text-center"
+  >
+    View
+  </button>
   ) : (
     <>
       <button

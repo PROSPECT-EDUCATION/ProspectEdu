@@ -9,6 +9,7 @@ import {
   FolderKanban,
   ArrowLeft,
   ArrowRight,
+  Library,
   ClipboardList
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
       icon: MessageSquareReply,
       path: "/teacher/queries/doubts",
     },
+    { label: "Study Materials", icon: Library, path: "/teacher/studymaterials" },
   ];
 
   return (

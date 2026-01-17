@@ -63,7 +63,7 @@ export default function TeacherQuizzesPage() {
             <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher-dashboard")}>
               Dashboard
             </span>{" / "}
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher/courses")}>
+            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher-dashboard")}>
               Courses
             </span>{" / "}
             <span className="text-[#124734] font-medium">Quizzes</span>

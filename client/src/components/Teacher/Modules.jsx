@@ -82,36 +82,46 @@ export default function Modules({ course }) { // ✅ CHANGED
         <Droppable droppableId="modules-list">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
-              {loading ? (
-                <p className="text-sm text-gray-500">Loading modules...</p>
-              ) : modules.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No modules added yet. Click "Add Module" to start.
-                </p>
-              ) : (
-                modules.map((mod, index) => (
-                  <Draggable key={mod._id} draggableId={String(mod._id)} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`transition ${snapshot.isDragging ? "shadow-lg border border-green-300" : ""}`}
-                      >
-                      <div
-  onClick={() => navigate(`/teacher/course/${courseId}/module/${mod._id}`)}
-  className="cursor-pointer"
->
-  <ModuleCard module={mod} index={index} viewOnly />
-</div>
+             {loading ? (
+  <p className="text-sm text-gray-500">Loading modules...</p>
+) : modules.length === 0 ? (
+  <p className="text-sm text-gray-500">
+    No modules added yet. Click "Add Module" to start.
+  </p>
+) : (
+  modules.map((mod, index) => (
+    <Draggable key={mod._id} draggableId={String(mod._id)} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`transition ${
+            snapshot.isDragging ? "shadow-lg border border-green-300" : ""
+          }`}
+        >
+          <ModuleCard
+            module={mod}
+            index={index}
+            onView={() => navigate(`/teacher/course/${courseId}/module/${mod._id}`)}
+            onRename={async (newTitle) => {
+              await courseContentApi.updateModule(mod._id, { title: newTitle });
+              await reload();
+            }}
+            onDelete={async () => {
+              await courseContentApi.deleteModule(mod._id);
+              await reload();
+            }}
+             onRefresh={reload}
+          />
+        </div>
+      )}
+    </Draggable>
+  ))
+)}
 
-                      </div>
-                    )}
-                  </Draggable>
-                ))
-              )}
+{provided.placeholder}
 
-              {provided.placeholder}
             </div>
           )}
         </Droppable>

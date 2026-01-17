@@ -32,7 +32,6 @@ export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
         {/* DESKTOP CONTROLS */}
         <div className="hidden md:flex items-center gap-4">
           <CourseDropdown role="teacher" />
-          <SearchBar />
           <StoreButton />
           <NotificationBell />
           <ProfileAvatar role="teacher" />

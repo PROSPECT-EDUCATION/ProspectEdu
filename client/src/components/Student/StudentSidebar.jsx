@@ -17,7 +17,6 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
 
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/student-dashboard" },
-    { label: "Live Classes", icon: Video, path: "/student/live-classes" },
     { label: "My Courses", icon: BookOpen, path: "/student/my-courses" },
     { label: "My Test Series", icon: Layers, path: "/student/test-series" },
     { label: "Study Materials", icon: Library, path: "/student/study-materials" },

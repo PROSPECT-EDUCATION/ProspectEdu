@@ -55,6 +55,19 @@ const { courseId } = useParams(); // ✅ works
       showToast?.(e?.response?.data?.message || "Delete failed", "error");
     }
   };
+const openAttachment = async (assignmentId) => {
+  try {
+    const res = await assignmentsApi.getFileBlob(assignmentId);
+    const mime = res.headers?.["content-type"] || "application/octet-stream";
+    const blob = new Blob([res.data], { type: mime });
+
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch (e) {
+    console.log(e);
+    showToast?.("Failed to open attachment", "error");
+  }
+};
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -80,7 +93,7 @@ const { courseId } = useParams(); // ✅ works
             {" / "}
             <span
               className="hover:text-[#009846] cursor-pointer hover:underline"
-              onClick={() => navigate("/teacher/courses")}
+              onClick={() => navigate("/teacher-dashboard")}
             >
               Courses
             </span>
@@ -131,18 +144,17 @@ const { courseId } = useParams(); // ✅ works
                       {a.instructions ? (
                         <div className="text-sm text-[#5B7065] mt-2">{a.instructions}</div>
                       ) : null}
+{a.fileUrl ? (
+  <button
+    onClick={() => openAttachment(a._id)}
+    className="inline-block text-sm text-[#009846] hover:underline mt-2 text-left"
+    type="button"
+  >
+    View Attachment ({a.fileName || "file"})
+  </button>
+) : null}
 
-                      {a.fileUrl ? (
-                        <a
-  href={`http://localhost:5000/api/v1/assignments/${a._id}/file`}
-  target="_blank"
-  rel="noreferrer"
-  className="inline-block text-sm text-[#009846] hover:underline mt-2"
->
-  View Attachment ({a.fileName || "file"})
-</a>
 
-                      ) : null}
                     </div>
 
                     <div className="flex gap-3">
