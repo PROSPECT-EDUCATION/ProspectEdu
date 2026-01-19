@@ -30,6 +30,7 @@ import AddModulesPage from './pages/Teacher/AddModulesPage';
 import PublishCoursePage from './pages/Teacher/PublishCoursePage';
 import CourseManagement from './pages/Teacher/CourseManagement';
 import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
+import TeacherStudyMaterials from './pages/Teacher/TeacherStudyMaterials';
 import EditProfile from './pages/Student/EditProfile';
 import CreateQuizPage from './pages/Teacher/CreateQuizPage';
 import TeacherQuizzesPage from './pages/Teacher/TeacherQuizzesPage';
@@ -166,6 +167,7 @@ function App() {
       <Route path="/teacher/students/performance" element={<StudentsPerformancePage />} />
       <Route path= "/teacher/queries/doubts" element = {<QueriesDoubtsPage/>}/>
       <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
+      <Route path="/teacher/studymaterials"  element = {<TeacherStudyMaterials/>}/>
       <Route path="/admin/confirm-admin" element={<AdminConfirmAdminPage/>}/>
       <Route path="/teacher/course/:courseId/module/:moduleId" element={<TeacherModuleContentPage />}/>
       <Route path="/admin/confirmTeacher" element={<AdminConfirmTeacherPage />} />

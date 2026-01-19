@@ -1,14 +1,34 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FileText, Search, Download, Eye, Loader2 } from "lucide-react";
+
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
+import { studyMaterialsApi } from "../../services/studyMaterials";
+
+function safeName(name) {
+  const n = String(name || "file").trim();
+  return n || "file";
+}
+
+function extBadge(fileType) {
+  const t = String(fileType || "").toLowerCase();
+  if (!t) return "FILE";
+  return t.toUpperCase();
+}
 
 export default function StudyMaterials() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const sidebarWidthPx = isCollapsed ? 80 : 256;
+
   const navigate = useNavigate();
 
-  const sidebarWidthPx = isCollapsed ? 80 : 256;
+  const [activeTab, setActiveTab] = useState("all"); // all | pdf | handwritten
+  const [q, setQ] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState([]);
+  const [scopeInfo, setScopeInfo] = useState({ scope: "", categories: [] });
 
   // 🔒 Prevent indexing (private page)
   useEffect(() => {
@@ -16,17 +36,73 @@ export default function StudyMaterials() {
     meta.name = "robots";
     meta.content = "noindex, follow";
     document.head.appendChild(meta);
-
     return () => document.head.removeChild(meta);
   }, []);
 
-  const studyMaterials = [
-    { title: "NCERT Biology Class 11 – Chapter 1 Notes", category: "Biology" },
-    { title: "NCERT Chemistry Class 12 – Organic Chemistry Summary", category: "Chemistry" },
-    { title: "Physics Wallah Handwritten Notes – Motion in a Plane", category: "Physics" },
-    { title: "KGS Institute – Polity Complete Notes PDF", category: "Polity" },
-    { title: "Geography Module – Indian Climate Overview", category: "Geography" },
-  ];
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await studyMaterialsApi.studentList({
+        type: activeTab, // backend expects "all" | "pdf" | "handwritten"
+        q,
+      });
+
+      setItems(res.data?.items || []);
+      setScopeInfo({
+        scope: res.data?.scope || "",
+        categories: res.data?.categories || [],
+      });
+    } catch (e) {
+      console.log(e);
+      setItems([]);
+      setScopeInfo({ scope: "", categories: [] });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // small debounce feel without extra libs
+    const t = setTimeout(() => load(), 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, q]);
+
+  const counts = useMemo(() => {
+    let pdf = 0;
+    let handwritten = 0;
+    for (const it of items) {
+      if (String(it.materialType) === "pdf") pdf += 1;
+      if (String(it.materialType) === "handwritten") handwritten += 1;
+    }
+    return { all: items.length, pdf, handwritten };
+  }, [items]);
+
+  const openInViewer = (id) => {
+    // ✅ opens your backend stream url (NOT raw cloudinary)
+    const url = studyMaterialsApi.fileUrl(id);
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const downloadFile = async (it) => {
+    try {
+      const res = await studyMaterialsApi.getFileBlob(it._id);
+      const mime = res.headers?.["content-type"] || "application/octet-stream";
+      const blob = new Blob([res.data], { type: mime });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = safeName(it.fileName || it.title || "file");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.log(e);
+      alert("Failed to download file");
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -37,18 +113,15 @@ export default function StudyMaterials() {
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
         aria-label="Student navigation sidebar"
       >
-        <StudentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
-      {/* Main Section */}
+      {/* Main */}
       <div
         className="flex flex-col flex-1 h-screen transition-all duration-300"
         style={{
-          marginLeft: isCollapsed ? 80 : 256,
-          width: `calc(100vw - ${isCollapsed ? 80 : 256}px)`,
+          marginLeft: sidebarWidthPx,
+          width: `calc(100vw - ${sidebarWidthPx}px)`,
         }}
       >
         {/* Topbar */}
@@ -59,74 +132,155 @@ export default function StudyMaterials() {
           <StudentTopbar pageTitle="Study Materials" />
         </header>
 
-        {/* Breadcrumb + Tabs */}
+        {/* Toolbar */}
         <div
-          className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] px-6 py-3"
+          className="sticky top-[64px] bg-[#F9FAFB] z-[998] border-b border-[#E6F4EC] px-6 py-4"
           style={{ left: sidebarWidthPx }}
         >
-          <div className="w-full flex flex-col items-start">
-            <p className="text-sm text-[#5B7065] mb-3">
-              <span
-                className="hover:underline hover:text-[#009846] cursor-pointer"
-                onClick={() => navigate("/student-dashboard")}
-              >
-                Home
-              </span>{" "}
-              / Study Materials /{" "}
-              <span className="text-[#124734] font-medium">All Notes</span>
-            </p>
+          {/* Breadcrumb */}
+          <p className="text-sm text-[#5B7065] mb-3">
+            <span
+              className="hover:underline hover:text-[#009846] cursor-pointer"
+              onClick={() => navigate("/student-dashboard")}
+            >
+              Home
+            </span>{" "}
+            / <span className="text-[#124734] font-medium">Study Materials</span>
+          </p>
 
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 justify-between">
+            {/* Tabs */}
             <div className="flex gap-6 border-b border-[#E6F4EC]">
-              {["all", "pdf", "handwritten"].map((tab) => (
+              {[
+                { key: "all", label: `All (${counts.all})` },
+                { key: "pdf", label: `PDFs (${counts.pdf})` },
+                { key: "handwritten", label: `Handwritten (${counts.handwritten})` },
+              ].map((t) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-2 text-sm font-medium ${
-                    activeTab === tab
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`pb-2 text-sm font-medium transition ${
+                    activeTab === t.key
                       ? "text-[#009846] border-b-2 border-[#009846]"
-                      : "text-[#5B7065]"
+                      : "text-[#5B7065] hover:text-[#124734]"
                   }`}
                 >
-                  {tab === "all"
-                    ? "All Notes"
-                    : tab === "pdf"
-                    ? "PDFs"
-                    : "Handwritten Notes"}
+                  {t.label}
                 </button>
               ))}
             </div>
+
+            {/* Search */}
+            <div className="w-full lg:w-[360px]">
+              <div className="flex items-center gap-2 bg-white border border-[#E6F4EC] rounded-xl px-3 py-2 shadow-sm">
+                <Search className="w-4 h-4 text-[#5B7065]" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search notes…"
+                  className="w-full outline-none text-sm text-[#124734] placeholder:text-[#8BA095]"
+                />
+              </div>
+            </div>
           </div>
+
+          {/* Scope info */}
+          {scopeInfo?.scope ? (
+            <div className="mt-3 text-xs text-[#5B7065]">
+              {scopeInfo.scope === "subscribed" ? (
+                <span>
+                  Showing materials for your enrolled course categories
+                  {scopeInfo.categories?.length ? (
+                    <span className="text-[#124734] font-medium">
+                      {" "}
+                      ({scopeInfo.categories.join(", ")})
+                    </span>
+                  ) : null}
+                </span>
+              ) : scopeInfo.scope === "all" ? (
+                <span>Showing all published materials.</span>
+              ) : scopeInfo.scope === "subscribed-empty" ? (
+                <span>No categories found for your enrollments.</span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-        {/* Page Body */}
+        {/* Body */}
         <main
           className="flex-1 overflow-y-auto px-4 md:px-6 py-8"
-          style={{ marginTop: "80px", height: "calc(100vh - 128px)" }}
-          aria-labelledby="study-materials-heading"
+          style={{ marginTop: "64px" }}
         >
-          {/* Hidden semantic heading */}
-          <h1 id="study-materials-heading" className="sr-only">
-            Student Study Materials
-          </h1>
+          <div className="w-full max-w-6xl mx-auto">
+            <div className="bg-white border border-[#E6F4EC] rounded-2xl shadow-sm p-5">
+              {loading ? (
+                <div className="flex items-center gap-2 text-[#5B7065] text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading materials…
+                </div>
+              ) : items.length === 0 ? (
+                <div className="py-10 text-center">
+                  <div className="mx-auto w-12 h-12 rounded-2xl bg-[#ECF5EE] border border-[#A7E1B2] flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-[#009846]" />
+                  </div>
+                  <div className="mt-3 text-[#124734] font-semibold">No materials found</div>
+                  <div className="mt-1 text-sm text-[#5B7065]">
+                    Try changing the tab or searching with a different keyword.
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {items.map((it) => (
+                    <article
+                      key={it._id}
+                      className="border border-[#E6F4EC] rounded-2xl p-5 hover:shadow-md transition bg-white"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-[#124734] font-semibold leading-snug line-clamp-2">
+                            {it.title}
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="text-xs px-2 py-1 rounded-full bg-[#ECF5EE] text-[#124734] border border-[#A7E1B2]">
+                              {String(it.category || "").toUpperCase()}
+                            </span>
+                            <span className="text-xs px-2 py-1 rounded-full bg-[#F3F4F6] text-[#374151] border border-[#E5E7EB]">
+                              {it.materialType === "handwritten" ? "HANDWRITTEN" : "PDF"}
+                            </span>
+                            <span className="text-xs px-2 py-1 rounded-full bg-[#F9FAFB] text-[#5B7065] border border-[#E6F4EC]">
+                              {extBadge(it.fileType)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
 
-          <div className="w-full max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {studyMaterials.map((item, index) => (
-              <article
-                key={index}
-                className="bg-white border border-[#E6F4EC] rounded-lg p-5 shadow-sm hover:shadow-md transition cursor-pointer"
-              >
-                <h3 className="text-[#124734] font-semibold text-md mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-[#5B7065] text-sm mb-4">
-                  {item.category}
-                </p>
+                      <div className="mt-4 text-xs text-[#5B7065]">
+                        File: <span className="text-[#124734]">{safeName(it.fileName)}</span>
+                      </div>
 
-                <button className="px-4 py-2 bg-[#009846] text-white text-sm rounded-md hover:bg-[#007a36] transition">
-                  View / Download
-                </button>
-              </article>
-            ))}
+                      <div className="mt-4 flex gap-2">
+                       
+                        <button
+                          onClick={() => downloadFile(it)}
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-[#A7E1B2] text-[#124734] text-sm hover:bg-[#ECF5EE] transition"
+                          type="button"
+                          title="Download"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => navigate(-1)}
+              className="mt-5 text-sm underline text-[#124734]"
+            >
+              ← Back
+            </button>
           </div>
         </main>
       </div>

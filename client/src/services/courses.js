@@ -1,5 +1,8 @@
 import { api } from "../lib/api";
-
+const authHeader = () => {
+  const token = sessionStorage.getItem("accessToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 export const coursesApi = {
   // Admin: create course
   create: (payload) => api.post("/courses", payload),
@@ -22,5 +25,7 @@ export const coursesApi = {
     api.patch(`/courses/admin/${courseId}/assign-teachers`, { teacherIds }),
 
   teacherMyCourses: () => api.get("/courses/teacher/my-courses"),
-  getTeacherCourseById: (id) => api.get(`/courses/${id}`), 
+  getTeacherCourseById: (id) => api.get(`/courses/${id}`),
+    teacherCourseStudents: (courseId) =>
+    api.get(`/courses/teacher/${courseId}/students`, { headers: authHeader() }), 
 };

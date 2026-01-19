@@ -11,13 +11,13 @@ export default function DashboardStats() {
     },
     {
       title: "Lecture Watch",
-      value: 4,
+      value: 0,
       icon: <PlayCircle size={22} className="text-[#009846]" />,
       bg: "bg-[#E8F8EF]",
     },
     {
       title: "My Submission",
-      value: 4,
+      value: 0,
       icon: <FileText size={22} className="text-[#F7A600]" />,
       bg: "bg-[#FEF6E8]",
     },

@@ -19,7 +19,6 @@ export default function CourseManagementPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [course, setCourse] = useState(null);
-
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   // ✅ Load course from localStorage
@@ -95,7 +94,8 @@ useEffect(() => {
          {activeTab === "overview" && <CourseOverviewTab course={course} />}
 {activeTab === "modules" && <Modules course={course} />}
 {activeTab === "assessments" && <AssessmentDashboard course={course} />}
-{activeTab === "students" && <StudentsPage course={course} />}
+{activeTab === "students" && <StudentsPage courseId={courseId} />}
+
 
         </div>
       </div>

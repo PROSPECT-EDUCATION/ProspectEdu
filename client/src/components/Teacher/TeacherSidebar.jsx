@@ -24,11 +24,7 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/teacher-dashboard" },
     
-    {
-      label: "Review Submissions",
-      icon: FilePlus2,
-      path: "/teacher/assessments/review",
-    },
+   
 
     {
       label: "Students",
