@@ -21,6 +21,7 @@ import {
   // student
   enrollInCourse,
   listMyCourses,
+  teacherListEnrolledStudents,
 } from "./courses.controller.js";
 
 const router = Router();
@@ -68,5 +69,15 @@ router.post("/:id/enroll", requireAuth, requireRole("student"), enrollInCourse);
 router.get("/", listPublishedCourses);
 router.get("/slug/:slug", getCourseBySlug);
 router.get("/:id", getCourseById);
+// server/src/modules/courses/courses.routes.js
+
+
+// ✅ put this BEFORE: router.get("/teacher/:courseId", ...)
+router.get(
+  "/teacher/:courseId/students",
+  requireAuth,
+  requireRole("teacher", "admin"),
+  teacherListEnrolledStudents
+);
 
 export default router;

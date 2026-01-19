@@ -3,7 +3,7 @@
 import mongoose from "mongoose";
 import { Course } from "./course.model.js";
 import { Enrollment } from "./enrollment.model.js";
-
+import { User } from "../users/user.model.js";
 import {
   createCourseSchema,
   updateCourseSchema,
@@ -399,7 +399,7 @@ export async function teacherMyCourses(req, res, next) {
 
 export async function teacherGetCourseForManagement(req, res, next) {
   try {
-      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      if (!mongoose.Types.ObjectId.isValid(req.params.courseId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid course id",
@@ -471,3 +471,60 @@ export async function listMyCourses(req, res, next) {
   }
 }
 
+// server/modules/courses/courses.controller.js
+ // ✅ add if not already imported
+
+export async function teacherListEnrolledStudents(req, res, next) {
+  try {
+    const { courseId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ success: false, message: "Invalid course id" });
+    }
+
+    const course = await Course.findById(courseId).select("_id assignedTeachers");
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    // ✅ teacher must be assigned OR admin
+    const ok = await assertTeacherAssignedOrAdmin(req, course);
+    if (!ok) return badRole(res);
+
+    const enrollments = await Enrollment.find({ courseId, status: "active" })
+      .sort({ updatedAt: -1 })
+      .select("studentUserId enrolledAt updatedAt")
+      .lean();
+
+    const studentIds = enrollments.map((e) => e.studentUserId);
+
+    const users = await User.find({ _id: { $in: studentIds }, role: "student" })
+      .select("_id fullName email phone lastLoginAt updatedAt")
+      .lean();
+
+    const map = new Map(users.map((u) => [String(u._id), u]));
+
+    const students = enrollments
+      .map((e) => {
+        const u = map.get(String(e.studentUserId));
+        if (!u) return null;
+
+        // ✅ last active: prefer lastLoginAt, fallback to user.updatedAt or enrollment.updatedAt
+        const lastActive = u.lastLoginAt || u.updatedAt || e.updatedAt;
+
+        return {
+          _id: u._id,
+          fullName: u.fullName || "—",
+          email: u.email || "—",
+          phone: u.phone || "—",
+          lastActive,
+          enrolledAt: e.enrolledAt,
+        };
+      })
+      .filter(Boolean);
+
+    return res.json({ success: true, courseId, students });
+  } catch (e) {
+    next(e);
+  }
+}

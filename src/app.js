@@ -9,6 +9,7 @@ import { errorHandler } from "./middlewares/error.js";
 import studentsRoutes from "./modules/students/students.routes.js";
 // routes (we’ll add auth first)
 import authRoutes from "./modules/auth/auth.routes.js";
+import studyMaterialsRoutes from "./modules/study-materials/studyMaterials.routes.js";
 import assignmentsRoutes from "./modules/assignments/assignments.routes.js";
 import quizzesRouter from "./modules/quizzes/quizzes.routes.js";
 import adminDashboardRouter from "./modules/adminDashboard/adminDashboard.routes.js";
@@ -20,6 +21,7 @@ import purchaseRoutes from "./modules/purchases/purchase.routes.js";
 import activityRoutes from "./modules/activity/activity.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import teacherProfileRoutes from "./modules/teachers/teacherProfile.routes.js";
+import overallPerformanceRoutes from "./modules/performance/overallPerformance.routes.js";
 export function createApp() {
   const app = express();
 
@@ -47,6 +49,9 @@ export function createApp() {
   app.use("/api/v1/assignments", assignmentsRoutes);
   app.use("/api/v1/quizzes", quizzesRouter);
   app.use("/api/v1/admin", adminDashboardRouter);
+  app.use("/api/v1/study-materials", studyMaterialsRoutes);
+  app.use("/api/v1/performance", overallPerformanceRoutes);
+
   app.use(notFound);
   app.use(errorHandler);
   return app;

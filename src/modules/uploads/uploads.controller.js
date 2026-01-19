@@ -80,5 +80,42 @@ export async function uploadAssignmentFile(req, res, next) {
     next(e);
   }
 }
+export async function uploadStudyMaterialFile(req, res, next) {
+  try {
+    if (!req.file?.buffer) {
+      return res.status(422).json({ success: false, message: "File is required" });
+    }
+
+    const file = req.file;
+
+    // only pdf/doc/docx
+    const ok =
+      file.mimetype === "application/pdf" ||
+      file.mimetype === "application/msword" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    if (!ok) {
+      return res.status(422).json({ success: false, message: "Only PDF/DOC/DOCX allowed" });
+    }
+
+    const result = await uploadBufferToCloudinaryAny({
+      buffer: file.buffer,
+      folder: "study-materials",
+      resource_type: "raw",
+    });
+
+    return res.json({
+      success: true,
+      url: result.secure_url,
+      publicId: result.public_id,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      bytes: result.bytes,
+      format: result.format,
+    });
+  } catch (e) {
+    next(e);
+  }
+}
 
 

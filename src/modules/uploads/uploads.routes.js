@@ -5,7 +5,7 @@ import {upload} from "../../middlewares/upload.js"; // your multer middleware (m
 import { requireAuth } from "../../middlewares/auth.js"; // adjust to your auth middleware
 import { requireRole } from "../../middlewares/auth.js";  // adjust to your RBAC middleware
 import { uploadAny } from "../../middlewares/uploadAny.js";
-import { uploadLessonFile, uploadAssignmentFile } from "./uploads.controller.js";
+import { uploadLessonFile, uploadAssignmentFile, uploadStudyMaterialFile } from "./uploads.controller.js";
 
 const router = Router();
 
@@ -31,4 +31,11 @@ router.post(
   uploadAny.single("file"),
   uploadAssignmentFile
 ); 
+router.post(
+  "/study-material-file",
+  requireAuth,
+  requireRole("teacher"),
+  uploadAny.single("file"),
+  uploadStudyMaterialFile
+);
 export default router;

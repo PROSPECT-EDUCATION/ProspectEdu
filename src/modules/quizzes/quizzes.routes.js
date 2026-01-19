@@ -7,6 +7,10 @@ import {
   updateQuiz,
   publishQuiz,
   deleteQuiz,
+   studentListPublishedQuizzes,
+  getQuizForPlay,
+  submitQuizAttempt,
+  listMyQuizAttempts,
 } from "./quizzes.controller.js";
 
 const router = Router();
@@ -51,5 +55,33 @@ router.delete(
   requireRole( "teacher"),
   deleteQuiz
 );
+router.get(
+  "/courses/:courseId/published",
+  requireAuth,
+  requireRole("admin", "teacher", "student"),
+  studentListPublishedQuizzes
+);
+
+router.get(
+  "/:quizId/play",
+  requireAuth,
+  requireRole("student", "admin", "teacher"),
+  getQuizForPlay
+);
+
+router.post(
+  "/:quizId/attempts",
+  requireAuth,
+  requireRole("student"),
+  submitQuizAttempt
+);
+
+router.get(
+  "/:quizId/attempts/me",
+  requireAuth,
+  requireRole("student"),
+  listMyQuizAttempts
+);
+
 
 export default router;

@@ -3,6 +3,7 @@ import { Assignment } from "./assignments.model.js";
 import { Course } from "../courses/course.model.js";
 import { uploadBufferToCloudinaryAny } from "../../utils/cloudinaryUploadAny.js";
 import { deleteFromCloudinary } from "../../utils/cloudinaryDelete.js";
+import { assertStudentHasCourseAccess } from "../../utils/courseAccess.js";
 
 // ✅ same logic you used elsewhere
 function isTeacher(req) {
@@ -188,6 +189,30 @@ export async function deleteAssignment(req, res, next) {
     await Assignment.deleteOne({ _id: assignmentId });
 
     return res.json({ success: true, deleted: true });
+  } catch (e) {
+    next(e);
+  }
+}
+
+
+/**
+ * GET /api/v1/assignments/courses/:courseId
+ * Student list assignments for a course (purchased/enrolled)
+ */
+export async function studentListAssignments(req, res, next) {
+  try {
+    const { courseId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ success: false, message: "Invalid courseId" });
+    }
+
+    await assertStudentHasCourseAccess(req.user.id, courseId);
+
+    const items = await Assignment.find({ courseId })
+      .sort({ createdAt: -1 })
+      .select("-__v");
+
+    return res.json({ success: true, assignments: items });
   } catch (e) {
     next(e);
   }

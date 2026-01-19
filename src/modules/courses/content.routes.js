@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../../middlewares/auth.js";
-import { createLesson, createModule,updateLesson, listLessons, listModules,deleteLesson, teacherGetModulesWithLessons } from "./content.controller.js";
+import { createLesson,updateModule,
+  deleteModule, studentModulesOverview, createModule,updateLesson, listLessons, listModules,deleteLesson, teacherGetModulesWithLessons ,getLessonFile, } from "./content.controller.js";
 
 const router = Router();
 
@@ -33,6 +34,27 @@ router.patch(
   requireAuth,
   requireRole("admin", "teacher"),
   updateLesson
+);
+router.get("/lessons/:lessonId/file", getLessonFile);
+router.get(
+  "/student/courses/:courseId/modules-overview",
+  requireAuth,
+  requireRole("student"),
+  studentModulesOverview
+);
+router.patch(
+  "/modules/:moduleId",
+  requireAuth,
+  requireRole("admin", "teacher"),
+  updateModule
+);
+
+// ✅ NEW: delete module (teacher/admin)
+router.delete(
+  "/modules/:moduleId",
+  requireAuth,
+  requireRole("admin", "teacher"),
+  deleteModule
 );
 
 export default router;

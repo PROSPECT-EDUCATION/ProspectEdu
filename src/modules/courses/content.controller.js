@@ -4,6 +4,7 @@ import { Enrollment } from "./enrollment.model.js";
 import { CourseModule } from "./module.model.js";
 import { Lesson } from "./lesson.model.js";
 import cloudinary from "../../config/cloudinary.js"; // adjust path if different
+import https from "https";
 
 /**
  * Helper: student must be enrolled to view content (for now)
@@ -280,6 +281,161 @@ export async function updateLesson(req, res, next) {
     next(e);
   }
 }
+export async function getLessonFile(req, res, next) {
+  try {
+    const { lessonId } = req.params;
+
+    const l = await Lesson.findById(lessonId).select("contentUrl fileName mimeType type");
+    if (!l?.contentUrl) {
+      return res.status(404).json({ success: false, message: "No file" });
+    }
+
+    // ✅ set proper headers so browser opens in new tab (inline)
+    const mime = l.mimeType || (l.type === "pdf" ? "application/pdf" : "application/octet-stream");
+    res.setHeader("Content-Type", mime);
+
+    // inline forces browser viewer for PDF (and helps other types)
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(l.fileName || "file")}"`
+    );
+
+    // ✅ stream bytes from Cloudinary to browser
+    https
+      .get(l.contentUrl, (fileRes) => {
+        if (fileRes.statusCode && fileRes.statusCode >= 400) {
+          return res.status(fileRes.statusCode).end();
+        }
+        fileRes.pipe(res);
+      })
+      .on("error", (err) => next(err));
+  } catch (e) {
+    next(e);
+  }
+}
+// ✅ Student: Course modules overview (enrolled only)
+// GET /api/v1/content/student/courses/:courseId/modules-overview
+export async function studentModulesOverview(req, res, next) {
+  try {
+    const { courseId } = req.params;
+
+    const course = await Course.findOne({ _id: courseId, status: "published" })
+      .select("title slug category short img date price")
+      .lean();
+
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    await assertStudentEnrolled(req, courseId);
+
+    const modules = await CourseModule.find({ courseId, isPublished: true })
+      .sort({ order: 1, createdAt: 1 })
+      .select("_id courseId title description order isPublished createdAt updatedAt")
+      .lean();
+
+    const moduleIds = modules.map((m) => m._id);
+
+    const lessons = await Lesson.find({
+      courseId,
+      moduleId: { $in: moduleIds },
+      isPublished: true,
+    })
+      .select("_id moduleId durationMinutes type")
+      .lean();
+
+    const stats = new Map(); // moduleId -> { lessonCount, totalMinutes, videos, files }
+    for (const l of lessons) {
+      const key = String(l.moduleId);
+      if (!stats.has(key)) {
+        stats.set(key, { lessonCount: 0, totalMinutes: 0, videos: 0, files: 0 });
+      }
+      const s = stats.get(key);
+      s.lessonCount += 1;
+      s.totalMinutes += Number(l.durationMinutes || 0);
+
+      if (String(l.type) === "video") s.videos += 1;
+      else s.files += 1;
+    }
+
+    const enriched = modules.map((m) => {
+      const s = stats.get(String(m._id)) || {
+        lessonCount: 0,
+        totalMinutes: 0,
+        videos: 0,
+        files: 0,
+      };
+      return { ...m, stats: s };
+    });
+
+    return res.json({ success: true, course, modules: enriched });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function updateModule(req, res, next) {
+  try {
+    const { moduleId } = req.params;
+    const { title, description, order, isPublished } = req.body || {};
+
+    const mod = await CourseModule.findById(moduleId);
+    if (!mod) return res.status(404).json({ success: false, message: "Module not found" });
+
+    // ✅ only assigned teacher/admin
+    await assertTeacherAssignedOrAdmin(req, mod.courseId);
+
+    if (title !== undefined) mod.title = String(title).trim();
+    if (description !== undefined) mod.description = String(description || "").trim();
+    if (order !== undefined) mod.order = Number(order || 0);
+    if (isPublished !== undefined) mod.isPublished = !!isPublished;
+
+    if (!mod.title) {
+      return res.status(422).json({ success: false, message: "Module title is required" });
+    }
+
+    await mod.save();
+    return res.json({ success: true, module: mod });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function deleteModule(req, res, next) {
+  try {
+    const { moduleId } = req.params;
+
+    const mod = await CourseModule.findById(moduleId);
+    if (!mod) return res.status(404).json({ success: false, message: "Module not found" });
+
+    // ✅ only assigned teacher/admin
+    await assertTeacherAssignedOrAdmin(req, mod.courseId);
+
+    // ✅ delete all lessons + their cloudinary files
+    const lessons = await Lesson.find({ moduleId: mod._id }).select("filePublicId mimeType type").lean();
+
+    for (const l of lessons) {
+      if (!l.filePublicId) continue;
+
+      const isVideo = l.type === "video" || String(l.mimeType || "").startsWith("video/");
+      const resource_type = isVideo ? "video" : "raw";
+
+      try {
+        await cloudinary.uploader.destroy(l.filePublicId, { resource_type });
+      } catch (err) {
+        console.log("Cloudinary delete failed:", err?.message || err);
+      }
+    }
+
+    await Lesson.deleteMany({ moduleId: mod._id });
+    await CourseModule.deleteOne({ _id: mod._id });
+
+    return res.json({ success: true, deleted: true });
+  } catch (e) {
+    next(e);
+  }
+}
+
 
 
 
