@@ -17,3 +17,9 @@ export async function submitLiveAttempt(attemptId) {
   const res = await api.post(`/live-tests/attempts/${attemptId}/submit`);
   return res?.data;
 }
+
+// ✅ NEW: Fetch report
+export async function getTestReport(seriesId, testId) {
+  const res = await api.get(`/live-tests/${seriesId}/tests/${testId}/report`);
+  return res?.data?.data;
+}

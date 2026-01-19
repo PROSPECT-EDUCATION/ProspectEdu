@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import ParentSidebar from "../../components/Parent/ParentSidebar";
-import ParentTopbar from "../../components/Parent/ParentTopbar";
+import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
+import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 
 import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
 import { api } from "../../lib/api";
 
-export default function ParentAnnouncementsPage() {
+export default function TeacherAnnouncementsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
@@ -19,7 +19,7 @@ export default function ParentAnnouncementsPage() {
     try {
       setLoading(true);
 
-      // ✅ Parent will receive only those announcements where recipients includes "parent"
+      // ✅ teacher will receive only those announcements where recipients includes "teacher"
       const res = await api.get("/announcements/me/for-me");
       setItems(res?.data?.data || []);
     } catch (e) {
@@ -30,19 +30,18 @@ export default function ParentAnnouncementsPage() {
   };
 
   useEffect(() => {
-  (async () => {
-    try {
-      // ✅ mark all announcements as read when opening this page
-      await api.post("/announcements/me/mark-all-read");
-      window.dispatchEvent(new Event("announcements:refresh"));
+    (async () => {
+      // ✅ when opening announcements page -> mark all as read -> bell count becomes 0
+      try {
+        await api.post("/announcements/me/mark-all-read");
+        window.dispatchEvent(new Event("announcements:refresh"));
 
-    } catch (e) {
-      // ignore
-    }
-    load();
-  })();
-}, []);
-
+      } catch (e) {
+        // ignore
+      }
+      load();
+    })();
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -51,12 +50,12 @@ export default function ParentAnnouncementsPage() {
         className="fixed top-0 left-0 h-full transition-all duration-300"
         style={{ width: sidebarWidth }}
       >
-        <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
-        <ParentTopbar pageTitle="Announcements" showStudentSwitcher={false} />
+        <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
 
         <div className="p-6 space-y-4 overflow-y-auto text-left">
           {loading ? (
@@ -67,7 +66,7 @@ export default function ParentAnnouncementsPage() {
             items.map((a) => (
               <AnnouncementCard
                 key={a._id}
-                a={{ ...a, id: a._id }} // ✅ keep compatibility if card uses a.id
+                a={{ ...a, id: a._id }}
               />
             ))
           )}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 
@@ -7,17 +7,24 @@ import CategorySlider from "../../../components/Admin/Ecom/Categories/CategorySl
 import CategoryTabs from "../../../components/Admin/Ecom/Categories/CategoryTabs";
 import ProductTable from "../../../components/Admin/Ecom/Categories/ProductTable";
 import Pagination from "../../../components/Admin/Ecom/Pagination";
-import categoryData from "../../../data/categories";
 
 import AddCategoryModal from "../../../components/Admin/Ecom/Categories/AddCategoryModal";
 import EditCategoryModal from "../../../components/Admin/Ecom/Categories/EditCategoryModal";
 
+import {
+  fetchCategories,
+  adminCreateCategory,
+  adminUpdateCategory,
+  adminDeleteCategory,
+} from "../../../lib/categoryApi";
+
 export default function CategoriesPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState("All Product (145)");
+  const [activeTab, setActiveTab] = useState("All Product ");
   const [page, setPage] = useState(1);
 
-  const [categories, setCategories] = useState(categoryData);
+  const [categories, setCategories] = useState([]);
+  const [loadingCats, setLoadingCats] = useState(true);
 
   // Modal states
   const [openAddModal, setOpenAddModal] = useState(false);
@@ -25,9 +32,30 @@ export default function CategoriesPage() {
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const loadCats = async () => {
+    setLoadingCats(true);
+    try {
+      const items = await fetchCategories();
+      // map backend => UI shape used in slider/modal
+      const mapped = items.map((c) => ({
+        id: c._id,
+        title: c.name,
+        img: c.imageUrl,
+      }));
+      setCategories(mapped);
+    } catch (e) {
+      setCategories([]);
+    } finally {
+      setLoadingCats(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCats();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] overflow-hidden">
-
       <div
         className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
@@ -51,17 +79,21 @@ export default function CategoriesPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto h-[calc(100vh-64px)]">
-
           {/* Header */}
-          <CategoryHeader 
+          <CategoryHeader
             onAddCategory={() => setOpenAddModal(true)}
-            onEditCategory={() => setOpenEditModal(true)}  // ⭐ IMPORTANT
+            onEditCategory={() => setOpenEditModal(true)}
           />
 
           <CategorySlider categories={categories} />
+          <p className="text-2xl font-bold text-left">Supplier Products</p>
           <CategoryTabs active={activeTab} setActive={setActiveTab} />
           <ProductTable activeTab={activeTab} />
           <Pagination page={page} setPage={setPage} totalPages={24} />
+
+          {loadingCats ? (
+            <div className="text-sm text-gray-500 mt-4">Loading categories...</div>
+          ) : null}
         </div>
       </div>
 
@@ -69,27 +101,29 @@ export default function CategoriesPage() {
       <AddCategoryModal
         open={openAddModal}
         onClose={() => setOpenAddModal(false)}
-        onSave={(newCategory) => {
-          setCategories([...categories, newCategory]);
+        onSave={async ({ name, imageFile }) => {
+          await adminCreateCategory({ name, imageFile });
           setOpenAddModal(false);
+          loadCats();
         }}
       />
 
-      {/* ⭐ EDIT MODAL */}
+      {/* Edit Modal */}
       <EditCategoryModal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         categories={categories}
-        onSave={(updatedList) => {
-          setCategories(updatedList);
+        onSave={async ({ id, name, imageFile }) => {
+          await adminUpdateCategory(id, { name, imageFile });
           setOpenEditModal(false);
+          loadCats();
         }}
-        onDelete={(updatedList) => {
-          setCategories(updatedList);
+        onDelete={async ({ id }) => {
+          await adminDeleteCategory(id);
           setOpenEditModal(false);
+          loadCats();
         }}
       />
-      
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiShoppingBag, FiHeart } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
@@ -9,46 +9,39 @@ import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
 import Footer from "../../components/Footer";
 
-import { api } from "../../lib/api"; // ✅ ADDED
-
-import {
-  trendingProducts,
-} from "../../data/ProductData";
-
-const categories = [
-  { name: "Merchandise", color: "#800040", icon: "👕" },
-  { name: "All", color: "#004d4d", icon: "📘" },
-  { name: "IT Books", color: "#222c7a", icon: "💻" },
-  { name: "Electrical Books", color: "#001F54", icon: "⚡" },
-  { name: "Civil Books", color: "#7A0900", icon: "🏗️" },
-  { name: "Law Books", color: "#054C29", icon: "⚖️" },
-  { name: "Medical Books", color: "#660000", icon: "🩺" },
-  { name: "Management Books", color: "#005566", icon: "📊" },
-];
+import { api } from "../../lib/api";
 
 const Ecommerce = () => {
   const navigate = useNavigate();
   const images = [img1, img2, img3];
   const [current, setCurrent] = useState(0);
 
+  // ✅ Admin categories
+  const [categories, setCategories] = useState([]);
+
   // CATEGORY SLIDER STATES
   const [start, setStart] = useState(0);
   const visible = 5;
 
-  const nextSlide = () => setStart((prev) => (prev + 1) % categories.length);
-  const prevSlide = () =>
+  const nextSlide = () => {
+    if (!categories.length) return
+    setStart((prev) => (prev + 1) % categories.length);
+  };
+
+  const prevSlide = () => {
+    if (!categories.length) return;
     setStart((prev) => (prev - 1 + categories.length) % categories.length);
+  };
 
-  const visibleCategories = Array.from({ length: visible }).map(
-    (_, i) => categories[(start + i) % categories.length]
-  );
+  const visibleCategories =
+    categories.length > 0
+      ? Array.from({ length: visible }).map(
+          (_, i) => categories[(start + i) % categories.length]
+        )
+      : [];
 
-  // ✅ BACKEND PRODUCTS FOR HOME SLIDERS
-  const [engineeringProducts, setEngineeringProducts] = useState([]);
-  const [lawProducts, setLawProducts] = useState([]);
-  const [medicalProducts, setMedicalProducts] = useState([]);
-  const [merchandiseProducts, setMerchandiseProducts] = useState([]);
-  const [managementProducts, setManagementProducts] = useState([]);
+  // ✅ Products from DB
+  const [allProducts, setAllProducts] = useState([]);
 
   // Auto slide banner
   useEffect(() => {
@@ -61,76 +54,120 @@ const Ecommerce = () => {
 
   const goToSlide = (index) => setCurrent(index);
 
-  // ✅ Load products for Engineering/Law/Medical sliders
+  // ✅ Load categories (admin created)
   useEffect(() => {
     let mounted = true;
 
-    const loadHomeSliders = async () => {
+    const palette = [
+      "#800040",
+      "#004d4d",
+      "#222c7a",
+      "#001F54",
+      "#7A0900",
+      "#054C29",
+      "#660000",
+      "#005566",
+    ];
+
+    const loadCategories = async () => {
       try {
-        const res = await api.get("/products"); // /api/v1/products
-        const products = res?.data?.products || [];
+        const res = await api.get("/categories");
+        const items = res?.data?.categories || [];
 
-        const mapped = products.map((p) => {
-          const price = Number(p.price || 0);
-          const offer = Number(p.offerPrice || 0);
-          const oldPrice = price;
-          const finalPrice = offer > 0 ? offer : price;
-
-          return {
-            id: p._id,
-            title: p.name,
-            description: p.description || "",
-            img:
-              (Array.isArray(p.images) && p.images[0]) ||
-              "https://via.placeholder.com/300x300?text=Product",
-            images: Array.isArray(p.images) ? p.images : [],
-            oldPrice,
-            price: finalPrice,
-            save: Math.max(0, oldPrice - finalPrice),
-            outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
-            category: (p.category || "").trim(),
-            customCategory: p.customCategory || "",
-          };
-        });
-
-        const isCat = (prod, cat) =>
-          (prod.category || "").toLowerCase() === cat.toLowerCase();
-
-        const eng = mapped.filter(
-          (p) =>
-            isCat(p, "IT Books") ||
-            isCat(p, "Electrical Books") ||
-            isCat(p, "Civil Books")
-        );
-
-        const law = mapped.filter((p) => isCat(p, "Law Books"));
-        const med = mapped.filter((p) => isCat(p, "Medical Books"));
-        const merch = mapped.filter((p) => isCat(p, "Merchandise"));
-        const manage = mapped.filter((p) => isCat(p, "Management Books"));
+        const mapped = items.map((c, idx) => ({
+          name: c.name,
+          img: c.imageUrl,
+          color: palette[idx % palette.length],
+        }));
 
         if (!mounted) return;
-        setEngineeringProducts(eng);
-        setLawProducts(law);
-        setMedicalProducts(med);
-        setMerchandiseProducts(merch);
-        setManagementProducts(manage);
+        setCategories(mapped);
+        setStart(0);
       } catch (e) {
-        console.error("Failed to load home slider products:", e);
         if (!mounted) return;
-        setEngineeringProducts([]);
-        setLawProducts([]);
-        setMedicalProducts([]);
-        setMerchandiseProducts([]);
-        setManagementProducts([]);
+        setCategories([]);
+        setStart(0);
       }
     };
 
-    loadHomeSliders();
+    loadCategories();
 
     return () => {
       mounted = false;
     };
   }, []);
+
+  // ✅ Load products
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProducts = async () => {
+      try {
+        const res = await api.get("/products");
+        const products = res?.data?.products || [];
+        if (!mounted) return;
+        setAllProducts(products);
+      } catch (e) {
+        if (!mounted) return;
+        setAllProducts([]);
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // ✅ Map DB product -> ProductSlider format
+  const mappedProducts = useMemo(() => {
+    return (allProducts || []).map((p) => {
+      const price = Number(p.price || 0);
+      const offer = Number(p.offerPrice || 0);
+      const oldPrice = price;
+      const finalPrice = offer > 0 ? offer : price;
+
+     return {
+  id: p._id,
+  title: p.name,
+  description: p.description || "",
+  img: (Array.isArray(p.images) && p.images[0]) || "https://via.placeholder.com/300x300?text=Product",
+  images: Array.isArray(p.images) ? p.images : [],
+  oldPrice,
+  price: finalPrice,
+  save: Math.max(0, oldPrice - finalPrice),
+  outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
+  category: (p.category || "").trim(),
+  createdAt: p.createdAt,
+  isTrending: !!p.isTrending, // ✅ ADD
+};
+
+    });
+  }, [allProducts]);
+
+  // ✅ Trending = latest products
+  const trendingProducts = useMemo(() => {
+  return mappedProducts.filter((p) => p.isTrending === true);
+}, [mappedProducts]);
+
+
+  // ✅ Exact category matching (admin category name)
+  const normalize = (s) => String(s || "").trim().toLowerCase();
+
+  const productsByCategory = useMemo(() => {
+    const map = new Map();
+    for (const p of mappedProducts) {
+      const key = normalize(p.category);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(p);
+    }
+    return map;
+  }, [mappedProducts]);
+
+  const getProductsForCategory = (categoryName) => {
+    return productsByCategory.get(normalize(categoryName)) || [];
+  };
 
   return (
     <section className=" pt-36">
@@ -203,9 +240,11 @@ const Ecommerce = () => {
                   w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32"
                   style={{ backgroundColor: cat.color }}
                 >
-                  <span className="text-white text-4xl sm:text-5xl md:text-6xl">
-                    {cat.icon}
-                  </span>
+                  <img
+                    src={cat.img}
+                    alt={cat.name}
+                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain"
+                  />
                 </div>
 
                 <p className="mt-3 font-medium text-[#2E2E2E]">{cat.name}</p>
@@ -225,20 +264,22 @@ const Ecommerce = () => {
         </div>
 
         {/* ---------- PRODUCT SLIDERS ---------- */}
-        <ProductSlider title="Trending Products" products={trendingProducts} navigate={navigate} />
+        {/* ✅ Trending first */}
+        <ProductSlider
+          title="Trending Products"
+          products={trendingProducts}
+          navigate={navigate}
+        />
 
-        {/* ✅ CHANGED: Engineering = IT + Electrical + Civil (from backend) */}
-        <ProductSlider title="Engineering Products" products={engineeringProducts} navigate={navigate} />
-
-        {/* ✅ CHANGED: Law (from backend) */}
-        <ProductSlider title="Law Products" products={lawProducts} navigate={navigate} />
-
-        <ProductSlider title="Management Products" products={managementProducts} navigate={navigate} />
-
-        {/* ✅ CHANGED: Medical (from backend) */}
-        <ProductSlider title="Medical Products" products={medicalProducts} navigate={navigate} />
-
-        <ProductSlider title="Merchandise Products" products={merchandiseProducts} navigate={navigate} />
+        {/* ✅ After trending: show slider for EACH admin category */}
+        {categories.map((cat) => (
+          <ProductSlider
+            key={cat.name}
+            title={`${cat.name} Products`}
+            products={getProductsForCategory(cat.name)}
+            navigate={navigate}
+          />
+        ))}
 
         {/* ---------- ASK QUESTIONS SECTION ---------- */}
         <div className="max-w-7xl mx-auto px-6 py-16">
@@ -246,11 +287,13 @@ const Ecommerce = () => {
             {/* Left */}
             <div className="w-full md:w-1/2">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#124734] leading-snug">
-                Ask Questions, <span className="text-gray-500">get help go beyond.</span>
+                Ask Questions,{" "}
+                <span className="text-gray-500">get help go beyond.</span>
               </h2>
 
               <p className="text-gray-600 mt-4 text-lg">
-                Our experts can answer all your questions regarding Prospect Ecommerce Products.
+                Our experts can answer all your questions regarding Prospect
+                Ecommerce Products.
               </p>
 
               <div className="mt-6">
@@ -263,7 +306,11 @@ const Ecommerce = () => {
 
             {/* Right Image */}
             <div className="w-full md:w-1/2 flex justify-center mt-8 md:mt-0">
-              <img src={contact} alt="Ask Questions" className="w-48 sm:w-60 md:w-80" />
+              <img
+                src={contact}
+                alt="Ask Questions"
+                className="w-48 sm:w-60 md:w-80"
+              />
             </div>
           </div>
         </div>
@@ -282,13 +329,10 @@ const Ecommerce = () => {
               const accessToken = sessionStorage.getItem("accessToken");
               const user = JSON.parse(sessionStorage.getItem("user") || "null");
 
-              // ✅ pehle check login hai ya nahi
               if (!accessToken || !user) {
-                // login page redirect + mark that user came from become supplier
                 return navigate("/login", { state: { from: "become-supplier" } });
               }
 
-              // ✅ agar login hai toh role check
               if (user.role === "supplier") {
                 return navigate("/supplier");
               }
@@ -301,6 +345,7 @@ const Ecommerce = () => {
           </button>
         </div>
       </section>
+
       <div className="pt-10">
         <Footer />
       </div>

@@ -1,88 +1,55 @@
-import { Pencil, Trash, Check, CheckCheck } from "lucide-react";
-import { useState } from "react";
+import { Paperclip } from "lucide-react";
 
-export default function MessageBubble({
-  m,
-  index,
-  onDelete,
-  onEditSave,
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(m.text);
+export default function MessageBubble({ m }) {
+  const isTeacher = m.from === "teacher";
+
+  const isImage =
+    m?.attachment?.resourceType === "image" ||
+    (m?.attachment?.mimetype || "").startsWith("image/");
 
   return (
     <div
-      className={`p-3 rounded-lg max-w-md ${
-        m.from === "teacher"
-          ? "ml-auto bg-[#DFF6E6] text-[#124734]"
-          : "bg-white border text-[#124734]"
+      className={`p-3 rounded-xl max-w-md shadow-sm ${
+        isTeacher
+          ? "ml-auto bg-[#A7E1B2]/50 text-[#124734]"
+          : "bg-[#A7E1B2] border border-[#E6F4EC] text-[#124734]"
       }`}
     >
-      {/* EDIT MODE */}
-      {isEditing ? (
-        <div className="flex flex-col gap-2">
-          <input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            className="border p-1 rounded-md outline-[#124734]"
-          />
+      {/* Text */}
+      {m.text ? <p className="whitespace-pre-wrap text-sm">{m.text}</p> : null}
 
-          <button
-            onClick={() => {
-              onEditSave(index, editValue);
-              setIsEditing(false);
-            }}
-            className="text-xs px-2 py-1 bg-[#124734] text-white rounded-md self-end"
-          >
-            Save
-          </button>
+      {/* Attachment */}
+      {m.attachment?.url ? (
+        <div className="mt-2">
+          {isImage ? (
+            <a href={m.attachment.url} target="_blank" rel="noreferrer">
+              <img
+                src={m.attachment.url}
+                alt={m.attachment.name || "attachment"}
+                className="w-48 rounded-lg border hover:opacity-95 transition"
+              />
+            </a>
+          ) : (
+            <a
+              href={m.attachment.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg bg-white hover:bg-[#F2FBF5] transition"
+            >
+              <Paperclip size={16} />
+              <span className="text-xs truncate max-w-[200px]">
+                {m.attachment.name || "attachment"}
+              </span>
+              <span className="text-[10px] text-[#009846] ml-auto">Open</span>
+            </a>
+          )}
         </div>
-      ) : (
-        <div>
-          {/* Text + buttons */}
-          <div className="flex justify-between items-start gap-4">
-            <p className="flex-1">{m.text}</p>
+      ) : null}
 
-            {m.from === "teacher" && (
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="p-1 bg-white border rounded-full hover:bg-gray-100"
-                >
-                  <Pencil size={14} />
-                </button>
-
-                <button
-                  onClick={() => onDelete(index)}
-                  className="p-1 bg-white border rounded-full hover:bg-gray-100"
-                >
-                  <Trash size={14} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Timestamp + edited + ticks */}
-          <div className="mt-1 flex items-center gap-2 text-xs text-[#5B7065]">
-            {/* timestamp */}
-            <span>{m.time}</span>
-
-            {/* edited */}
-            {m.edited && (
-              <span className="italic text-[#2F6B4F]">(edited)</span>
-            )}
-
-            {/* ticks (teacher only) */}
-            {m.from === "teacher" && (
-              <>
-                {m.status === "sent" && <Check size={14} />}
-                {m.status === "delivered" && <CheckCheck size={14} className="text-gray-500" />}
-                {m.status === "seen" && <CheckCheck size={14} className="text-[#124734]" />}
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Time */}
+      <div className="mt-1 text-[10px] text-[#5B7065] text-right">
+        {m.time}
+      </div>
     </div>
   );
 }

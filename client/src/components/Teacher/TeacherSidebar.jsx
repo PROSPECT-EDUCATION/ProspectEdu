@@ -13,6 +13,7 @@ import {
   Boxes,
   Newspaper,
  PenTool,
+ Bell,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
@@ -57,7 +58,13 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
     { label: "Research", icon: Boxes, path: "/teacher/research" },
     { label: "Blog", icon: PenTool, path: "/teacher/blogs" },
     { label: "News", icon: Newspaper, path: "/teacher/news" },
+    {
+      label: "Reply to Parents Doubts",
+      icon: MessageSquareReply,
+      path: "/teacher/doubts",
+    },
     { label: "Test & Learning", icon: ClipboardList, path: "/teacher/test-learning" },
+    { label: "Announcements", icon: Bell, path: "/teacher/announcements" },
 
 
   ];

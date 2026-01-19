@@ -1,28 +1,60 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import Footer from "../../components/Footer";
-
-const categories = [
-  { name: "Merchandise", color: "#800040", icon: "👕" },
-  { name: "All", color: "#004d4d", icon: "📖" },
-  { name: "IT Books", color: "#222c7a", icon: "💻" },
-  { name: "Electrical Books", color: "#001F54", icon: "⚡" },
-  { name: "Civil Books", color: "#7A0900", icon: "🏗️" },
-  { name: "Law Books", color: "#054C29", icon: "⚖️" },
-  { name: "Medical Books", color: "#660000", icon: "🩺" },
-  { name: "Management Books", color: "#005566", icon: "📊" },
-];
+import { api } from "../../lib/api"; // ✅ add
 
 const Categories = () => {
   const navigate = useNavigate();
+
+  // ✅ admin-created categories from backend
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const palette = [
+      "#800040",
+      "#004d4d",
+      "#222c7a",
+      "#001F54",
+      "#7A0900",
+      "#054C29",
+      "#660000",
+      "#005566",
+    ];
+
+    const load = async () => {
+      try {
+        const res = await api.get("/categories"); // /api/v1/categories
+        const items = res?.data?.categories || [];
+
+        const mapped = items.map((c, idx) => ({
+          name: c.name,
+          img: c.imageUrl,
+          color: palette[idx % palette.length],
+        }));
+
+        if (!mounted) return;
+        setCategories(mapped);
+      } catch (e) {
+        if (!mounted) return;
+        setCategories([]);
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <section className=" pt-36">
       <EcomHeader />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10 pb-20 text-left">
-
         {/* Breadcrumb */}
         <p className="text-gray-600 text-xs sm:text-sm mb-6">
           <span
@@ -40,7 +72,8 @@ const Categories = () => {
         </h2>
 
         {/* Categories GRID */}
-        <div className="
+        <div
+          className="
           grid 
           grid-cols-2 
           sm:grid-cols-3 
@@ -64,9 +97,12 @@ const Categories = () => {
                 "
                 style={{ backgroundColor: cat.color }}
               >
-                <span className="text-white text-2xl sm:text-3xl md:text-4xl">
-                  {cat.icon}
-                </span>
+                {/* ✅ ONLY change: icon -> image (layout same) */}
+                <img
+                  src={cat.img}
+                  alt={cat.name}
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
+                />
               </div>
 
               <p className="mt-3 font-medium text-[#2E2E2E] text-sm sm:text-base">
@@ -76,7 +112,10 @@ const Categories = () => {
           ))}
         </div>
       </div>
-      <div className="pt-10"> <Footer /></div>
+      <div className="pt-10">
+        {" "}
+        <Footer />
+      </div>
     </section>
   );
 };

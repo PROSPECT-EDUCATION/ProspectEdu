@@ -34,7 +34,7 @@ export default function ParentTopbar({
   return (
     <>
       {/* TOPBAR */}
-      <header className="w-full h-[64px] bg-white shadow-sm flex items-center justify-between px-4 sm:px-6">
+      <header className="w-full h-[64px] bg-white shadow-sm flex items-center justify-between px-4 sm:px-6 sticky top-0 z-[9999] relative">
 
         {/* LEFT — Title */}
         <div>

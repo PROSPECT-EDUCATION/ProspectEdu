@@ -39,7 +39,9 @@ const ProductNoSlider = ({ products, columns = 3 }) => {
                     onClick={() =>  
                       {const accessToken = sessionStorage.getItem("accessToken");
     if (!accessToken) return navigate("/login");   // ✅ not logged in -> login page
-                      addToCart({ ...p, quantity: 1},navigate)}}
+                      const pid = String(p.id || p._id || "");
+                    addToCart({ ...p, id: pid, quantity: 1 }, navigate);
+                   }}
                     className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
                   >
 

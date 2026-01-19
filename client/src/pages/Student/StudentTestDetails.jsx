@@ -1,5 +1,5 @@
-// src/pages/Student/TestLearning.jsx
-import { useEffect, useMemo, useState } from "react";
+// src/pages/Student/StudentTestDetails.jsx
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
@@ -29,19 +29,17 @@ const toMin = (v) => {
 
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
+/**
+ * IMPORTANT:
+ * attempted must be derived from attempt.submitted (backend attaches it in /test-purchase/me/series/:seriesId)
+ * so view report + filter + progress all depend on latest fetch after submission.
+ */
 function computeTestStatus(test, nowMs) {
   const start = test?.startAt ? new Date(test.startAt).getTime() : null;
   const end = test?.endAt ? new Date(test.endAt).getTime() : null;
 
-  // ✅ FIX: define attempted
-  const attempted = Boolean(
-    test?.attempted ||
-    test?.attempt?.submitted ||
-    test?.attempt?.attemptId ||
-    test?.attempt?.score !== undefined
-  );
-
-  const inProgress = Boolean(test?.attempt?.inProgress);
+  // ✅ strongest signal (backend sets attempt.submitted when student submits)
+  const attempted = Boolean(test?.attempt?.submitted || test?.attempted);
 
   const explicit = (test?.status || "").toLowerCase();
   if (explicit === "live") return attempted ? "attempted" : "live";
@@ -53,10 +51,8 @@ function computeTestStatus(test, nowMs) {
   if (end && nowMs > end) return attempted ? "attempted" : "unattempted";
 
   if (attempted) return "attempted";
-  if (inProgress) return "live";
   return "unattempted";
 }
-
 
 const badgeStyles = {
   live: "bg-red-50 text-red-700 border-red-200",
@@ -65,49 +61,78 @@ const badgeStyles = {
   unattempted: "bg-slate-50 text-slate-700 border-slate-200",
 };
 
-export default function TestLearning() {
+export default function StudentTestDetails() {
   const { id } = useParams(); // seriesId
   const navigate = useNavigate();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
-  const [activeTab, setActiveTab] = useState("all"); // all|live|upcoming|attempted|unattempted
+  const [activeTab, setActiveTab] = useState("all"); // all|attempted|unattempted
   const [loading, setLoading] = useState(true);
   const [series, setSeries] = useState(null);
 
+  // ✅ keep time in state so status updates without full reload
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const data = await fetchMySeriesDetails(id);
-        setSeries(data || null);
-      } catch (e) {
-        console.error(e);
-        setSeries(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    const t = setInterval(() => setNowMs(Date.now()), 30_000); // update every 30s
+    return () => clearInterval(t);
+  }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchMySeriesDetails(id);
+      setSeries(data || null);
+    } catch (e) {
+      console.error(e);
+      setSeries(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  const nowMs = Date.now();
+  // ✅ initial load
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  /**
+   * ✅ BIG FIX:
+   * When student finishes test and comes back from /live page,
+   * this page must re-fetch so attempted/filter/progress becomes correct.
+   */
+  useEffect(() => {
+    const onFocus = () => load();
+    const onVis = () => {
+      if (document.visibilityState === "visible") load();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [load]);
 
   const testsWithStatus = useMemo(() => {
     const tests = Array.isArray(series?.tests) ? series.tests : [];
     return tests.map((t) => ({
       ...t,
       __status: computeTestStatus(t, nowMs),
+      __isAttempted: Boolean(t?.attempt?.submitted || t?.attempted),
     }));
   }, [series, nowMs]);
 
   const counts = useMemo(() => {
-  const total = testsWithStatus.length;
-  const attempted = testsWithStatus.filter((t) => t.__status === "attempted").length;
-  const unattempted = total - attempted;
-  return { all: total, attempted, unattempted };
-}, [testsWithStatus]);
-
+    const total = testsWithStatus.length;
+    const attempted = testsWithStatus.filter((t) => t.__isAttempted).length; // ✅ submitted only
+    const unattempted = total - attempted;
+    return { all: total, attempted, unattempted };
+  }, [testsWithStatus]);
 
   const progressPct = useMemo(() => {
     const total = counts.all || 0;
@@ -116,11 +141,10 @@ export default function TestLearning() {
   }, [counts]);
 
   const filtered = useMemo(() => {
-  if (activeTab === "attempted") return testsWithStatus.filter((t) => t.__status === "attempted");
-  if (activeTab === "unattempted") return testsWithStatus.filter((t) => t.__status !== "attempted");
-  return testsWithStatus;
-}, [testsWithStatus, activeTab]);
-
+    if (activeTab === "attempted") return testsWithStatus.filter((t) => t.__isAttempted);
+    if (activeTab === "unattempted") return testsWithStatus.filter((t) => !t.__isAttempted);
+    return testsWithStatus;
+  }, [testsWithStatus, activeTab]);
 
   const seriesTitle = series?.title || "Test Series Details";
   const seriesType = series?.type || "—";
@@ -130,16 +154,15 @@ export default function TestLearning() {
   const questionType = series?.questionType || "—";
   const price = Number(series?.price || 0);
 
- const startLiveTest = (test) => {
-  const tid = test?._id || test?.id;
-  navigate(`/student/series/${id}/tests/${tid}/live`);
-};
+  const startLiveTest = (test) => {
+    const tid = test?._id || test?.id;
+    navigate(`/student/series/${id}/tests/${tid}/live`);
+  };
 
-const viewResult = (test) => {
-  const tid = test?._id || test?.id;
-  navigate(`/student/series/${id}/tests/${tid}/live?view=result`);
-};
-
+  const viewReport = (test) => {
+    const tid = test?._id || test?.id;
+    navigate(`/student/series/${id}/tests/${tid}/report`);
+  };
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -157,19 +180,26 @@ const viewResult = (test) => {
 
         <main className="flex-1 overflow-y-auto text-left" style={{ marginTop: 64, height: "calc(100vh - 64px)" }}>
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
-            {/* Breadcrumb + Back */}
             <div className="flex items-center justify-between gap-3 mb-4">
               <p className="text-sm text-[#5B7065]">
                 Home / <span className="text-[#124734] font-medium">My Test Series</span> /{" "}
                 <span className="text-[#124734] font-semibold">Details</span>
               </p>
 
-              <button
-                onClick={() => navigate(-1)}
-                className="text-sm font-medium px-4 py-2 rounded-full border border-[#CDE8D5] bg-white hover:bg-[#E6F4EC] text-[#124734] transition"
-              >
-                ← Back
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={load}
+                  className="text-sm font-medium px-4 py-2 rounded-full border border-[#CDE8D5] bg-white hover:bg-[#E6F4EC] text-[#124734] transition"
+                >
+                  ⟳ Refresh
+                </button>
+                <button
+                  onClick={() => navigate(-1)}
+                  className="text-sm font-medium px-4 py-2 rounded-full border border-[#CDE8D5] bg-white hover:bg-[#E6F4EC] text-[#124734] transition"
+                >
+                  ← Back
+                </button>
+              </div>
             </div>
 
             {loading ? (
@@ -178,9 +208,8 @@ const viewResult = (test) => {
               <RefreshComponent message="Series not found or you don’t have access." />
             ) : (
               <>
-                {/* Hero */}
                 <div className="bg-white border border-[#E6F4EC] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="p-6 md:p-8 bg-gradient-to-r from-[#A7E1B2] to-[#A7E1B2]/60">
+                  <div className="p-6 md:p-8 bg-gradient-to-r from-[#A7E1B2] to-[#A7E1B2]/80">
                     <div className="flex flex-col md:flex-row md:items-center gap-5">
                       <div className="w-full md:w-[220px]">
                         <div className="bg-white rounded-2xl border border-[#CDE8D5] p-3 shadow-sm">
@@ -231,7 +260,7 @@ const viewResult = (test) => {
                           </div>
                         </div>
 
-                        {/* Progress */}
+                        {/* ✅ Progress Bar (now updates correctly after submission due to re-fetch) */}
                         <div className="mt-5">
                           <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-semibold text-[#124734]">Your Progress</p>
@@ -275,7 +304,7 @@ const viewResult = (test) => {
 
                   <div className="px-4 md:px-6 pb-6 pt-4">
                     {filtered.length === 0 ? (
-                      <div className="bg-[#F9FAFB] border border-[#E6F4EC] rounded-2xl p-6">
+                      <div className="bg-[#A7E1B2] border border-[#E6F4EC] rounded-2xl p-6">
                         <p className="text-sm text-[#5B7065]">No tests found in this section.</p>
                       </div>
                     ) : (
@@ -285,15 +314,12 @@ const viewResult = (test) => {
                           const badge = badgeStyles[status] || badgeStyles.unattempted;
 
                           const title = test?.title || test?.name || "Test";
-                          const durationMin = toMin(test?.durationMinutes || test?.duration || 0);
-                          const marks = test?.totalMarks ?? test?.marks ?? "—";
-                          const questions = test?.totalQuestions ?? test?.questions ?? "—";
+                          const durationMin = toMin(test?.durationMinutes || 0);
+                          const marks = test?.totalMarks ?? "—";
+                          const questions = test?.totalQuestions ?? "—";
 
-                          const startAt = test?.startAt || test?.startsAt;
-                          const endAt = test?.endAt || test?.endsAt;
-
+                          const isAttempted = test.__isAttempted;
                           const canAttempt = status === "live" || status === "unattempted";
-                          const isAttempted = status === "attempted";
 
                           return (
                             <div
@@ -304,20 +330,15 @@ const viewResult = (test) => {
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <h3 className="text-lg font-extrabold text-[#0F2E22]">{title}</h3>
-                                    <p className="text-xs text-[#5B7065] mt-1">
-                                      Starts: <span className="font-semibold">{fmtDateTime(startAt)}</span>
-                                      {"  "}•{"  "}
-                                      Ends: <span className="font-semibold">{fmtDateTime(endAt)}</span>
-                                    </p>
                                   </div>
 
                                   <span className={`text-xs font-bold px-3 py-1 rounded-full border ${badge}`}>
-                                    {status === "live"
+                                    {isAttempted
+                                      ? "ATTEMPTED"
+                                      : status === "live"
                                       ? "LIVE NOW"
                                       : status === "upcoming"
                                       ? "UPCOMING"
-                                      : status === "attempted"
-                                      ? "ATTEMPTED"
                                       : "UNATTEMPTED"}
                                   </span>
                                 </div>
@@ -341,22 +362,27 @@ const viewResult = (test) => {
 
                                 <div className="mt-5 flex items-center justify-between gap-3">
                                   <div className="text-xs text-[#5B7065]">
-                                    {isAttempted
-                                      ? `Score: ${test?.attempt?.score ?? test?.score ?? "—"}`
-                                      : status === "upcoming"
-                                      ? "You can attempt when it becomes live."
-                                      : status === "live"
-                                      ? "Attempt now before it ends."
-                                      : "Not attempted yet."}
+                                    {isAttempted ? (
+                                      <>
+                                        Score: <b>{test?.attempt?.score ?? "—"}</b> /{" "}
+                                        {test?.attempt?.totalMarks ?? "—"}
+                                      </>
+                                    ) : status === "upcoming" ? (
+                                      "You can attempt when it becomes live."
+                                    ) : status === "live" ? (
+                                      "Attempt now before it ends."
+                                    ) : (
+                                      "Not attempted yet."
+                                    )}
                                   </div>
 
                                   <div className="flex gap-2">
                                     {isAttempted ? (
                                       <button
-                                        onClick={() => viewResult(test)}
+                                        onClick={() => viewReport(test)}
                                         className="px-4 py-2 rounded-full text-sm font-semibold border border-[#124734] text-[#124734] hover:bg-[#E6F4EC] transition"
                                       >
-                                        View Result
+                                        View Report
                                       </button>
                                     ) : (
                                       <button
@@ -382,14 +408,12 @@ const viewResult = (test) => {
                   </div>
                 </div>
 
-                {/* Important info */}
                 <div className="mt-6 bg-white border border-[#E6F4EC] rounded-2xl shadow-sm p-6">
                   <h3 className="text-lg font-extrabold text-[#0F2E22] mb-3">Important Information</h3>
                   <ul className="text-sm text-[#5B7065] list-disc pl-5 space-y-2">
                     <li>Live tests can be attempted only within the live window (start/end time).</li>
-                    <li>Attempted tests will show result after submission (if enabled).</li>
+                    <li>After submission, you can view your full report.</li>
                     <li>Make sure your internet connection is stable before starting an online test.</li>
-                    <li>If you face any issue, contact support from the Help/Doubt section.</li>
                   </ul>
                 </div>
               </>

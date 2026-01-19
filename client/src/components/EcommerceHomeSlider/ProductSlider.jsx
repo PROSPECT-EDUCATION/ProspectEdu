@@ -114,10 +114,21 @@ const ProductSlider = ({ title, products, navigate }) => {
                           const accessToken = sessionStorage.getItem("accessToken");
                             if (!accessToken) return navigate("/login");   // ✅ not logged in -> login page
                           // ✅ optional: if already in cart, avoid duplicate
-                          const exists = cart.some((item) => item.id === p.id);
+                         const pid = String(p.id || p._id || "");
+                          const exists = cart.some((item) => String(item.id) === pid);
                           if (exists) return showToast("Already in Cart");
-                          addToCart(p, navigate);
+
+                          addToCart(
+                            {
+                              ...p,
+                              id: pid,
+                              quantity: 1,
+                            },
+                            navigate
+                          );
+
                           showToast("Added to Cart");
+
                         }}
                         className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
                       >

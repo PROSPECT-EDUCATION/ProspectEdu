@@ -1,14 +1,17 @@
 // src/components/Student/StudentTopbar.jsx
-import { useState } from "react";
+import { useState} from "react";
 import CourseDropdown from "./ui/CourseDropdown";
 import SearchBar from "./ui/SearchBar";
 import StoreButton from "./ui/StoreButton";
 import NotificationBell from "./ui/NotificationBell";
 import ProfileAvatar from "./ui/ProfileAvatar";
 import { Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 export default function StudentTopbar({ isCollapsed = false, pageTitle }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ const navigate = useNavigate();
 
   return (
     <>
@@ -42,7 +45,7 @@ export default function StudentTopbar({ isCollapsed = false, pageTitle }) {
           <CourseDropdown />
           <SearchBar />
           <StoreButton />
-          <NotificationBell />
+          <NotificationBell onClick={() => navigate("/student/announcements")} />
           <ProfileAvatar />
         </div>
 
@@ -74,7 +77,7 @@ export default function StudentTopbar({ isCollapsed = false, pageTitle }) {
 
           {/* Notifications */}
           <div>
-            <NotificationBell />
+            <NotificationBell onClick={() => navigate("/student/announcements")} />
           </div>
 
           {/* Profile */}

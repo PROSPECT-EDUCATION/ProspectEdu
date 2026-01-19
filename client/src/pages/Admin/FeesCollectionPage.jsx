@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
-import FeesTable from "../../components/Admin/Fees/FeeTable";
+import TestSeriesFeesTable from "../../components/Admin/TestSeriesFees/TestSeriesFeesTable";
 import { useNavigate } from "react-router-dom";
+
 
 
 export default function FeesCollectionPage() {
@@ -14,9 +15,7 @@ export default function FeesCollectionPage() {
   const navigate = useNavigate();
   const sidebarWidth = isCollapsed ? 80 : 256;
 
-  const handleAddFees = () => {
-    navigate("/admin/fees/addfees");
-  };
+  
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -62,7 +61,7 @@ export default function FeesCollectionPage() {
               Dashboard
             </span>
             {" / "}
-            <span className="text-[#124734] font-semibold">Fees Collection</span>
+            <span className="text-[#124734] font-semibold">Test Series Fees Collection</span>
           </div>
 </div>
           {/* CARD */}
@@ -81,13 +80,7 @@ export default function FeesCollectionPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Add Fees button (GREEN THEME) */}
-                <button
-  onClick={() => navigate("/admin/fees/addfees")}
-  className="bg-[#28a855] text-white px-4 py-2 rounded-lg shadow hover:bg-[#0E3A2B] transition"
->
-  + Add Fees
-</button>
+                
 
 
                 {/* SEARCH */}
@@ -104,7 +97,8 @@ export default function FeesCollectionPage() {
             </div>
 
             {/* TABLE */}
-            <FeesTable search={search} />
+           <TestSeriesFeesTable search={search} />
+
 
           </div>
         </div>

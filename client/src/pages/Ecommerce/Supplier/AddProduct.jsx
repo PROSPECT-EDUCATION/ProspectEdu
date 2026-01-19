@@ -56,30 +56,25 @@ export default function AddProduct() {
   };
 
   const loadSupplierCategories = async () => {
-    setLoadingCats(true);
-    setError("");
-    try {
-      const res = await api.get("/suppliers/me");
-      const data = res.data;
+  setLoadingCats(true);
+  setError("");
+  try {
+    // ✅ load Admin predefined categories
+    const res = await api.get("/categories");
+    const items = res?.data?.categories || [];
 
-      if (!data?.exists) {
-        setSupplierCategories([]);
-        setError("Supplier profile not found. Please apply first.");
-        return;
-      }
+    // ✅ you are using supplierCategories as string list in dropdown,
+    // so keep it as array of category names
+    const names = items.map((c) => c.name);
+    setSupplierCategories(names);
+  } catch (e) {
+    setSupplierCategories([]);
+    setError(e?.response?.data?.message || "Failed to load categories");
+  } finally {
+    setLoadingCats(false);
+  }
+};
 
-      if (data.status !== "approved") {
-        setError("Your supplier account is not approved yet.");
-      }
-
-      setSupplierCategories(Array.isArray(data.categories) ? data.categories : []);
-    } catch (e) {
-      setSupplierCategories([]);
-      setError(e?.response?.data?.message || "Failed to load supplier categories");
-    } finally {
-      setLoadingCats(false);
-    }
-  };
 
   useEffect(() => {
     loadSupplierCategories();

@@ -16,19 +16,14 @@ export default function AddCategoryModal({ open, onClose, onSave }) {
   };
 
   const handleSubmit = () => {
-    if (!name || !image) {
-      alert("Please fill all fields!");
-      return;
-    }
+  if (!name || !image) {
+    alert("Please fill all fields!");
+    return;
+  }
 
-    const newCategory = {
-      title: name,
-      img: imagePreview,
-    };
-
-    onSave(newCategory);
-    onClose();
-  };
+  onSave({ name, imageFile: image });   // ✅ send file to parent
+  onClose();
+};
 
   return (
    <div className="fixed inset-0 bg-[#E8F5EC]/70 backdrop-blur-sm flex justify-center items-center z-[9999]">

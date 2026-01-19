@@ -92,7 +92,40 @@ export default function LiveTest() {
       setSeriesTitle(data?.seriesTitle || "Live Test");
       setTestMeta(data?.test || null);
       setQuestions(Array.isArray(data?.questions) ? data.questions : []);
-      setAttempt(data?.attempt || null);
+      const rawAttempt = data?.attempt || null;
+const qs = Array.isArray(data?.questions) ? data.questions : [];
+const total = qs.length;
+
+// ✅ normalize answers so nothing is pre-selected
+let normAttempt = rawAttempt;
+
+if (rawAttempt) {
+  const arr = Array.isArray(rawAttempt.answers) ? [...rawAttempt.answers] : [];
+
+  // ensure array length = questions length
+  for (let i = 0; i < total; i++) {
+    const a = arr[i] || {};
+
+    // IMPORTANT:
+    // If backend sends 0 by default, treat it as "not answered"
+    // unless we are sure student actually selected something.
+    // safest: convert undefined / null / NaN to null.
+    const idx = a.selectedIndex;
+
+    const fixedSelected =
+      idx === undefined || idx === null || Number.isNaN(Number(idx)) ? null : Number(idx);
+
+    arr[i] = {
+      review: Boolean(a.review),
+      selectedIndex: fixedSelected,
+    };
+  }
+
+  normAttempt = { ...rawAttempt, answers: arr };
+}
+
+setAttempt(normAttempt);
+
       setActiveIdx(0);
     } catch (e) {
       console.error(e);
@@ -119,7 +152,7 @@ export default function LiveTest() {
   useEffect(() => {
     if (!attempt) return;
     if (attempt?.submitted) {
-      navigate(`/studenttest-learning/${seriesId}`, { replace: true });
+      navigate(`/studen-ttest-learning/${seriesId}`, { replace: true });
     }
   }, [attempt?.submitted, seriesId, navigate]);
 
@@ -223,7 +256,7 @@ export default function LiveTest() {
       // ✅ Redirect after submit (choose what you want)
       // Option A: Go back to test details
       setTimeout(() => {
-        navigate(`/studenttest-learning/${seriesId}`);
+        navigate(`/student-test-learning/${seriesId}`);
       }, 900);
 
       // Option B: If you create a result page later:
@@ -415,7 +448,7 @@ export default function LiveTest() {
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       {(currentQ?.options || []).map((opt, i) => {
-                        const selected = Number(currentA?.selectedIndex) === i;
+                        const selected = currentA?.selectedIndex === i;
                         return (
                           <button
                             key={i}

@@ -7,7 +7,8 @@ import {
   Library,
   ArrowLeft,
   ArrowRight,
-  ListChecks
+  ListChecks,
+  Bell,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -23,6 +24,7 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
     { label: "Practice", icon: BookOpen, path: "/student/practice" },
     { label: "All Test Series" , icon : ListChecks, path: "/student/all-test-series"},
     { label: "All Courses" , icon: Edit3, path: "/student/all-courses"},
+    { label: "Notifications", icon: Bell, path: "/student/announcements" },
   ];
 
   return (

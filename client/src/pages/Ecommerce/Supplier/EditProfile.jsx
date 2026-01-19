@@ -52,16 +52,8 @@ export default function EditProfile() {
     },
   });
 
-  const categoryOptions = [
-    "Engineering Books",
-    "Law Books",
-    "Management Books",
-    "Merchandise",
-    "Stationery",
-    "Notes & PDFs",
-    "Medical Books",
-    "Others",
-  ];
+  const [categoryOptions, setCategoryOptions] = useState(["Others"]);
+
 
   const updateForm = (key, value) => setForm((p) => ({ ...p, [key]: value }));
   const updatePickup = (key, value) =>
@@ -113,6 +105,33 @@ export default function EditProfile() {
     setCustomCategories((prev) => prev.filter((c) => c !== cat));
   };
 
+  useEffect(() => {
+  let mounted = true;
+
+  const loadAdminCategories = async () => {
+    try {
+      const res = await api.get("/categories");
+      const items = res?.data?.categories || [];
+      const names = items.map((c) => c.name).filter(Boolean);
+
+      const next = [...names, "Others"]; // keep Others
+      if (!mounted) return;
+
+      setCategoryOptions(next);
+    } catch {
+      if (!mounted) return;
+      setCategoryOptions(["Others"]);
+    }
+  };
+
+  loadAdminCategories();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
+
+
   const loadProfile = async () => {
     setLoading(true);
     setError("");
@@ -130,7 +149,7 @@ export default function EditProfile() {
       // ✅ Map categories from DB:
       // Known categories => buttons
       // Unknown categories => customCategories, and auto-select "Others"
-      const knownSet = new Set(categoryOptions.filter((c) => c !== "Others"));
+      const knownSet = new Set((categoryOptions || []).filter((c) => c !== "Others"));
       const dbCats = data.categories || [];
 
       const knownCats = dbCats.filter((c) => knownSet.has(c));

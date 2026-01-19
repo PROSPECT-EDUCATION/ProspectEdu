@@ -225,10 +225,30 @@ const ProductDetail = () => {
                       const accessToken = sessionStorage.getItem("accessToken");
                       if (!accessToken) return navigate("/login");
 
-                      const exists = cart.some((item) => Number(item.id) === Number(product.id));
-                      if (exists) return showToast("❗ Already in cart");
-                      addToCart({ ...product, quantity },navigate);
-                      showToast("✅ Added to cart");
+                     const pid = String(product.id || product._id || "");
+                        const exists = cart.some((item) => String(item.id) === pid);
+
+                        if (exists) return showToast("❗ Already in cart");
+
+                        // ✅ ensure cart item shape matches Cart.jsx usage
+                        addToCart(
+                          {
+                            id: pid,
+                            title: product.title || product.name || "",
+                            img: product.img || (product.images && product.images[0]) || "",
+                            images: product.images || [],
+                            price: product.price,
+                            oldPrice: product.oldPrice,
+                            outOfStock: product.outOfStock,
+                            category: product.category,
+                            description: product.description,
+                            quantity,
+                          },
+                          navigate
+                        );
+
+                        showToast("✅ Added to cart");
+
                     }}
                     className="w-full py-3 bg-[#A7E1B2] text-gray-800 rounded hover:bg-gray-300"
                   >

@@ -4,84 +4,107 @@ import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
+const normalizeCartItems = (items) => {
+  if (!Array.isArray(items)) return [];
+  return items.map((it) => ({
+    id: String(it.productId?._id || it.productId || it._id || ""),
+    title: it.title || it.productId?.name || "",
+    img: it.img || it.productId?.images?.[0] || "",
+    price: Number(it.price || it.productId?.offerPrice || it.productId?.price || 0),
+    oldPrice: Number(it.oldPrice || it.productId?.price || 0),
+    quantity: Number(it.quantity || 1),
+  }));
+};
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const { token } = useAuth(); // ✅ reactive token
+  const { token } = useAuth(); // if your AuthContext provides token
 
-  const normalizeCartItems = (items) => {
-    if (!Array.isArray(items)) return [];
-    return items.map((it) => ({
-      id: it.productId?._id || it.productId,
-      title: it.title || it.productId?.name || "",
-      img: it.img || it.productId?.images?.[0] || "",
-      price: Number(it.price || it.productId?.offerPrice || it.productId?.price || 0),
-      oldPrice: Number(it.oldPrice || it.productId?.price || 0),
-      quantity: Number(it.quantity || 1),
-    }));
+  // ✅ always read fresh token
+  const getAccessToken = () => token || sessionStorage.getItem("accessToken") || "";
+
+  const authConfig = () => {
+    const t = getAccessToken();
+    if (!t) return null;
+    return { headers: { Authorization: `Bearer ${t}` } };
   };
 
-  // 🔥 AUTO LOAD ON LOGIN / LOGOUT
-  useEffect(() => {
-    if (!token) {
+  const loadCart = async () => {
+    const cfg = authConfig();
+    if (!cfg) {
       setCart([]);
       return;
     }
-
-    loadCart();
-  }, [token]); // ✅ KEY FIX
-
-  const loadCart = async () => {
     try {
-      const res = await api.get("/cart");
-      const items = res?.data?.cart?.items || [];
-      setCart(normalizeCartItems(items));
-    } catch {
+      const res = await api.get("/cart", cfg);
+      setCart(normalizeCartItems(res?.data?.cart?.items || []));
+    } catch (e) {
       setCart([]);
     }
   };
 
-  const addToCart = async (product) => {
-    if (!token) return;
+  // ✅ load on mount + whenever token changes
+  useEffect(() => {
+    loadCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
-    const exists = cart.find((item) => item.id === product.id);
+  const addToCart = async (product) => {
+    const cfg = authConfig();
+    if (!cfg) return;
+
+    const pid = String(product?.id || product?._id || "");
+    if (!pid) return;
+
+    const exists = cart.some((item) => String(item.id) === pid);
     if (exists) return;
 
-    const res = await api.post("/cart/items", {
-      productId: product.id,
-      quantity: product.quantity || 1,
-    });
-
-    setCart(normalizeCartItems(res?.data?.cart?.items || []));
+    try {
+      const res = await api.post(
+        "/cart/items",
+        { productId: pid, quantity: Number(product.quantity || 1) },
+        cfg
+      );
+      setCart(normalizeCartItems(res?.data?.cart?.items || []));
+    } catch (e) {
+      await loadCart();
+    }
   };
 
   const increaseQty = async (id) => {
-    if (!token) return;
-    const item = cart.find((x) => x.id === id);
+    const cfg = authConfig();
+    if (!cfg) return;
+
+    const pid = String(id || "");
+    const item = cart.find((x) => String(x.id) === pid);
     if (!item) return;
 
-    const res = await api.patch(`/cart/items/${id}`, {
-      quantity: Math.min(5, item.quantity + 1),
-    });
+    const nextQty = Math.min(5, item.quantity + 1);
 
+    const res = await api.patch(`/cart/items/${pid}`, { quantity: nextQty }, cfg);
     setCart(normalizeCartItems(res?.data?.cart?.items || []));
   };
 
   const decreaseQty = async (id) => {
-    if (!token) return;
-    const item = cart.find((x) => x.id === id);
+    const cfg = authConfig();
+    if (!cfg) return;
+
+    const pid = String(id || "");
+    const item = cart.find((x) => String(x.id) === pid);
     if (!item) return;
 
-    const res = await api.patch(`/cart/items/${id}`, {
-      quantity: Math.max(1, item.quantity - 1),
-    });
+    const nextQty = Math.max(1, item.quantity - 1);
 
+    const res = await api.patch(`/cart/items/${pid}`, { quantity: nextQty }, cfg);
     setCart(normalizeCartItems(res?.data?.cart?.items || []));
   };
 
   const removeFromCart = async (id) => {
-    if (!token) return;
+    const cfg = authConfig();
+    if (!cfg) return;
 
-    const res = await api.delete(`/cart/items/${id}`);
+    const pid = String(id || "");
+    const res = await api.delete(`/cart/items/${pid}`, cfg);
     setCart(normalizeCartItems(res?.data?.cart?.items || []));
   };
 

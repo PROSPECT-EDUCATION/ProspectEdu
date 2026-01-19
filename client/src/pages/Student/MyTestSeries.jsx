@@ -1,5 +1,5 @@
 // src/pages/Student/MyTestSeries.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
@@ -17,20 +17,38 @@ export default function MyTestSeries() {
   const navigate = useNavigate();
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const data = await fetchMyPurchasedSeries();
-        setItems(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error(e);
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+ const load = useCallback(async () => {
+  setLoading(true);
+  try {
+    const data = await fetchMyPurchasedSeries();
+    setItems(Array.isArray(data) ? data : []);
+  } catch (e) {
+    console.error(e);
+    setItems([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+useEffect(() => {
+  load();
+}, [load]);
+
+useEffect(() => {
+  const onFocus = () => load();
+  const onVis = () => {
+    if (document.visibilityState === "visible") load();
+  };
+
+  window.addEventListener("focus", onFocus);
+  document.addEventListener("visibilitychange", onVis);
+
+  return () => {
+    window.removeEventListener("focus", onFocus);
+    document.removeEventListener("visibilitychange", onVis);
+  };
+}, [load]);
+
 
   const filteredList = useMemo(() => {
     let list = items;
@@ -152,7 +170,7 @@ export default function MyTestSeries() {
 
                       <div className="mt-6 text-center">
                         <button
-                          onClick={() => navigate(`/studenttest-learning/${t._id}`)}
+                          onClick={() => navigate(`/student-test-learning/${t._id}`)}
                           className="border border-[#1E5631] text-[#1E5631] font-medium px-6 py-2 rounded-full hover:bg-[#1E5631] hover:text-white transition"
                         >
                           View Details

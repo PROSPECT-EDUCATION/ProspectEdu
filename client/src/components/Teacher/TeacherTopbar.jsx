@@ -5,9 +5,10 @@ import NotificationBell from "../Student/ui/NotificationBell";
 import ProfileAvatar from "../Student/ui/ProfileAvatar";
 import StoreButton from "../Student/ui/StoreButton";
 import { Menu, X } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -34,7 +35,8 @@ export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
           <CourseDropdown role="teacher" />
           <SearchBar />
           <StoreButton />
-          <NotificationBell />
+          <NotificationBell onClick={() => navigate("/teacher/announcements")} />
+
           <ProfileAvatar role="teacher" />
         </div>
 
@@ -66,7 +68,7 @@ export default function TeacherTopbar({ isCollapsed = false, pageTitle }) {
 
           {/* Notifications */}
           <div>
-            <NotificationBell />
+            <NotificationBell onClick={() => navigate("/teacher/announcements")} />
           </div>
 
           {/* Profile Avatar */}

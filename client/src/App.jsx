@@ -41,7 +41,7 @@ import EditProfilePage from './pages/Teacher/EditProfilePage';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentStudentsPage from './pages/Parent/ParentStudentPage';
 import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
-import ParentMessagesPage from './pages/Parent/ParentMessagePage';
+
 import ParentAnnouncementsPage from './pages/Parent/ParentAnnouncementsPage';
 import ParentPaymentsPage from './pages/Parent/ParentPaymentsPage';
 import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
@@ -131,6 +131,12 @@ import TestLearning from "./pages/Student/StudentTestDetails";
 import TeacherSeriesTests from "./pages/Teacher/TeacherSeriesTests";
 import TeacherTestQuestions from "./pages/Teacher/TeacherTestQuestions";
 import LiveTest from "./pages/Student/LiveTest";
+import TestReport from "./pages/Student/TestReport";
+import StudentAnnouncementsPage from "./pages/Student/StudentAnnouncementsPage";
+import TeacherAnnouncementsPage from "./pages/Teacher/TeacherAnnouncementsPage";
+import ParentMessagesPage from "./pages/Parent/ParentMessagesPage";
+import TeacherParentDoubtsPage from "./pages/Teacher/TeacherParentDoubtsPage";
+
 
 
 
@@ -183,7 +189,7 @@ function App() {
       <Route path="/parent-dashboard" element = {<ParentDashboard/>}/>
       <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
       <Route path="/parent/students/:id" element={<StudentDetailsPage />} />
-      <Route path="/parent/messages" element={<ParentMessagesPage/>}/>
+      
       <Route path="/parent/announcements" element={<ParentAnnouncementsPage/>}/>
       <Route path="/parent/payments" element={<ParentPaymentsPage/>}/>
       <Route path="/parent/settings" element={<ParentSettingsPage/>}/>
@@ -226,11 +232,12 @@ function App() {
       <Route path="/teacher/news" element={<TeacherNewsPage />} />
       <Route path="/teacher/test-learning" element={<TeacherTestLearning />} />
         <Route path="/checkout-test-learning/:id" element={<CheckoutTestLearning />} />
-        <Route path="/studenttest-learning/:id" element={<TestLearning />} />
+        <Route path="/student-test-learning/:id" element={<TestLearning />} />
          <Route path="/teacher/series-tests/:id" element={<TeacherSeriesTests />} />
       <Route path="/teacher/series-tests/:id/tests/:testId/questions" element={<TeacherTestQuestions />} />
       <Route path="/student/series/:seriesId/tests/:testId/live" element={<LiveTest />} />
-
+  <Route path="/parent/messages" element={<ParentMessagesPage />} />
+<Route path="/teacher/doubts" element={<TeacherParentDoubtsPage />} />
 
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />
@@ -270,6 +277,11 @@ function App() {
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/achievers" element={<Achievers />} />
         <Route path="/teacher/blogs" element={<TeacherBlogs />} />
+        <Route path="/student/series/:seriesId/tests/:testId/report" element={<TestReport />} />
+        <Route path="/student/announcements" element={<StudentAnnouncementsPage />} />
+        <Route path="/teacher/announcements" element={<TeacherAnnouncementsPage />} />
+
+
 
 
 

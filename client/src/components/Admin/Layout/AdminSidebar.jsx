@@ -63,7 +63,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       title: "Fees",
       icon: CreditCard,
       children: [
-        { label: "Fees Collection", path: "/admin/fees/collection" },
+        { label: "Test Series Fees Collection", path: "/admin/fees/collection" },
       ],
     },
     { title: "Scholarship", icon: Award, path: "/admin/scholarship" },

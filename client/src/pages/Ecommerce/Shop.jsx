@@ -12,16 +12,8 @@ const Shop = () => {
   const initialCategory = urlParams.get("category");
 
   // ✅ same as backend predefined + Other
-  const categories = [
-    "IT Books",
-    "Electrical Books",
-    "Civil Books",
-    "Law Books",
-    "Medical Books",
-    "Management Books",
-    "Merchandise",
-    "Other",
-  ];
+ const [categories, setCategories] = useState(["Other"]);
+
 
   const [selectedCategories, setSelectedCategories] = useState(
     initialCategory ? [initialCategory] : []
@@ -33,6 +25,27 @@ const Shop = () => {
   // ✅ products from backend
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  let mounted = true;
+  (async () => {
+    try {
+      const res = await api.get("/categories");
+      const items = res?.data?.categories || [];
+      const names = items.map((c) => c.name);
+
+      if (!mounted) return;
+      setCategories([...names, "Other"]);
+    } catch {
+      if (mounted) setCategories(["Other"]);
+    }
+  })();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
+
 
   // ✅ Fetch products for everyone
   useEffect(() => {

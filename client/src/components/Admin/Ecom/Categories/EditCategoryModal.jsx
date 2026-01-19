@@ -19,9 +19,9 @@ export default function EditCategoryModal({
     setSelected(title);
 
     const cat = categories.find((c) => c.title === title);
-
     setName(cat.title);
     setImagePreview(cat.img);
+    setImageFile(null);
   };
 
   const handleImageUpload = (e) => {
@@ -32,7 +32,7 @@ export default function EditCategoryModal({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selected) {
       alert("Select a category to edit.");
       return;
@@ -42,26 +42,29 @@ export default function EditCategoryModal({
       return;
     }
 
-    const updated = categories.map((c) =>
-      c.title === selected
-        ? {
-            ...c,
-            title: name,
-            img: imageFile ? imagePreview : c.img,
-          }
-        : c
-    );
+    const cat = categories.find((c) => c.title === selected);
+    if (!cat?.id) {
+      alert("Invalid category selected");
+      return;
+    }
 
-    onSave(updated);
+    await onSave({
+      id: cat.id,
+      name: name.trim(),
+      imageFile, // optional
+    });
+
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selected) return;
 
+    const cat = categories.find((c) => c.title === selected);
+    if (!cat?.id) return;
+
     if (window.confirm("Are you sure you want to delete this category?")) {
-      const updated = categories.filter((c) => c.title !== selected);
-      onDelete(updated);
+      await onDelete({ id: cat.id });
       onClose();
     }
   };
@@ -69,14 +72,15 @@ export default function EditCategoryModal({
   return (
     <div className="fixed inset-0 bg-[#E8F5EC]/70 backdrop-blur-sm flex justify-center items-center z-[9999]">
       <div className="bg-white p-6 rounded-xl shadow-lg w-[380px] border border-[#CDE7D3]">
-
         <h2 className="text-lg font-semibold text-[#124734] mb-4">
           Edit Category
         </h2>
 
         {/* Select Category */}
         <div className="mb-4">
-          <label className="text-sm text-gray-600 mb-1 block">Select Category</label>
+          <label className="text-sm text-gray-600 mb-1 block">
+            Select Category
+          </label>
           <select
             className="border rounded-md p-2 w-full"
             value={selected}
@@ -84,7 +88,7 @@ export default function EditCategoryModal({
           >
             <option value="">-- Choose Category --</option>
             {categories.map((c) => (
-              <option key={c.title} value={c.title}>
+              <option key={c.id || c.title} value={c.title}>
                 {c.title}
               </option>
             ))}
@@ -112,7 +116,9 @@ export default function EditCategoryModal({
 
             {/* Category Name */}
             <div className="mb-4">
-              <label className="text-sm text-gray-600 mb-1">Category Name</label>
+              <label className="text-sm text-gray-600 mb-1">
+                Category Name
+              </label>
               <input
                 className="border rounded-md p-2 w-full"
                 value={name}
@@ -149,7 +155,6 @@ export default function EditCategoryModal({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

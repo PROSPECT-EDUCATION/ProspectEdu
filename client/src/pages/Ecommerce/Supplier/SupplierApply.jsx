@@ -34,6 +34,9 @@ const SupplierApply = () => {
 
   const [customCategory, setCustomCategory] = useState("");
 
+  // ✅ NEW: admin predefined categories
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
   const [form, setForm] = useState({
     shopName: "",
     ownerName: "",
@@ -81,16 +84,39 @@ const SupplierApply = () => {
     }
   }, [accessToken, user, navigate]);
 
+  // ✅ Load admin categories (predefined)
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAdminCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        const items = res?.data?.categories || [];
+        const names = items.map((c) => c.name).filter(Boolean);
+
+        // ✅ keep existing "Others" option for custom
+        const next = [...names, "Others"];
+
+        if (!mounted) return;
+        setCategoryOptions(next);
+      } catch {
+        if (!mounted) return;
+        // fallback: still keep Others
+        setCategoryOptions(["Others"]);
+      }
+    };
+
+    loadAdminCategories();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const fetchMySupplierProfile = async () => {
     setError("");
     setLoading(true);
     try {
-      // ✅ IMPORTANT: avoid double /api/v1 if your api baseURL already has it
       const res = await api.get("/suppliers/me", authHeaders);
-
-      // Backend recommended responses:
-      // 1) { exists:false }
-      // 2) { exists:true, status:"pending"/"approved"/"rejected", ...profileFields }
       setSupplierProfile(res.data);
     } catch (e) {
       setError(e?.response?.data?.message || "Failed to load supplier status.");
@@ -162,12 +188,10 @@ const SupplierApply = () => {
     if (!form.pickupAddress.pincode.trim()) return "Pincode is required.";
     if (!form.categories.length) return "Select at least one category.";
 
-    // ✅ NEW: if Others selected, custom type is required
     if (form.categories.includes("Others") && !customCategory.trim()) {
       return "Please specify product type for 'Others' category.";
     }
 
-    // ✅ PAN mandatory, GSTIN optional
     if (!form.kyc.pan.trim()) return "PAN is mandatory.";
 
     return "";
@@ -189,7 +213,6 @@ const SupplierApply = () => {
           ]
         : form.categories;
 
-      // Send only useful data (trim empty optional blocks)
       const payload = {
         shopName: form.shopName.trim(),
         ownerName: form.ownerName.trim(),
@@ -206,7 +229,6 @@ const SupplierApply = () => {
           country: form.pickupAddress.country.trim() || "India",
         },
 
-        // gstin optional, pan mandatory
         kyc: {
           gstin: form.kyc.gstin.trim(),
           pan: form.kyc.pan.trim(),
@@ -219,10 +241,7 @@ const SupplierApply = () => {
         },
       };
 
-      // ✅ IMPORTANT: avoid double /api/v1 if your api baseURL already has it
       await api.post("/suppliers/apply", payload, authHeaders);
-
-      // After apply, refresh status
       await fetchMySupplierProfile();
     } catch (e2) {
       setError(e2?.response?.data?.message || "Application submission failed.");
@@ -239,24 +258,11 @@ const SupplierApply = () => {
     </div>
   );
 
-  // If user already supplier role, you may prefer to redirect to dashboard
   useEffect(() => {
     if (user?.role === "supplier") {
-      // optional: if you want supplier to not see apply page
-      // navigate("/supplier-dashboard", { replace: true });
+      // optional
     }
   }, [user, navigate]);
-
-  const categoryOptions = [
-    "Engineering Books",
-    "Law Books",
-    "Management Books",
-    "Merchandise",
-    "Stationery",
-    "Notes & PDFs",
-    "Medical Books",
-    "Others",
-  ];
 
   return (
     <>
@@ -295,7 +301,6 @@ const SupplierApply = () => {
             </div>
           ) : (
             <>
-              {/* If profile exists => show status */}
               {supplierProfile?.exists ? (
                 <div className="mt-8">
                   {supplierProfile.status === "pending" ? (
@@ -355,7 +360,6 @@ const SupplierApply = () => {
                       <div className="flex gap-3 flex-wrap mt-4">
                         <button
                           onClick={() => {
-                            // Allow re-apply UX: clear existing UI locally
                             setSupplierProfile({ exists: false });
                             setError("");
                           }}
@@ -374,7 +378,6 @@ const SupplierApply = () => {
                   )}
                 </div>
               ) : (
-                /* If profile does NOT exist => show apply form */
                 <div className="mt-8 bg-white border rounded-2xl p-6 shadow-sm">
                   <h2 className="text-2xl font-bold text-[#124734]">
                     Apply to Become a Supplier
