@@ -5,6 +5,7 @@ import {
   myPurchasedSeries,
   hasPurchased,
   mySeriesDetails, // ✅ NEW
+  adminListPurchases,
 } from "./testPurchase.controller.js";
 
 const router = Router();
@@ -15,5 +16,6 @@ router.get("/has/:id", requireAuth, hasPurchased);
 
 // ✅ This is REQUIRED because frontend calls this:
 router.get("/me/series/:seriesId", requireAuth, mySeriesDetails);
+router.get("/admin/all", requireAuth, adminListPurchases);
 
 export default router;

@@ -2,191 +2,196 @@ import Supplier from "../suppliers/supplier.model.js";
 import Product from "./product.model.js";
 import { createProductSchema } from "./product.validators.js";
 import { uploadBufferToCloudinary } from "../../utils/cloudinaryUpload.js";
+import Category from "../categories/category.model.js";
 
-// ✅ Shop page predefined categories (same as your UI filter)
-const PREDEFINED_CATEGORIES = [
-  "IT Books",
-  "Electrical Books",
-  "Civil Books",
-  "Law Books",
-  "Medical Books",
-  "Management Books",
-  "Merchandise",
-];
+/* ---------------- HELPERS ---------------- */
+
+async function ensureCategoryExists(name) {
+  const raw = (name || "").trim();
+  if (!raw) return false;
+
+  const found = await Category.findOne({
+    name: { $regex: new RegExp(`^${raw}$`, "i") },
+  }).lean();
+
+  return !!found;
+}
+
+async function uploadImages(req) {
+  const files = req.files || [];
+  const urls = [];
+
+  for (const f of files) {
+    const uploaded = await uploadBufferToCloudinary(f.buffer, "products");
+    urls.push(uploaded.secure_url);
+  }
+
+  return urls;
+}
+
+/* ---------------- SUPPLIER CREATE ---------------- */
 
 export async function createProduct(req, res, next) {
   try {
-    // multipart/form-data => req.body values are strings
-    const body = {
-      ...req.body,
-      price: req.body.price !== undefined ? Number(req.body.price) : req.body.price,
-      offerPrice:
-        req.body.offerPrice !== undefined && req.body.offerPrice !== ""
-          ? Number(req.body.offerPrice)
-          : 0,
-      quantity: req.body.quantity !== undefined ? Number(req.body.quantity) : req.body.quantity,
-      images: [], // we will set after cloudinary upload
-    };
-
-    const parsed = createProductSchema.safeParse(body);
+    const parsed = createProductSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: parsed.error.flatten(),
-      });
+      return res.status(400).json({ success: false, errors: parsed.error });
     }
 
-    // find supplier by logged-in user
     const supplier = await Supplier.findOne({ userId: req.user.id });
-    if (!supplier) {
-      return res.status(404).json({
-        success: false,
-        message: "Supplier profile not found",
-      });
+    if (!supplier || supplier.status !== "approved") {
+      return res.status(403).json({ success: false, message: "Supplier not approved" });
     }
 
-    // allow only approved suppliers
-    if (supplier.status !== "approved") {
-      return res.status(403).json({
-        success: false,
-        message: "Supplier not approved yet",
-      });
+    if (!(await ensureCategoryExists(parsed.data.category))) {
+      return res.status(400).json({ success: false, message: "Invalid category" });
     }
 
-    // ✅ upload images to Cloudinary (if any)
-    const files = req.files || [];
-    const imageUrls = [];
+    const images = await uploadImages(req);
 
-    for (const f of files) {
-      const uploaded = await uploadBufferToCloudinary(f.buffer, "products");
-      imageUrls.push(uploaded.secure_url);
-    }
-
-    const rawCategory = (parsed.data.category || "").trim();
-
-    // ✅ If category is not in predefined list -> send it to "Other"
-    const isPredefined = PREDEFINED_CATEGORIES.some(
-      (c) => c.toLowerCase() === rawCategory.toLowerCase()
-    );
-
-    const finalCategory = isPredefined ? rawCategory : "Other";
-    const finalCustomCategory = isPredefined ? "" : rawCategory;
-
-    const doc = await Product.create({
+    const product = await Product.create({
       supplierId: supplier._id,
       createdBy: req.user.id,
-
-      name: parsed.data.name.trim(),
-      description: parsed.data.description?.trim() || "",
-
-      category: finalCategory,
-      customCategory: finalCustomCategory,
-
-      price: parsed.data.price,
-      offerPrice: parsed.data.offerPrice,
-      quantity: parsed.data.quantity,
-
-      images: imageUrls, // ✅ STORE CLOUDINARY URLS
+      ...parsed.data,
+      images,
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "Product created",
-      product: doc,
-    });
-  } catch (err) {
-    next(err);
+    res.status(201).json({ success: true, product });
+  } catch (e) {
+    next(e);
   }
 }
 
-// ✅ PUBLIC: for shop page (everyone can see)
-export async function listPublicProducts(req, res, next) {
-  try {
-    const products = await Product.find({ status: "active" })
-      .sort({ createdAt: -1 })
-      .populate("supplierId", "shopName")
-      .lean();
+/* ---------------- ADMIN CREATE ---------------- */
 
-    return res.json({
-      success: true,
-      products,
+export async function createProductAdmin(req, res, next) {
+  try {
+    const parsed = createProductSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, errors: parsed.error });
+    }
+
+    if (!(await ensureCategoryExists(parsed.data.category))) {
+      return res.status(400).json({ success: false, message: "Invalid category" });
+    }
+
+    const images = await uploadImages(req);
+
+    const product = await Product.create({
+      supplierId: null,
+      createdBy: req.user.id,
+      ...parsed.data,
+      images,
     });
-  } catch (err) {
-    next(err);
+
+    res.status(201).json({ success: true, product });
+  } catch (e) {
+    next(e);
   }
 }
 
-export async function myProducts(req, res, next) {
+/* ---------------- ADMIN LIST ---------------- */
+
+export async function adminMyProducts(req, res, next) {
   try {
-    const supplier = await Supplier.findOne({ userId: req.user.id });
-    if (!supplier) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Supplier profile not found" });
-    }
+    const products = await Product.find({
+      createdBy: req.user.id,
+      supplierId: null,
+    }).sort({ createdAt: -1 });
 
-    const products = await Product.find({ supplierId: supplier._id }).sort({
-      createdAt: -1,
-    });
-
-    return res.json({ success: true, products });
-  } catch (err) {
-    next(err);
+    res.json({ success: true, products });
+  } catch (e) {
+    next(e);
   }
 }
 
-export async function deleteProduct(req, res, next) {
+/* ---------------- ADMIN TOGGLES ---------------- */
+
+export async function adminToggleStock(req, res, next) {
   try {
-    const supplier = await Supplier.findOne({ userId: req.user.id });
-    if (!supplier) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Supplier profile not found" });
-    }
-
-    const deleted = await Product.findOneAndDelete({
-      _id: req.params.id,
-      supplierId: supplier._id,
-    });
-
-    if (!deleted) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found or not allowed" });
-    }
-
-    return res.json({ success: true, message: "Product removed", deleted });
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function updateStock(req, res, next) {
-  try {
-    const supplier = await Supplier.findOne({ userId: req.user.id });
-    if (!supplier) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Supplier profile not found" });
-    }
-
-    const { outOfStock } = req.body;
-
-    const updated = await Product.findOneAndUpdate(
-      { _id: req.params.id, supplierId: supplier._id },
-      { $set: { outOfStock: !!outOfStock } },
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, createdBy: req.user.id, supplierId: null },
+      { outOfStock: !!req.body.outOfStock },
       { new: true }
     );
 
-    if (!updated) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found or not allowed" });
-    }
+    if (!product) return res.status(404).json({ success: false });
 
-    return res.json({ success: true, message: "Stock updated", product: updated });
-  } catch (err) {
-    next(err);
+    res.json({ success: true, product });
+  } catch (e) {
+    next(e);
   }
 }
+
+export async function adminToggleTrending(req, res, next) {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isTrending: !!req.body.isTrending },
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+
+    res.json({ success: true, product });
+  } catch (e) {
+    next(e);
+  }
+}
+
+
+/* ---------------- PUBLIC ---------------- */
+
+export async function listPublicProducts(req, res, next) {
+  try {
+    const products = await Product.find({ status: "active" }).sort({ createdAt: -1 });
+    res.json({ success: true, products });
+  } catch (e) {
+    next(e);
+  }
+}
+
+// ✅ ADMIN DELETE PRODUCT
+export async function adminDeleteProduct(req, res, next) {
+  try {
+    const deleted = await Product.findOneAndDelete({
+      _id: req.params.id,
+      createdBy: req.user.id,   // only admin who created it
+      supplierId: null,         // ensure admin product
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found or not allowed",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+// ✅ ADMIN: list ALL supplier-added products
+
+
+export async function adminAllSupplierProducts(req, res, next) {
+  try {
+    const products = await Product.find({ supplierId: { $ne: null } })
+      .populate({
+        path: "supplierId",
+        select: "shopName ownerName userId",
+        populate: { path: "userId", select: "name email" }, // name from signup user
+      })
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, products });
+  } catch (e) {
+    next(e);
+  }
+}
+
+

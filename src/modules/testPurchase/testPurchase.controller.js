@@ -116,3 +116,18 @@ export const mySeriesDetails = async (req, res, next) => {
     next(e);
   }
 };
+// ✅ ADMIN: list all paid purchases (for fees collection style page)
+export const adminListPurchases = async (req, res, next) => {
+  try {
+    const items = await TestPurchase.find({ status: "PAID" })
+      .populate("user", "name email role")         // adjust fields if your User schema differs
+      .populate("testSeries")                      // brings title, price, etc.
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, data: items });
+  } catch (e) {
+    next(e);
+  }
+};
+

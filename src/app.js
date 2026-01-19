@@ -30,6 +30,9 @@ import testPurchaseRoutes from "./modules/testPurchase/testPurchase.routes.js";
 import blogRoutes from "./modules/blog/blog.routes.js";
 import announcementRoutes from "./modules/announcements/announcement.routes.js";
 import liveTestsRoutes from "./modules/liveTests/liveTests.routes.js";
+import parentDoubtRoutes from "./modules/parentDoubts/parentDoubt.routes.js";
+import supportTicketRoutes from "./modules/support/supportTicket.routes.js";
+import categoryRoutes from "./modules/categories/category.routes.js";
 
 
 
@@ -73,6 +76,9 @@ export function createApp() {
   app.use("/api/v1/blogs", blogRoutes);
  app.use("/api/v1/announcements", announcementRoutes);
  app.use("/api/v1/live-tests", liveTestsRoutes);
+  app.use("/api/v1/parentdoubts", parentDoubtRoutes);
+  app.use("/api/v1/support-tickets", supportTicketRoutes);
+  app.use("/api/v1/categories", categoryRoutes);
 
 
 

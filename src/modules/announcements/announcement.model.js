@@ -5,6 +5,14 @@ const announcementSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true, maxlength: 140 },
     description: { type: String, required: true, trim: true, maxlength: 5000 },
 
+    category: {
+  type: String,
+  trim: true,
+  default: "General",
+  maxlength: 40,
+},
+
+
     // ✅ new: who to send
     recipients: {
       type: [String],

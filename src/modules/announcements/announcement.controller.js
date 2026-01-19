@@ -8,7 +8,7 @@ import AnnouncementRead from "./announcementRead.model.js";
  */
 export async function createAnnouncement(req, res, next) {
   try {
-    const { title, description, recipients } = req.body;
+    const { title, description, recipients,category } = req.body;
 
     if (!title?.trim()) return res.status(400).json({ success: false, message: "Title required" });
     if (!description?.trim())
@@ -22,6 +22,7 @@ export async function createAnnouncement(req, res, next) {
       description: description.trim(),
       recipients,
       createdBy: req.user.id,
+     category: category || "General",
     });
 
     return res.status(201).json({ success: true, data: doc });
@@ -75,11 +76,12 @@ export async function getAnnouncement(req, res, next) {
  */
 export async function updateAnnouncement(req, res, next) {
   try {
-    const { title, description, recipients } = req.body;
+    const { title, description, recipients, category  } = req.body;
 
     const update = {};
     if (title !== undefined) update.title = String(title).trim();
     if (description !== undefined) update.description = String(description).trim();
+    if (category !== undefined) update.category = String(category || "General").trim();
     if (recipients !== undefined) update.recipients = recipients;
 
     if (

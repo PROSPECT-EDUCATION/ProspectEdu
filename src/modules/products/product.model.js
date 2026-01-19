@@ -2,12 +2,15 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
+    // Supplier product OR Admin product
     supplierId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Supplier",
-      required: true,
+      default: null,
       index: true,
     },
+
+    // Admin or Supplier user who created product
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -18,16 +21,18 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
 
-    // ✅ category filter will use this (Predefined OR "Other")
-    category: { type: String, required: true },
-
-    // ✅ when supplier enters a custom category, store here
+    // Admin predefined category name
+    category: { type: String, required: true, trim: true },
     customCategory: { type: String, default: "" },
 
     price: { type: Number, required: true, min: 0 },
     offerPrice: { type: Number, required: true, min: 0 },
-    quantity: { type: Number, required: true, min: 0, default: 0 },
+    quantity: { type: Number, required: true, min: 0 },
+
     outOfStock: { type: Boolean, default: false },
+
+    // 🔥 NEW: Trending toggle
+    isTrending: { type: Boolean, default: false, index: true },
 
     images: [{ type: String }],
 
