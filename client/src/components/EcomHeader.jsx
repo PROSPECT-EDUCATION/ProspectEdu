@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import logoImg from "../assets/logo.webp";
-import { FiShoppingBag, FiHeart, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiShoppingBag,
+  FiHeart,
+  FiShoppingCart,
+  FiMenu,
+  FiX,
+} from "react-icons/fi";
 import { FaShoppingBag, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { IoSearch, IoPersonCircle } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 
-
-
 const AUTH_KEY = "isLoggedIn";
 
+/** ---------- Auth Helpers ---------- */
 function readStoredUser() {
   const raw = sessionStorage.getItem("user") || localStorage.getItem("user");
   if (!raw) return null;
@@ -20,7 +25,37 @@ function readStoredUser() {
 }
 
 function hasToken() {
-  return !!(sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken"));
+  return !!(
+    sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken")
+  );
+}
+
+/** ---------- Product Helpers (works with many schemas) ---------- */
+function getProductTitle(p) {
+  return (p?.title || p?.name || p?.productName || "").toString();
+}
+
+function getProductId(p) {
+  return (p?._id || p?.id || p?.productId || getProductTitle(p)).toString();
+}
+
+function getProductImage(p) {
+  return (
+    p?.thumbnail ||
+    p?.image ||
+    p?.img ||
+    (Array.isArray(p?.images) ? p.images[0] : null) ||
+    "https://via.placeholder.com/80?text=Prod"
+  );
+}
+
+function slugify(str) {
+  return str
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
 }
 
 const EcomHeader = () => {
@@ -46,35 +81,115 @@ const EcomHeader = () => {
 
   const [userName, setUserName] = useState("");
 
-  
+  // ✅ Products loaded from DB
+  const [allProducts, setAllProducts] = useState([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
 
+  /**
+   * ✅ IMPORTANT:
+   * If your Vite proxy is configured, keep this:
+   *   "/api/v1/products"
+   *
+   * If proxy is NOT configured, use full backend URL:
+   *   "http://localhost:8080/api/v1/products"
+   *   (change 8080 to your backend port)
+   */
+  const PRODUCTS_API = "/api/v1/products";
+
+  /** ---------- Load products once for search ---------- */
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadProducts() {
+      try {
+        const res = await fetch(PRODUCTS_API, { signal: controller.signal });
+
+        // if backend returns non-json error page (like HTML), this avoids crash
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          const text = await res.text();
+          console.error("Products API did not return JSON:", text);
+          setAllProducts([]);
+          setProductsLoaded(true);
+          return;
+        }
+
+        const data = await res.json();
+
+        // supports: [] OR {products:[]} OR {data:[]} OR {items:[]} OR {success:true, data:{products:[]}}
+        const list =
+          Array.isArray(data)
+            ? data
+            : Array.isArray(data?.products)
+            ? data.products
+            : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.items)
+            ? data.items
+            : Array.isArray(data?.data?.products)
+            ? data.data.products
+            : [];
+
+        setAllProducts(list);
+      } catch (e) {
+        if (e?.name !== "AbortError") {
+          console.error("Header product load failed:", e);
+          setAllProducts([]);
+        }
+      } finally {
+        setProductsLoaded(true);
+      }
+    }
+
+    loadProducts();
+    return () => controller.abort();
+  }, []);
+
+  /** ---------- Search ---------- */
   const handleSearch = (value) => {
     setSearchQuery(value);
 
-    if (!value.trim()) return setSearchResults([]);
+    const q = value.trim().toLowerCase();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
 
-    const results = allProducts.filter((p) =>
-      p.title.toLowerCase().includes(value.toLowerCase())
-    );
+    const results = allProducts.filter((p) => {
+      const title = getProductTitle(p).toLowerCase();
+      const category = (p?.category || p?.categoryName || "")
+        .toString()
+        .toLowerCase();
+      const brand = (p?.brand || "").toString().toLowerCase();
+
+      // You can add more fields if you want:
+      const desc = (p?.description || "").toString().toLowerCase();
+
+      return (
+        title.includes(q) ||
+        category.includes(q) ||
+        brand.includes(q) ||
+        desc.includes(q)
+      );
+    });
 
     setSearchResults(results);
   };
 
-  // Detect scrolling
+  /** ---------- Scrolling effect ---------- */
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 80);
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ✅ Keep header synced when login happens from LoginForm (it dispatches authChange)
+  /** ---------- Sync auth status with storage + custom event ---------- */
   useEffect(() => {
     const syncAuth = () => {
       const user = readStoredUser();
       const tokenOk = hasToken();
-
       const loggedInNow = Boolean(user && tokenOk);
+
       setIsLoggedIn(loggedInNow);
       setUserName(user?.fullName || user?.name || "");
       if (!loggedInNow) setOpenMenu(false);
@@ -82,7 +197,7 @@ const EcomHeader = () => {
 
     syncAuth();
     window.addEventListener("authChange", syncAuth);
-    window.addEventListener("storage", syncAuth); // if other tabs change localStorage
+    window.addEventListener("storage", syncAuth);
 
     return () => {
       window.removeEventListener("authChange", syncAuth);
@@ -90,8 +205,8 @@ const EcomHeader = () => {
     };
   }, []);
 
+  /** ---------- Logout ---------- */
   const doLogout = () => {
-    // ✅ clear everything related to auth
     localStorage.setItem(AUTH_KEY, "false");
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("user");
@@ -107,19 +222,68 @@ const EcomHeader = () => {
     window.location.href = "/ecommerce-home";
   };
 
+  /** ---------- Render Search Results (reusable) ---------- */
+  const SearchDropdown = ({ isMobile = false }) => {
+    if (!searchQuery) return null;
+
+    return (
+      <div
+        className={`absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-2 max-h-64 overflow-y-auto z-[9999] ${
+          isMobile ? "" : ""
+        }`}
+      >
+        {!productsLoaded ? (
+          <p className="p-4 text-gray-500 text-sm">Loading products...</p>
+        ) : searchResults.length === 0 ? (
+          <p className="p-4 text-gray-500 text-sm">No product found</p>
+        ) : (
+          searchResults.map((p) => {
+            const title = getProductTitle(p);
+            const img = getProductImage(p);
+
+            return (
+              <div
+                key={getProductId(p)}
+                className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer"
+                onClick={() => {
+                  navigate(`/product/${slugify(title)}`, { state: p });
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  if (isMobile) setMobileMenu(false);
+                }}
+              >
+                <img
+                  src={img}
+                  alt={title}
+                  className="w-10 h-10 object-contain"
+                />
+                <div className="flex flex-col">
+                  <p className="font-medium text-sm">{title}</p>
+                  {(p?.category || p?.categoryName) && (
+                    <p className="text-xs text-gray-500">
+                      {(p?.category || p?.categoryName).toString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  };
+
   return (
     <header
       className={`w-full bg-white fixed top-0 left-0 z-50 shadow-md transition-all duration-300 
       ${isScrolled ? "py-1 shadow-lg" : "py-0"}`}
     >
-      {/* Top Bar */}
       {!isScrolled && (
         <div className="w-full bg-[#124734] text-white text-center py-2 text-xs sm:text-sm font-medium">
           Welcome to the Store
         </div>
       )}
 
-      {/* MAIN NAV */}
       <div
         className={`max-w-7xl mx-auto flex items-center justify-between 
         ${isScrolled ? "py-2 px-4" : "py-4 sm:py-6 px-3 sm:px-6"}`}
@@ -153,7 +317,7 @@ const EcomHeader = () => {
 
         {/* DESKTOP NAV */}
         <div className="hidden sm:flex items-center gap-6 text-[#124734] font-medium">
-          {/* SEARCH BAR */}
+          {/* SEARCH */}
           <div className="relative w-64 md:w-80">
             <div className="flex items-center bg-[#A7E1B2] rounded-full shadow-lg py-2 px-4">
               <IoSearch size={20} className="text-[#124734]" />
@@ -166,34 +330,10 @@ const EcomHeader = () => {
               />
             </div>
 
-            {/* DESKTOP SEARCH RESULTS */}
-            {searchQuery && (
-              <div className="absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-2 max-h-64 overflow-y-auto z-[9999]">
-                {searchResults.length === 0 ? (
-                  <p className="p-4 text-gray-500 text-sm">No product found</p>
-                ) : (
-                  searchResults.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {
-                          state: p,
-                        });
-                        setSearchQuery("");
-                        setSearchResults([]);
-                      }}
-                    >
-                      <img src={p.img} className="w-10 h-10 object-contain" />
-                      <p className="font-medium text-sm">{p.title}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+            <SearchDropdown />
           </div>
 
-          {/* USER MENU / LOGIN BUTTON */}
+          {/* USER MENU / LOGIN */}
           {isLoggedIn ? (
             <div className="relative">
               <button
@@ -273,11 +413,10 @@ const EcomHeader = () => {
         </div>
       </div>
 
-      {/* ⭐ MOBILE SLIDE MENU ⭐ */}
+      {/* MOBILE MENU */}
       {mobileMenu && (
         <div className="fixed inset-0 bg-black/50 z-[9999]">
-          <div className="absolute right-0 top-0 w-64 h-full bg-white shadow-xl p-6">
-            {/* CLOSE BUTTON */}
+          <div className="absolute right-0 top-0 w-72 h-full bg-white shadow-xl p-6">
             <button
               onClick={() => setMobileMenu(false)}
               className="text-2xl text-[#124734] mb-6"
@@ -298,40 +437,15 @@ const EcomHeader = () => {
                 />
               </div>
 
-              {/* MOBILE SEARCH RESULTS */}
-              {searchQuery && (
-                <div className="absolute left-0 right-0 bg-white rounded-lg shadow-xl mt-2 max-h-64 overflow-y-auto z-[9999]">
-                  {searchResults.length === 0 ? (
-                    <p className="p-3 text-gray-500">No product found</p>
-                  ) : (
-                    searchResults.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          navigate(`/product/${p.title.toLowerCase().replace(/ /g, "-")}`, {
-                            state: p,
-                          });
-                          setMobileMenu(false);
-                          setSearchQuery("");
-                        }}
-                      >
-                        <img src={p.img} className="w-10 h-10 object-contain" />
-                        <p>{p.title}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
+              <SearchDropdown isMobile />
             </div>
 
-            {/* MOBILE MENU LINKS */}
+            {/* MOBILE LINKS */}
             <div className="flex flex-col gap-5 text-[#124734] text-lg">
               <button onClick={() => navigate("/shop")}>Shop</button>
               <button onClick={() => navigate("/wishlist")}>Wishlist</button>
               <button onClick={() => navigate("/my-cart")}>My Cart</button>
 
-              {/* ✅ only show profile/orders/logout if logged in */}
               {isLoggedIn ? (
                 <>
                   <button onClick={() => navigate("/my-profile")}>My Profile</button>
