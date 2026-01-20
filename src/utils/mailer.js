@@ -1,43 +1,86 @@
+// src/utils/mailer.js
 import nodemailer from "nodemailer";
 
-export function makeTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    throw new Error("SMTP config missing. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env");
-  }
-  console.log("SMTP_USER =", process.env.SMTP_USER);
-console.log("SMTP_PASS =", process.env.SMTP_PASS ? "SET" : "MISSING");
-console.log("SMTP_HOST =", process.env.SMTP_HOST, "PORT =", process.env.SMTP_PORT);
-
-
+function makeTransporter() {
   return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   });
 }
 
-export async function sendDoubtAnswerEmail({ to, name, doubtType, doubt, answer }) {
+/* ---------------- EXISTING: Doubt Answer Email ---------------- */
+export async function sendDoubtAnswerEmail({ to, parentName, teacherName, subject, question, answer }) {
   const transporter = makeTransporter();
 
-  const subject = `Response to your doubt (${doubtType})`;
+  const safeParent = parentName?.trim() || "Parent";
+  const safeTeacher = teacherName?.trim() || "Teacher";
+
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-      <h2 style="color:#124734;">Hello ${name || "Student"},</h2>
-      <p>We received your doubt and here is our response:</p>
-      <div style="background:#F9FAFB;border:1px solid #e5e7eb;padding:12px;border-radius:10px;">
-        <p><b>Doubt Type:</b> ${doubtType}</p>
-        <p><b>Your Doubt:</b><br/> ${String(doubt || "").replace(/\n/g, "<br/>")}</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color:#111827;">
+      <h2 style="color:#124734; margin:0 0 12px;">Hello ${safeParent},</h2>
+      <p style="margin:0 0 12px;">
+        Your doubt has been answered by <b>${safeTeacher}</b>.
+      </p>
+
+      <div style="background:#F9FAFB;border:1px solid #e5e7eb;padding:14px;border-radius:12px;">
+        <p style="margin:0 0 8px;"><b>Subject:</b> ${subject || "-"}</p>
+        <p style="margin:0 0 8px;"><b>Your Question:</b> ${question || "-"}</p>
+        <p style="margin:0;"><b>Teacher's Answer:</b> ${answer || "-"}</p>
       </div>
-      <div style="margin-top:12px;background:#E7F7E8;border:1px solid #a7e1b2;padding:12px;border-radius:10px;">
-        <p><b>Answer:</b><br/> ${String(answer || "").replace(/\n/g, "<br/>")}</p>
+
+      <p style="margin:18px 0 0; color:#6b7280;">
+        Regards,<br/>
+        <b>Prospect Education Team</b>
+      </p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    to,
+    subject: `Doubt Answered: ${subject || "Your Query"}`,
+    html,
+  });
+}
+
+/* ---------------- NEW: Product Restock Email ---------------- */
+export async function sendProductRestockEmail({ to, name, productName, productUrl }) {
+  const transporter = makeTransporter();
+
+  const safeName = name?.trim() ? name.trim() : "Customer";
+  const subject = `Back in stock: ${productName} 🎉`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color:#111827;">
+      <h2 style="margin:0 0 12px; color:#124734;">Hello ${safeName},</h2>
+
+      <p style="margin:0 0 12px;">
+        Good news! The product you requested is now <b>back in stock</b>.
+      </p>
+
+      <div style="background:#F9FAFB;border:1px solid #e5e7eb;padding:14px;border-radius:12px;">
+        <p style="margin:0;"><b>Product:</b> ${productName}</p>
       </div>
-      <p style="margin-top:16px;color:#6b7280;">Prospect Education Team</p>
+
+      ${
+        productUrl
+          ? `<p style="margin:14px 0 0;">
+               <a href="${productUrl}" style="display:inline-block;background:#124734;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;">
+                 View Product
+               </a>
+             </p>`
+          : `<p style="margin:14px 0 0;">Open the app and check the product page.</p>`
+      }
+
+      <p style="margin:18px 0 0; color:#6b7280;">
+        Thanks for shopping with us!<br/>
+        <b>Prospect Education Store Team</b>
+      </p>
     </div>
   `;
 

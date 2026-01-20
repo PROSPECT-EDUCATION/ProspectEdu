@@ -33,7 +33,7 @@ import liveTestsRoutes from "./modules/liveTests/liveTests.routes.js";
 import parentDoubtRoutes from "./modules/parentDoubts/parentDoubt.routes.js";
 import supportTicketRoutes from "./modules/support/supportTicket.routes.js";
 import categoryRoutes from "./modules/categories/category.routes.js";
-
+import razorpayRoutes from "./modules/payments/razorpay.routes.js";
 
 
 
@@ -79,7 +79,7 @@ export function createApp() {
   app.use("/api/v1/parentdoubts", parentDoubtRoutes);
   app.use("/api/v1/support-tickets", supportTicketRoutes);
   app.use("/api/v1/categories", categoryRoutes);
-
+  app.use("/api/v1/payments", razorpayRoutes);
 
 
 

@@ -11,12 +11,17 @@ import {
   adminDeleteProduct,
   listPublicProducts,
   adminAllSupplierProducts,
+  supplierMyProducts,
+  notifyMeWhenInStock, // ✅ NEW
 } from "./product.controller.js";
 
 const router = express.Router();
 
 /* -------- PUBLIC -------- */
 router.get("/", listPublicProducts);
+
+// ✅ NEW: Notify me (logged-in user)
+router.post("/:id/notify", requireAuth, notifyMeWhenInStock);
 
 /* -------- SUPPLIER -------- */
 router.post(
@@ -57,13 +62,14 @@ router.patch(
   adminToggleTrending
 );
 
-// ✅ DELETE (THIS WAS MISSING)
+// ✅ DELETE
 router.delete(
   "/admin/:id",
   requireAuth,
   requireRole("admin"),
   adminDeleteProduct
 );
+
 // ✅ ADMIN: all supplier products
 router.get(
   "/admin/supplier-products",
@@ -71,13 +77,12 @@ router.get(
   requireRole("admin"),
   adminAllSupplierProducts
 );
+
 router.get(
-  "/admin/supplier-products",
+  "/mine",
   requireAuth,
-  requireRole("admin"),
-  adminAllSupplierProducts
+  requireRole("supplier"),
+  supplierMyProducts
 );
-
-
 
 export default router;

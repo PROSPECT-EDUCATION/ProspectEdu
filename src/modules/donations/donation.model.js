@@ -1,3 +1,4 @@
+// src/modules/donations/donation.model.js
 import mongoose from "mongoose";
 
 const donationSchema = new mongoose.Schema(
@@ -17,6 +18,16 @@ const donationSchema = new mongoose.Schema(
     country: { type: String, required: true, trim: true },
 
     pan: { type: String, default: "", trim: true },
+
+    // 🔥 NEW: payment related
+    status: {
+      type: String,
+      enum: ["CREATED", "CONFIRMED", "FAILED"],
+      default: "CREATED",
+    },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    razorpaySignature: { type: String },
   },
   { timestamps: true }
 );

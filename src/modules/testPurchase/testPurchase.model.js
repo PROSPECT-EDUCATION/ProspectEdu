@@ -8,6 +8,11 @@ const TestPurchaseSchema = new mongoose.Schema(
     status: { type: String, enum: ["PAID", "FAILED"], default: "PAID" },
     provider: { type: String, default: "MANUAL" },
     transactionId: { type: String, default: "" },
+
+    // ✅ Razorpay details (needed for admin + tracking)
+    razorpayOrderId: { type: String, default: "" },
+    razorpayPaymentId: { type: String, default: "" },
+    razorpaySignature: { type: String, default: "" },
   },
   { timestamps: true }
 );

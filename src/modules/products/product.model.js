@@ -41,6 +41,16 @@ const productSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+
+    // ✅ NEW: Restock notification list
+    // Stores email from signup user who clicked "Notify Me"
+    restockNotifyUsers: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        email: { type: String, required: true, lowercase: true, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
