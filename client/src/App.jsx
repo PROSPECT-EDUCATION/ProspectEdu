@@ -136,7 +136,9 @@ import StudentAnnouncementsPage from "./pages/Student/StudentAnnouncementsPage";
 import TeacherAnnouncementsPage from "./pages/Teacher/TeacherAnnouncementsPage";
 import ParentMessagesPage from "./pages/Parent/ParentMessagesPage";
 import TeacherParentDoubtsPage from "./pages/Teacher/TeacherParentDoubtsPage";
-
+import SupplierApprovalPage from './pages/Admin/Ecom/SupplierApprovalPage';
+import DonationConfirmation from './pages/Donation/DonationConfirmation';
+  
 
 
 
@@ -238,6 +240,9 @@ function App() {
       <Route path="/student/series/:seriesId/tests/:testId/live" element={<LiveTest />} />
   <Route path="/parent/messages" element={<ParentMessagesPage />} />
 <Route path="/teacher/doubts" element={<TeacherParentDoubtsPage />} />
+<Route path="/admin/ecom/suppliers" element={<SupplierApprovalPage />} />
+<Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
+
 
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />

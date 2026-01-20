@@ -6,6 +6,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Footer from "../../components/Footer";
 import { api } from "../../lib/api";
 
+// ✅ helper to load Razorpay script (Checkout.js)
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 const Checkout = () => {
   const { addresses, addAddress, fetchAddresses } = useAddress();
   const { cart } = useCart();
@@ -96,69 +109,134 @@ const Checkout = () => {
   const shipping = totalPrice < 1000 ? 99 : 0;
   const grandTotal = totalPrice + shipping;
 
-  // ✅ PAY NOW: create order in DB
-   const handlePayNow = async () => {
-  try {
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      navigate("/login", { state: { from: "ecom-header" } });
-      return;
+  // ✅ PAY NOW: Razorpay flow (create-order -> open checkout -> verify -> confirm)
+  const handlePayNow = async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      if (!token) {
+        navigate("/login", { state: { from: "ecom-header" } });
+        return;
+      }
+
+      if (!checkoutItems || checkoutItems.length === 0) {
+        alert("Your cart is empty.");
+        return;
+      }
+
+      const selected = addresses.find((a) => (a._id || a.id) === selectedAddress);
+
+      if (!selected) {
+        alert("Please select an address.");
+        return;
+      }
+
+      // 1) Load Razorpay SDK
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        alert("Razorpay SDK failed to load. Please disable adblock and try again.");
+        return;
+      }
+
+      // 2) Create Razorpay order from backend
+      const amountInPaise = Math.round(Number(grandTotal) * 100);
+
+      const payload = {
+        items: checkoutItems.map((p) => ({
+          productId: p.id,
+          quantity: Number(p.quantity || 1),
+        })),
+        address: {
+          name: selected.name,
+          phone: selected.phone,
+          email: selected.email,
+          address: selected.address,
+          city: selected.city,
+          state: selected.state,
+          pincode: selected.pincode,
+          country: selected.country || "India",
+        },
+        amountInPaise,
+      };
+
+      // ✅ backend route: /api/v1/payments/razorpay/create-order
+      const createRes = await api.post("/payments/razorpay/create-order", payload);
+
+      if (!createRes?.data?.success) {
+        alert(createRes?.data?.message || "Failed to create Razorpay order");
+        return;
+      }
+
+      const { keyId, razorpayOrderId, amount, currency, localOrderId } =
+        createRes.data.data || {};
+
+      if (!keyId || !razorpayOrderId || !localOrderId) {
+        alert("Invalid Razorpay order response from server.");
+        return;
+      }
+
+      // 3) Open Razorpay Checkout
+      const options = {
+        key: keyId,
+        amount, // paise
+        currency: currency || "INR",
+        name: "Prospect Education",
+        description: "Order Payment",
+        order_id: razorpayOrderId,
+        prefill: {
+          name: selected.name,
+          email: selected.email,
+          contact: selected.phone,
+        },
+        notes: {
+          localOrderId,
+        },
+        theme: {
+          color: "#124734",
+        },
+        handler: async function (response) {
+          try {
+            // 4) Verify payment on backend
+            const verifyRes = await api.post("/payments/razorpay/verify", {
+              localOrderId,
+              razorpay_order_id: response?.razorpay_order_id,
+              razorpay_payment_id: response?.razorpay_payment_id,
+              razorpay_signature: response?.razorpay_signature,
+            });
+
+            if (!verifyRes?.data?.success) {
+              alert(verifyRes?.data?.message || "Payment verification failed");
+              return;
+            }
+
+            // 5) Redirect to confirmation
+            navigate(`/order-confirmation/${localOrderId}`, {
+              state: { forcedStatus: "CONFIRMED" },
+            });
+          } catch (e) {
+            console.error("Verify error:", e);
+            alert(e?.response?.data?.message || "Payment verification failed");
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            // user closed popup (order remains PENDING on server)
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", function (resp) {
+        console.error("Payment failed:", resp);
+        alert(resp?.error?.description || "Payment failed");
+      });
+
+      rzp.open();
+    } catch (err) {
+      console.error("PayNow Razorpay error:", err);
+      alert(err?.response?.data?.message || "Failed to start payment");
     }
-
-    if (!checkoutItems || checkoutItems.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-
-    const selected = addresses.find(
-      (a) => (a._id || a.id) === selectedAddress
-    );
-
-    if (!selected) {
-      alert("Please select an address.");
-      return;
-    }
-
-    const payload = {
-      items: checkoutItems.map((p) => ({
-        productId: p.id,
-        quantity: Number(p.quantity || 1),
-      })),
-      address: {
-        name: selected.name,
-        phone: selected.phone,
-        email: selected.email,
-        address: selected.address,
-        city: selected.city,
-        state: selected.state,
-        pincode: selected.pincode,
-        country: selected.country || "India",
-      },
-    };
-
-    const res = await api.post("/orders", payload);
-
-    if (!res?.data?.success) {
-      alert(res?.data?.message || "Failed to place order");
-      return;
-    }
-
-    const orderId = res?.data?.order?.orderId;
-
-    if (!orderId) {
-      navigate("/my-order");
-      return;
-    }
-
-    navigate(`/order-confirmation/${orderId}`, {
-      state: { forcedStatus: "CONFIRMED" },
-    });
-  } catch (err) {
-    console.error("PayNow error:", err);
-    alert(err?.response?.data?.message || "Failed to place order");
-  }
-}; // ✅ VERY IMPORTANT semicolon
-
+  }; // ✅ VERY IMPORTANT semicolon
 
   return (
     <section className=" pt-36">
@@ -166,7 +244,6 @@ const Checkout = () => {
 
       {/* MAIN GRID */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 px-4 md:px-10 py-10 pb-20 text-left">
-
         {/* LEFT SIDE */}
         <div className="md:col-span-2 bg-white shadow rounded-xl p-5 md:p-8">
           <h2 className="text-xl md:text-2xl font-bold text-[#124734] mb-6">

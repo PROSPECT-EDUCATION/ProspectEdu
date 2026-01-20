@@ -5,7 +5,23 @@ import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
 import testImg from "../../assets/test1.webp";
 import { fetchPublicTestSeries, fetchPublicTestSeriesById } from "../../lib/testSeriesApi";
-import { confirmTestPurchase, hasPurchasedSeries } from "../../lib/testPurchaseApi";
+import {
+  confirmTestPurchase,
+  hasPurchasedSeries,
+  createTestSeriesRazorpayOrder,
+  verifyTestSeriesRazorpayPayment,
+} from "../../lib/testPurchaseApi";
+
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export default function CheckoutTestLearning() {
   const { id } = useParams();
@@ -19,7 +35,6 @@ export default function CheckoutTestLearning() {
   const token = sessionStorage.getItem("accessToken");
   const isLoggedIn = !!token;
 
-  // ✅ if not logged in -> go login and return here
   useEffect(() => {
     if (!isLoggedIn) {
       sessionStorage.setItem("postLoginRedirect", `/checkout-test-learning/${id}`);
@@ -28,26 +43,22 @@ export default function CheckoutTestLearning() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, id]);
 
-  // ✅ load series (with fallback)
   useEffect(() => {
     (async () => {
       if (!id) return;
 
       setLoading(true);
       try {
-        // 1) Try direct fetch by id
         let data = null;
         try {
           data = await fetchPublicTestSeriesById(id);
         } catch (err) {
-          // 2) Fallback: fetch public list and find by id
           const list = await fetchPublicTestSeries();
           data = Array.isArray(list) ? list.find((x) => String(x._id) === String(id)) : null;
         }
 
         setSeries(data);
 
-        // purchase check (only if logged in)
         if (isLoggedIn) {
           const ok = await hasPurchasedSeries(id);
           setPurchased(ok);
@@ -70,21 +81,76 @@ export default function CheckoutTestLearning() {
   const onPayNow = async () => {
     if (!series) return;
 
+    // ✅ Free series -> direct unlock (no Razorpay)
+    if (Number(series.price || 0) === 0) {
+      setPaying(true);
+      try {
+        await confirmTestPurchase({
+          testSeriesId: series._id,
+          provider: "FREE",
+          transactionId: "FREE_" + Date.now(),
+        });
+        navigate("/student/test-series", { replace: true });
+      } catch (e) {
+        console.error(e);
+        alert(e?.response?.data?.message || "Unlock failed");
+      } finally {
+        setPaying(false);
+      }
+      return;
+    }
+
     setPaying(true);
     try {
-      await confirmTestPurchase({
-        testSeriesId: series._id,
-        provider: "MANUAL",
-        transactionId: "TXN_" + Date.now(),
-      });
+      const ok = await loadRazorpayScript();
+      if (!ok) {
+        alert("Razorpay SDK failed to load. Check internet / adblocker.");
+        return;
+      }
 
-      // ✅ go to my series after success
-      navigate("/student/test-series", { replace: true });
+      // ✅ Step-1: create order from backend
+      const order = await createTestSeriesRazorpayOrder(series._id);
+
+      const options = {
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "ProspectEdu",
+        description: `Purchase: ${order.title || "Test Series"}`,
+        order_id: order.razorpayOrderId,
+
+        handler: async (response) => {
+          try {
+            // ✅ Step-2: verify payment + save purchase in DB
+            await verifyTestSeriesRazorpayPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              testSeriesId: series._id,
+            });
+
+            navigate("/student/test-series", { replace: true });
+          } catch (e) {
+            console.error(e);
+            alert(e?.response?.data?.message || "Payment verification failed");
+            setPaying(false);
+          }
+        },
+
+        modal: {
+          ondismiss: () => setPaying(false),
+        },
+
+        theme: { color: "#009846" },
+      };
+
+      const rz = new window.Razorpay(options);
+      rz.open();
     } catch (e) {
       console.error(e);
       alert(e?.response?.data?.message || "Payment failed");
     } finally {
-      setPaying(false);
+      // keep paying true while modal is open; handler/ondismiss will update
     }
   };
 
@@ -209,8 +275,9 @@ export default function CheckoutTestLearning() {
                 {paying ? "Processing..." : price === 0 ? "Unlock Now" : "Pay Now"}
               </button>
 
+              {/* layout preserved - just updated note */}
               <p className="text-xs text-[#5B7065] mt-3">
-                Note: This is manual success payment for now. Later you can integrate Razorpay/Stripe.
+                Note: You will be redirected after successful payment confirmation.
               </p>
             </div>
           </div>

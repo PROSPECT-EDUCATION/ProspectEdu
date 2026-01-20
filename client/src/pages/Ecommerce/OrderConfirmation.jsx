@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams,useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import Footer from "../../components/Footer";
 import { api } from "../../lib/api";
@@ -11,7 +11,11 @@ const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const prettyDate = (iso) => {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   } catch {
     return iso;
   }
@@ -47,9 +51,9 @@ const OrderConfirmation = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const location = useLocation();
-const forcedStatus = location?.state?.forcedStatus; // "CONFIRMED" | "REJECTED"
-const forcedReason = location?.state?.reason;
 
+  const forcedStatus = location?.state?.forcedStatus; // "CONFIRMED" | "REJECTED"
+  const forcedReason = location?.state?.reason;
 
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
@@ -57,19 +61,51 @@ const forcedReason = location?.state?.reason;
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
+
         const token = sessionStorage.getItem("accessToken");
         if (!token) {
           navigate("/login", { state: { from: "ecom-header" } });
           return;
         }
-        const res = await api.get(`/orders/${orderId}`);
-        setOrder(res?.data?.order || null);
+
+        let foundOrder = null;
+
+        // ✅ 1) Try direct fetch by param (some backends return {order} or {data})
+        try {
+          const res = await api.get(`/orders/${orderId}`);
+          foundOrder =
+            res?.data?.order ||
+            res?.data?.data?.order ||
+            res?.data?.data ||
+            null;
+        } catch (e) {
+          foundOrder = null;
+        }
+
+        // ✅ 2) Fallback: if backend doesn't support /orders/:id, use /orders/mine and find it
+        if (!foundOrder) {
+          try {
+            const mine = await api.get("/orders/mine");
+            const list =
+              mine?.data?.orders || mine?.data?.data?.orders || mine?.data?.data || [];
+            foundOrder =
+              (list || []).find((o) => String(o?._id) === String(orderId)) ||
+              (list || []).find((o) => String(o?.orderId) === String(orderId)) ||
+              null;
+          } catch (e) {
+            foundOrder = null;
+          }
+        }
+
+        setOrder(foundOrder);
       } catch (e) {
         setOrder(null);
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [orderId, navigate]);
 
@@ -92,8 +128,6 @@ const forcedReason = location?.state?.reason;
 
     const status = forcedStatus || overallStatus(order.items || []);
 
-
-
     return {
       orderId: order.orderId,
       date: prettyDate(order.createdAt),
@@ -107,8 +141,9 @@ const forcedReason = location?.state?.reason;
         grandTotal: Number(order.grandTotal || 0),
       },
       address: order.address,
+      forcedReason,
     };
-  }, [order]);
+  }, [order, forcedStatus, forcedReason]);
 
   return (
     <section className="pt-36">
@@ -166,6 +201,11 @@ const forcedReason = location?.state?.reason;
                   <p className="text-gray-700 mt-2">
                     Your order has been rejected/canceled. You can check item-wise status below.
                   </p>
+                  {view.forcedReason ? (
+                    <p className="text-gray-700 mt-2">
+                      <b>Reason:</b> {view.forcedReason}
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 <div className="border border-green-200 bg-green-50 rounded-2xl p-5">

@@ -71,7 +71,7 @@ const SupplierApply = () => {
     if (!user) return;
     setForm((prev) => ({
       ...prev,
-      ownerName: prev.ownerName || user.name || "",
+      ownerName: prev.ownerName || user.fullName || user.name || "",
       phone: prev.phone || user.phone || "",
       email: prev.email || user.email || "",
     }));
@@ -112,19 +112,46 @@ const SupplierApply = () => {
     };
   }, []);
 
-  const fetchMySupplierProfile = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const res = await api.get("/suppliers/me", authHeaders);
-      setSupplierProfile(res.data);
-    } catch (e) {
-      setError(e?.response?.data?.message || "Failed to load supplier status.");
-      setSupplierProfile(null);
-    } finally {
+ const fetchMySupplierProfile = async () => {
+  setError("");
+  setLoading(true);
+
+  try {
+    // ✅ Always use status API (fresh + simple)
+    const stRes = await api.get("/suppliers/me/status", authHeaders);
+    const st = stRes?.data?.supplierStatus; // none | pending | approved | rejected
+
+    if (st === "none") {
+      setSupplierProfile({ exists: false });
       setLoading(false);
+      return;
     }
-  };
+
+    // ✅ fetch full supplier profile only if exists
+    const profRes = await api.get("/suppliers/me", authHeaders);
+    const full = profRes?.data || {};
+
+    // Normalize shape for UI
+    setSupplierProfile({
+      exists: true,
+      status: st,
+      reviewNote: full?.reviewNote,
+      ...full,
+    });
+
+    // ✅ IMPORTANT: if approved, go dashboard (unblock ke baad yehi hoga)
+    if (st === "approved") {
+      navigate("/supplier", { replace: true });
+      return;
+    }
+  } catch (e) {
+    setError(e?.response?.data?.message || "Failed to load supplier status.");
+    setSupplierProfile(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchMySupplierProfile();
@@ -281,12 +308,21 @@ const SupplierApply = () => {
               </p>
             </div>
 
-            <button
-              onClick={() => navigate("/supplier")}
-              className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:opacity-90"
-            >
-              Supplier Info Page
-            </button>
+           <button
+  onClick={async () => {
+    try {
+      const st = await api.get("/suppliers/me/status", authHeaders);
+      if (st?.data?.supplierStatus === "approved") return navigate("/supplier");
+      return navigate("/supplier/apply");
+    } catch {
+      return navigate("/supplier/apply");
+    }
+  }}
+  className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:opacity-90"
+>
+  Supplier Info Page
+</button>
+
           </div>
 
           {error ? (
@@ -332,12 +368,23 @@ const SupplierApply = () => {
                       </p>
 
                       <div className="flex gap-3 flex-wrap mt-4">
-                        <button
-                          onClick={() => navigate("/supplier")}
-                          className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:opacity-90"
-                        >
-                          Go to Dashboard
-                        </button>
+                       <button
+                        onClick={async () => {
+                          try {
+                            const stRes = await api.get("/suppliers/me/status", authHeaders);
+                            if (stRes?.data?.supplierStatus === "approved") {
+                              return navigate("/supplier", { replace: true });
+                            }
+                            return fetchMySupplierProfile();
+                          } catch {
+                            return fetchMySupplierProfile();
+                          }
+                        }}
+                        className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:opacity-90"
+                      >
+                        Go to Dashboard
+                      </button>
+
                         <button
                           onClick={fetchMySupplierProfile}
                           className="px-5 py-2 rounded-xl border border-[#124734] text-[#124734] font-semibold hover:bg-[#124734]/10"

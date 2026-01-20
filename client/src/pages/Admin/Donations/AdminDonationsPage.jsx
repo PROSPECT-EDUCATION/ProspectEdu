@@ -85,36 +85,58 @@ const AdminDonationsPage = () => {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-700">
-                    <tr>
-                      <th className="text-left px-4 py-3">Donor</th>
-                      <th className="text-left px-4 py-3">Contact</th>
-                      <th className="text-left px-4 py-3">Address</th>
-                      <th className="text-left px-4 py-3">Amount</th>
-                      <th className="text-left px-4 py-3">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {donations.map((d) => (
-                      <tr key={d._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-900">
-                            {d.firstName} {d.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500">PAN: {d.pan || "-"}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-gray-900">{d.email}</div>
-                          <div className="text-gray-600">{d.mobile}</div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {d.address}, {d.city}, {d.state} - {d.postalCode}, {d.country}
-                        </td>
-                        <td className="px-4 py-3 font-bold text-[#124734]">₹{d.amount}</td>
-                        <td className="px-4 py-3 text-gray-600">{fmt(d.createdAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+                 <thead className="bg-gray-50 text-gray-700">
+  <tr>
+    <th className="text-left px-4 py-3">Donor</th>
+    <th className="text-left px-4 py-3">Contact</th>
+    <th className="text-left px-4 py-3">Amount</th>
+    <th className="text-left px-4 py-3">Status</th>
+    <th className="text-left px-4 py-3">Razorpay</th>
+    <th className="text-left px-4 py-3">Date</th>
+  </tr>
+</thead>
+
+<tbody className="divide-y">
+  {donations.map((d) => (
+    <tr key={d._id} className="hover:bg-gray-50">
+      <td className="px-4 py-3">
+        <div className="font-semibold text-gray-900">
+          {d.firstName} {d.lastName}
+        </div>
+        <div className="text-xs text-gray-500">PAN: {d.pan || "-"}</div>
+      </td>
+
+      <td className="px-4 py-3">
+        <div className="text-gray-900">{d.email}</div>
+        <div className="text-gray-600">{d.mobile}</div>
+      </td>
+
+      <td className="px-4 py-3 font-bold text-[#124734]">₹{d.amount}</td>
+
+      <td className="px-4 py-3">
+        <span
+          className={`text-xs px-2 py-1 rounded-full border ${
+            d.status === "CONFIRMED"
+              ? "bg-green-50 text-green-700 border-green-200"
+              : d.status === "CREATED"
+              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+              : "bg-red-50 text-red-700 border-red-200"
+          }`}
+        >
+          {d.status}
+        </span>
+      </td>
+
+      <td className="px-4 py-3 text-xs text-gray-700">
+        <div className="font-mono break-all">Order: {d.razorpayOrderId || "-"}</div>
+        <div className="font-mono break-all">Pay: {d.razorpayPaymentId || "-"}</div>
+      </td>
+
+      <td className="px-4 py-3 text-gray-600">{fmt(d.createdAt)}</td>
+    </tr>
+  ))}
+</tbody>
+
                 </table>
               </div>
             )}

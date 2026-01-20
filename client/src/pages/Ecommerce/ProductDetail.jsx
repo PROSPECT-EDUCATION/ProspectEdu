@@ -1,17 +1,15 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
-import logo from "../../assets/logo.webp";
 import { FaFacebookF } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaWhatsapp } from "react-icons/fa";
-import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
-import book from "../../assets/book.webp";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { FiHeart } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import Footer from "../../components/Footer";
+import { api } from "../../lib/api"; // ✅ NEW (needed for notify api)
 
 const ProductDetail = () => {
   const navigate = useNavigate();
@@ -22,14 +20,15 @@ const ProductDetail = () => {
   const { state: product } = useLocation();
 
   React.useEffect(() => {
-  const first = product?.images?.[0] || product?.img;
-  setThumbnail(first);
-}, [product]);
-
+    const first = product?.images?.[0] || product?.img;
+    setThumbnail(first);
+  }, [product]);
 
   const shareFacebook = () => {
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        currentUrl
+      )}`,
       "_blank"
     );
   };
@@ -43,9 +42,9 @@ const ProductDetail = () => {
 
   const shareTwitter = () => {
     window.open(
-      `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(
-        product.title
-      )}`,
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+        currentUrl
+      )}&text=${encodeURIComponent(product.title)}`,
       "_blank"
     );
   };
@@ -68,19 +67,26 @@ const ProductDetail = () => {
   }
 
   const images =
-  product?.images && product.images.length > 0
-    ? product.images
-    : [product.img];
+    product?.images && product.images.length > 0 ? product.images : [product.img];
 
+  // ✅ NEW: Notify handler (no layout changes)
+  const handleNotifyMe = async () => {
+    const accessToken = sessionStorage.getItem("accessToken");
+    if (!accessToken) return navigate("/login");
 
-  const trendingProducts = [
-    { id: 1, title: "IT Books", img: book, price: 299, oldPrice: 499, save: 200, outOfStock: false },
-    { id: 2, title: "Electrical Books", img: book, price: 249, oldPrice: 349, save: 100, outOfStock: false },
-    { id: 3, title: "Civil Books", img: book, price: 199, oldPrice: 299, save: 100, outOfStock: true },
-    { id: 4, title: "Law Books", img: book, price: 399, oldPrice: 499, save: 100, outOfStock: false },
-    { id: 5, title: "Management Books", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false },
-    { id: 6, title: "Notebooks", img: book, price: 299, oldPrice: 399, save: 100, outOfStock: false }
-  ];
+    try {
+      const pid = String(product.id || product._id || "");
+      if (!pid) return showToast("Product id missing");
+
+      await api.post(`/products/${pid}/notify`);
+      showToast("✅ You will be notified when the product is back in stock");
+    } catch (e) {
+      showToast(
+        e?.response?.data?.message || "Failed to subscribe for notification"
+      );
+    }
+  };
+
 
   return (
     <section className="pt-36">
@@ -93,7 +99,6 @@ const ProductDetail = () => {
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 pb-20 text-left">
-
         {/* Breadcrumb */}
         <p className="text-gray-600 mb-3 sm:mb-5 text-sm sm:text-base">
           <span
@@ -106,10 +111,8 @@ const ProductDetail = () => {
         </p>
 
         <div className="flex flex-col md:flex-row gap-10 sm:gap-16 mt-4">
-
           {/* LEFT IMAGE SECTION */}
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-
             {/* Thumbnails */}
             <div className="flex sm:flex-col gap-3 order-2 sm:order-1 justify-center">
               {images.map((image, index) => (
@@ -131,13 +134,12 @@ const ProductDetail = () => {
 
           {/* RIGHT DETAILS */}
           <div className="w-full md:w-1/2">
-
             {/* Title + Heart */}
             <div className="flex items-center justify-between">
               <h1 className="text-2xl sm:text-3xl font-bold">{product.title}</h1>
 
               <button
-                onClick={() => toggleWishlist(product,navigate)}
+                onClick={() => toggleWishlist(product, navigate)}
                 className="p-2 rounded-full bg-[#A7E1B2]/40 hover:bg-[#A7E1B2] transition"
               >
                 {wishlist.some((item) => item.id === product.id) ? (
@@ -213,7 +215,7 @@ const ProductDetail = () => {
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
               {product.outOfStock ? (
                 <button
-                  onClick={() => showToast("We will notify you when the product arrives")}
+                  onClick={handleNotifyMe} // ✅ changed only logic
                   className="w-full py-3 bg-red-200 text-red-700 rounded hover:bg-red-300"
                 >
                   Notify Me 🔔
@@ -225,30 +227,31 @@ const ProductDetail = () => {
                       const accessToken = sessionStorage.getItem("accessToken");
                       if (!accessToken) return navigate("/login");
 
-                     const pid = String(product.id || product._id || "");
-                        const exists = cart.some((item) => String(item.id) === pid);
+                      const pid = String(product.id || product._id || "");
+                      const exists = cart.some((item) => String(item.id) === pid);
 
-                        if (exists) return showToast("❗ Already in cart");
+                      if (exists) return showToast("❗ Already in cart");
 
-                        // ✅ ensure cart item shape matches Cart.jsx usage
-                        addToCart(
-                          {
-                            id: pid,
-                            title: product.title || product.name || "",
-                            img: product.img || (product.images && product.images[0]) || "",
-                            images: product.images || [],
-                            price: product.price,
-                            oldPrice: product.oldPrice,
-                            outOfStock: product.outOfStock,
-                            category: product.category,
-                            description: product.description,
-                            quantity,
-                          },
-                          navigate
-                        );
+                      addToCart(
+                        {
+                          id: pid,
+                          title: product.title || product.name || "",
+                          img:
+                            product.img ||
+                            (product.images && product.images[0]) ||
+                            "",
+                          images: product.images || [],
+                          price: product.price,
+                          oldPrice: product.oldPrice,
+                          outOfStock: product.outOfStock,
+                          category: product.category,
+                          description: product.description,
+                          quantity,
+                        },
+                        navigate
+                      );
 
-                        showToast("✅ Added to cart");
-
+                      showToast("✅ Added to cart");
                     }}
                     className="w-full py-3 bg-[#A7E1B2] text-gray-800 rounded hover:bg-gray-300"
                   >
@@ -285,28 +288,36 @@ const ProductDetail = () => {
               <div className="flex items-center gap-4 mt-5">
                 <span className="font-semibold">Share:</span>
 
-                <button onClick={shareFacebook} className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]">
+                <button
+                  onClick={shareFacebook}
+                  className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                >
                   <FaFacebookF className="text-indigo-700" />
                 </button>
 
-                <button onClick={shareTwitter} className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]">
+                <button
+                  onClick={shareTwitter}
+                  className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                >
                   <FaXTwitter className="text-black" />
                 </button>
 
-                <button onClick={shareWhatsApp} className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]">
+                <button
+                  onClick={shareWhatsApp}
+                  className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                >
                   <FaWhatsapp className="text-green-600 text-xl" />
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Related + Recently Viewed */}
-      <ProductSlider title="Related Products" products={trendingProducts} navigate={navigate} />
-      <ProductSlider title="Recently Viewed" products={trendingProducts} navigate={navigate} />
-       <div className="pt-10"> <Footer /></div>
+     
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

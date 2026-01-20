@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import logoImg from "../assets/logo.webp";
 import { FiShoppingBag, FiHeart, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 import { FaShoppingBag, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { IoSearch, IoPersonCircle } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 
-import {
-  trendingProducts,
-  merchandiseProducts,
-  EnginneringProducts,
-  LawProducts,
-  ManagementProducts,
-} from "../data/ProductData";
+
 
 const AUTH_KEY = "isLoggedIn";
+
+function readStoredUser() {
+  const raw = sessionStorage.getItem("user") || localStorage.getItem("user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function hasToken() {
+  return !!(sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken"));
+}
 
 const EcomHeader = () => {
   const navigate = useNavigate();
@@ -28,20 +36,17 @@ const EcomHeader = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // ✅ only for login/logout toggle (default: logged in if not set)
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem(AUTH_KEY) !== "false"
-  );
+  // ✅ Correct default: NOT logged in unless token+user exists
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const user = readStoredUser();
+    const tokenOk = hasToken();
+    const flag = localStorage.getItem(AUTH_KEY) === "true"; // optional compatibility
+    return Boolean(user && tokenOk) || flag;
+  });
 
   const [userName, setUserName] = useState("");
 
-  const allProducts = [
-    ...trendingProducts,
-    ...EnginneringProducts,
-    ...LawProducts,
-    ...ManagementProducts,
-    ...merchandiseProducts,
-  ];
+  
 
   const handleSearch = (value) => {
     setSearchQuery(value);
@@ -63,22 +68,44 @@ const EcomHeader = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ Keep header synced when login happens from LoginForm (it dispatches authChange)
   useEffect(() => {
-    if (!isLoggedIn) {
-      setUserName("");
-      return;
-    }
+    const syncAuth = () => {
+      const user = readStoredUser();
+      const tokenOk = hasToken();
 
-    const u = sessionStorage.getItem("user");
-    if (u) {
-      try {
-        const parsed = JSON.parse(u);
-        setUserName(parsed?.fullName || parsed?.name || "");
-      } catch {
-        setUserName("");
-      }
-    }
-  }, [isLoggedIn]);
+      const loggedInNow = Boolean(user && tokenOk);
+      setIsLoggedIn(loggedInNow);
+      setUserName(user?.fullName || user?.name || "");
+      if (!loggedInNow) setOpenMenu(false);
+    };
+
+    syncAuth();
+    window.addEventListener("authChange", syncAuth);
+    window.addEventListener("storage", syncAuth); // if other tabs change localStorage
+
+    return () => {
+      window.removeEventListener("authChange", syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
+
+  const doLogout = () => {
+    // ✅ clear everything related to auth
+    localStorage.setItem(AUTH_KEY, "false");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+
+    setIsLoggedIn(false);
+    setUserName("");
+    setShowLogoutPopup(false);
+    setOpenMenu(false);
+
+    window.dispatchEvent(new Event("authChange"));
+    window.location.href = "/ecommerce-home";
+  };
 
   return (
     <header
@@ -126,7 +153,6 @@ const EcomHeader = () => {
 
         {/* DESKTOP NAV */}
         <div className="hidden sm:flex items-center gap-6 text-[#124734] font-medium">
-
           {/* SEARCH BAR */}
           <div className="relative w-64 md:w-80">
             <div className="flex items-center bg-[#A7E1B2] rounded-full shadow-lg py-2 px-4">
@@ -181,9 +207,24 @@ const EcomHeader = () => {
 
               {openMenu && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border">
-                  <button onClick={() => navigate("/my-profile")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Profile</button>
-                  <button onClick={() => navigate("/my-order")} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">My Orders</button>
-                  <button onClick={() => setShowLogoutPopup(true)} className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]">Logout</button>
+                  <button
+                    onClick={() => navigate("/my-profile")}
+                    className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]"
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    onClick={() => navigate("/my-order")}
+                    className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]"
+                  >
+                    My Orders
+                  </button>
+                  <button
+                    onClick={() => setShowLogoutPopup(true)}
+                    className="w-full px-4 py-2 text-left hover:bg-[#A7E1B2]"
+                  >
+                    Logout
+                  </button>
                 </div>
               )}
             </div>
@@ -197,7 +238,10 @@ const EcomHeader = () => {
           )}
 
           {/* SHOP */}
-          <div onClick={() => navigate("/shop")} className="group flex items-center gap-2 cursor-pointer">
+          <div
+            onClick={() => navigate("/shop")}
+            className="group flex items-center gap-2 cursor-pointer"
+          >
             <FiShoppingBag className="group-hover:hidden" />
             <FaShoppingBag className="hidden group-hover:block text-[#1E5631]" />
             <span className="group-hover:text-[#1E5631]">Shop</span>
@@ -206,7 +250,10 @@ const EcomHeader = () => {
           <div className="w-[2px] h-6 bg-gray-400"></div>
 
           {/* WISHLIST */}
-          <div onClick={() => navigate("/wishlist")} className="group flex items-center gap-2 cursor-pointer">
+          <div
+            onClick={() => navigate("/wishlist")}
+            className="group flex items-center gap-2 cursor-pointer"
+          >
             <FiHeart className="group-hover:hidden" />
             <FaHeart className="hidden group-hover:block text-[#1E5631]" />
             <span className="group-hover:text-[#1E5631]">Wishlist</span>
@@ -215,7 +262,10 @@ const EcomHeader = () => {
           <div className="w-[2px] h-6 bg-gray-400"></div>
 
           {/* CART */}
-          <div onClick={() => navigate("/my-cart")} className="group flex items-center gap-2 cursor-pointer">
+          <div
+            onClick={() => navigate("/my-cart")}
+            className="group flex items-center gap-2 cursor-pointer"
+          >
             <FiShoppingCart className="group-hover:hidden" />
             <FaShoppingCart className="hidden group-hover:block text-[#1E5631]" />
             <span className="group-hover:text-[#1E5631]">My Cart</span>
@@ -227,7 +277,6 @@ const EcomHeader = () => {
       {mobileMenu && (
         <div className="fixed inset-0 bg-black/50 z-[9999]">
           <div className="absolute right-0 top-0 w-64 h-full bg-white shadow-xl p-6">
-
             {/* CLOSE BUTTON */}
             <button
               onClick={() => setMobileMenu(false)}
@@ -281,11 +330,15 @@ const EcomHeader = () => {
               <button onClick={() => navigate("/shop")}>Shop</button>
               <button onClick={() => navigate("/wishlist")}>Wishlist</button>
               <button onClick={() => navigate("/my-cart")}>My Cart</button>
-              <button onClick={() => navigate("/my-profile")}>My Profile</button>
-              <button onClick={() => navigate("/my-order")}>My Orders</button>
-              <button onClick={() => setShowLogoutPopup(true)}>Logout</button>
 
-              {!isLoggedIn && (
+              {/* ✅ only show profile/orders/logout if logged in */}
+              {isLoggedIn ? (
+                <>
+                  <button onClick={() => navigate("/my-profile")}>My Profile</button>
+                  <button onClick={() => navigate("/my-order")}>My Orders</button>
+                  <button onClick={() => setShowLogoutPopup(true)}>Logout</button>
+                </>
+              ) : (
                 <button
                   onClick={() => {
                     setMobileMenu(false);
@@ -318,15 +371,7 @@ const EcomHeader = () => {
               </button>
 
               <button
-                onClick={() => {
-                  localStorage.setItem(AUTH_KEY, "false");
-                  sessionStorage.removeItem("accessToken");
-                  sessionStorage.removeItem("user");
-                  setIsLoggedIn(false);
-                  setShowLogoutPopup(false);
-                  setOpenMenu(false);
-                  window.location.href = "/ecommerce-home";
-                }}
+                onClick={doLogout}
                 className="flex-1 bg-[#124734] text-white py-2 rounded-xl hover:bg-[#0f3a23]"
               >
                 Logout

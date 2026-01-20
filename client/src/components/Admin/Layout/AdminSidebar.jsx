@@ -76,13 +76,12 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Purchase List", path: "/admin/ecom/products/purchase" },
 
         { label: "All Categories", path: "/admin/ecom/categories" },
+        { label: "Supplier Approval", path: "/admin/ecom/suppliers" },
+
 
         { label: "All Orders", path: "/admin/ecom/orders" },
-         { label: "Customers", path: "/admin/ecom/customers" },
-        
-        {label: "Transaction", path: "/admin/ecom/transaction"},
       ],
-    },
+    },  
 
     {
       title: "Announcements",
