@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Library,
-  ClipboardList
+  ClipboardList,
+  CreditCard,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
@@ -30,6 +31,11 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
       label: "Students",
       icon: Users,
       path: "/teacher/students/performance",
+    },
+    {
+      label: "Payments",
+      icon: CreditCard,
+      path: "/teacher/payments",
     },
 
     {

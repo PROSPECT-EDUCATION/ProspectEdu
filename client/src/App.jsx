@@ -42,6 +42,8 @@ import QueriesDoubtsPage from './pages/Teacher/QueriesDoubtsPage';
 import ChangePasswordTeacher from './pages/Teacher/ChangePasswordTeacher'
 import EditProfilePage from './pages/Teacher/EditProfilePage';
 import TeacherModuleContentPage from './pages/Teacher/TeacherModuleContentPage';
+import TeacherPaymentsPage from './pages/Teacher/TeacherPaymentsPage';
+
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentStudentsPage from './pages/Parent/ParentStudentPage';
 import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
@@ -52,7 +54,6 @@ import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
-
 
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
@@ -157,7 +158,7 @@ function App() {
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
       <Route path="/teacher/assessment/assignment/:courseId" element={<CreateAssignmentPage />} />
       <Route path="/teacher/assessment/assignments/:courseId" element={<TeacherAssignmentsPage />} />
-
+      <Route path="/teacher/payments" element={<TeacherPaymentsPage/>}/>
       <Route path="/teacher/assessment/quiz/:courseId" element={<CreateQuizPage />} />
       <Route path="/teacher/assessment/quizzes/:courseId" element={<TeacherQuizzesPage />} />
       <Route path="/teacher/assessment/quizzes/view/:quizId" element={<TeacherQuizDetailsPage />} />

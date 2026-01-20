@@ -13,3 +13,7 @@ export async function getStudentByIdAdmin(studentId) {
   const { data } = await api.get(`/students/${studentId}`);
   return data; // { success, user, profile }
 }
+export async function getStudentDetails(studentId) {
+  const { data } = await api.get(`/students/${studentId}/details`);
+  return data;
+}
