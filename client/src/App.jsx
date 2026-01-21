@@ -2,10 +2,9 @@ import './App.css'
 import Home from "./pages/home";
 import {Routes, Route} from "react-router-dom";
 import Courses from "./pages/Courses";
-import EngineeringCourses from "./pages/Courses/EngineeringCourses";
-import LawCourses from "./pages/Courses/LawCourses";
-import ManagementCourses from "./pages/Courses/ManagementCourses";
-import MedicalCourses from './pages/Courses/MedicalCourses';
+import CategoryCourses from "./pages/Courses/CategoryCourses";
+import PublicCourseDetail from "./pages/Courses/PublicCourseDetail";
+import CheckoutPage from './pages/Courses/CheckoutPage';
 import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
 import SignupPage from "./pages/Auth/SignupPage";
@@ -15,29 +14,36 @@ import MyCourses from './pages/Student/MyCourses';
 import MyTestSeries from './pages/Student/MyTestSeries';
 import StudyMaterials from './pages/Student/StudyMaterials';
 import Practice from './pages/Student/Practice';
+import StudentAssignmentViewPage from './pages/Student/StudentAssignmentViewPage';
+import StudentQuizStartPage from './pages/Student/StudentQuizStartPage';
+import StudentQuizResultPage from './pages/Student/StudentQuizResultPage';
+import StudentQuizAttemptsPage from './pages/Student/StudentQuizAttempsPage';
 import AllTestSeries from './pages/Student/AllTestSeries';
 import AllCourses from './pages/Student/AllCourses';
 import StorePage from './pages/Store/StorePage';
-import EditProfile from "./pages/Student/EditProfile";
 import ChangePassword from './pages/Student/ChangePassword';
-import OrdersPage from './pages/Student/OrdersPage';
+import StudentCourseModulesPage from "./pages/Student/StudentCourseModulesPage";
+import StudentModuleLessonsPage from "./pages/Student/StudentModuleLessonsPage";
 import Doubts from './pages/Student/Doubts';
-import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import TeacherCoursesPage from './pages/Teacher/TeacherCoursesPage';
-import CreateCourse from './pages/Teacher/CreateCourse';
 import AddModulesPage from './pages/Teacher/AddModulesPage';
 import PublishCoursePage from './pages/Teacher/PublishCoursePage';
 import CourseManagement from './pages/Teacher/CourseManagement';
-import AssessmentDashboardPage from './pages/Teacher/AssessmentDashboardPage';
 import CreateAssignmentPage from './pages/Teacher/CreateAssignmentPage';
+import TeacherStudyMaterials from './pages/Teacher/TeacherStudyMaterials';
+import EditProfile from './pages/Student/EditProfile';
 import CreateQuizPage from './pages/Teacher/CreateQuizPage';
+import TeacherQuizzesPage from './pages/Teacher/TeacherQuizzesPage';
+import TeacherQuizDetailsPage from './pages/Teacher/TeacherQuizDetailsPage';
 import ViewSubmissionsPage from './pages/Teacher/ViewSubmissionsPage';
 import ReviewSubmissionsPageWrapper from './pages/Teacher/ReviewSubmissionsPageWrapper';
 import StudentsPerformancePage from './pages/Teacher/StudentsPerformancePage';
 import QueriesDoubtsPage from './pages/Teacher/QueriesDoubtsPage';
 import ChangePasswordTeacher from './pages/Teacher/ChangePasswordTeacher'
-import TeacherOrdersPage from './pages/Teacher/TeacherOrdersPage';
 import EditProfilePage from './pages/Teacher/EditProfilePage';
+import TeacherModuleContentPage from './pages/Teacher/TeacherModuleContentPage';
+import TeacherPaymentsPage from './pages/Teacher/TeacherPaymentsPage';
+
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentStudentsPage from './pages/Parent/ParentStudentPage';
 import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
@@ -48,13 +54,12 @@ import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
+
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
-import AdminAddStudentPage from './pages/Admin/AdminAddStudentPage';
-import AdminEditStudentPage from './pages/Admin/AdminEditStudentPage';
 import AdminAllTeachersPage from './pages/Admin/AdminAllTeachersPage';
-import AdminAddTeacherPage from './pages/Admin/AdminAddTeacherPage';
-import AdminEditTeacherPage from './pages/Admin/AdminEditTeacherPage';
+import AdminConfirmAdminPage from './pages/Admin/AdminConfirmAdminPage';
+import AdminConfirmTeacherPage from "./pages/Admin/AdminConfirmTeacherPage";
 import FeesCollectionPage from './pages/Admin/FeesCollectionPage';
 import AddFeesPage from './pages/Admin/AddFeesPage';
 import FeesReceiptPage from './pages/Admin/FeesReceiptPage';
@@ -64,14 +69,13 @@ import AdminCoursesPage from './pages/Admin/AdminCoursesPage';
 import AdminCourseDetailPage from './pages/Admin/AdminCourseDetailPage';
 import EditCoursePage from './pages/Admin/EditCoursePage';
 import AddCoursePage from './pages/Admin/AddCoursePage';
-import EnrollStudentsPage from './pages/Admin/EnrollStudentsPage';
+
 import EcomOrdersPage from './pages/Admin/Ecom/EcomOrdersPage';
 import OrderDetailsPage from './pages/Admin/Ecom/OrderDetailsPage';
 import CustomersPage from './pages/Admin/Ecom/CustomersPage';
 import CustomerDetailsPage from './pages/Admin/Ecom/CustomerDetailsPage';
 import CategoriesPage from './pages/Admin/Ecom/CategoriesPage';
 import TransactionsPage from './pages/Admin/Ecom/TransactionsPage';
-import AdminEditProfile from './pages/Admin/AdminEditProfile';
 import AdminChangePassword from './pages/Admin/AdminChangePassword';
 import SettingsPage from './pages/Admin/SettingsPage';
 import AdminAddProduct from './pages/Admin/Ecom/AdminAddProduct';
@@ -91,6 +95,8 @@ import TeacherBlogs from "./pages/Teacher/Blogs/TeacherBlogs";
 
 
 
+import AdminCourseCategoryPage from './pages/Admin/AdminCourseCategoryPage';
+import TeacherAssignmentsPage from './pages/Teacher/TeacherAssignmentsPage';
 import AskDoubtSection from "./pages/AskDoubt/AskDoubtSection";
 import ResearchReport from "./pages/ResearchReport/ResearchReport";
 import ReportDetails from "./pages/ResearchReport/ReportDetails";
@@ -152,10 +158,9 @@ function App() {
     <Routes>
       <Route path="/" element={<Home/>}/>
       <Route path="/courses" element={<Courses />} />
-      <Route path="/courses/engineering" element={<EngineeringCourses />} />
-      <Route path="/courses/law" element={<LawCourses />} />
-      <Route path="/courses/management" element={<ManagementCourses />} />
-      <Route path="/courses/medical" element={<MedicalCourses/>}/>
+      <Route path="/categories/:category" element={<CategoryCourses />} />
+      <Route path="/courses/:slug" element={<PublicCourseDetail/>}/>
+      <Route path="/checkout/:courseId" element={<CheckoutPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/student-dashboard" element={<StudentDashboard/>}/>
@@ -163,30 +168,42 @@ function App() {
       <Route path="/student/my-courses" element={<MyCourses/>}/>
       <Route path="/student/test-series" element={<MyTestSeries/>}/>
       <Route path="/student/study-materials" element={<StudyMaterials/>}/>
-      <Route path="/student/practice" element={<Practice/>}/>
+      <Route path="/student/practice" element={<Practice />} />
+<Route path="/student/practice/:courseId" element={<Practice />} />
+      <Route path="/student/assignments/:assignmentId" element={<StudentAssignmentViewPage />} />
+<Route path="/student/quizzes/:quizId/start" element={<StudentQuizStartPage />} />
+<Route path="/student/quizzes/:quizId/result" element={<StudentQuizResultPage />} />
+<Route path="/student/quizzes/:quizId/attempts" element={<StudentQuizAttemptsPage />} />
       <Route path="/student/all-test-series" element={<AllTestSeries/>}/>
       <Route path="/student/all-courses" element={<AllCourses/>}/>
       <Route path="/student/edit-profile" element={<EditProfile />} />
       <Route path="/store" element={<StorePage/>}/>
       <Route path="/student/change-password" element = {<ChangePassword/>}/>
-      <Route path="/student/orders" element={<OrdersPage />} />
       <Route path="/student/doubts" element={<Doubts/>}/>
-      <Route path="/teacher-dashboard" element={<TeacherDashboard/>}/>
-      <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
-      <Route path="/teacher/create-course" element={<CreateCourse/>}/>
+      <Route path="/student/courses/:courseId/modules" element={<StudentCourseModulesPage />} />
+      <Route path="/student/courses/:courseId/modules/:moduleId" element={<StudentModuleLessonsPage />} />
+
+      <Route path="/teacher-dashboard" element={<TeacherCoursesPage />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
       <Route path= "/teacher/publish-course" element ={<PublishCoursePage/>}/>
       <Route path="/teacher/course/:courseId" element={<CourseManagement />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />
-      <Route path="/teacher/assessments" element={<AssessmentDashboardPage />} />
-      <Route path="/teacher/assessment/assignment" element={<CreateAssignmentPage />} />
-      <Route path="/teacher/assessment/quiz" element={<CreateQuizPage />} />
+      <Route path="/teacher/assessment/assignment/:courseId" element={<CreateAssignmentPage />} />
+      <Route path="/teacher/assessment/assignments/:courseId" element={<TeacherAssignmentsPage />} />
+      <Route path="/teacher/payments" element={<TeacherPaymentsPage/>}/>
+      <Route path="/teacher/assessment/quiz/:courseId" element={<CreateQuizPage />} />
+      <Route path="/teacher/assessment/quizzes/:courseId" element={<TeacherQuizzesPage />} />
+      <Route path="/teacher/assessment/quizzes/view/:quizId" element={<TeacherQuizDetailsPage />} />
+
       <Route path="/teacher/assessment/submissions" element={<ViewSubmissionsPage />} />
       <Route path="/teacher/assessments/review" element={<ReviewSubmissionsPageWrapper />} />
       <Route path="/teacher/students/performance" element={<StudentsPerformancePage />} />
       <Route path= "/teacher/queries/doubts" element = {<QueriesDoubtsPage/>}/>
       <Route path="/teacher/change-password" element = {<ChangePasswordTeacher/>}/>
-      <Route path="/teacher/orders" element={<TeacherOrdersPage />}/>
+      <Route path="/teacher/studymaterials"  element = {<TeacherStudyMaterials/>}/>
+      <Route path="/admin/confirm-admin" element={<AdminConfirmAdminPage/>}/>
+      <Route path="/teacher/course/:courseId/module/:moduleId" element={<TeacherModuleContentPage />}/>
+      <Route path="/admin/confirmTeacher" element={<AdminConfirmTeacherPage />} />
       <Route path="/teacher/edit-profile" element = {<EditProfilePage/>}/>
       <Route path="/parent-dashboard" element = {<ParentDashboard/>}/>
       <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
@@ -198,28 +215,25 @@ function App() {
       <Route path="/parent/change-password" element={<ParentChangePasswordPage/>}/>
       <Route path="/admin-dashboard" element = {<AdminDashboardPage/>}/>
       <Route path="/admin/students" element= {<AdminAllStudentsPage/>}/>
-      <Route path="/admin/students/add" element={<AdminAddStudentPage/>}/>
-      <Route path="/admin/students/edit" element={<AdminEditStudentPage/>}/>
+    
       <Route path="/admin/teachers" element={<AdminAllTeachersPage/>}/>
-      <Route path="/admin/teachers/add" element={<AdminAddTeacherPage/>}/>
-      <Route path = "/admin/teachers/edit" element={<AdminEditTeacherPage/>}/>
+    
       <Route path="/admin/fees/collection" element={<FeesCollectionPage/>}/>
       <Route path="admin/fees/addfees" element={<AddFeesPage/>}/>
       <Route path="/admin/fees/receipt/:receiptId" element={<FeesReceiptPage />} />
       <Route path="/admin/announcements" element ={<AdminAnnouncementsPage/>}/>
       <Route path="/admin/announcements/create" element = {<AddAnnouncementPage/>}/>
       <Route path="/admin/courses" element={<AdminCoursesPage/>}/>
-      <Route path="/admin/courses/:slug/edit" element={<AdminCourseDetailPage />} />
-      <Route path="/admin/course-edit/:slug" element={<EditCoursePage/>}/>
+      <Route path="/admin/courses/:courseId" element={<AdminCourseDetailPage />} />
+      <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage/>}/>
       <Route path="/admin/courses/add" element={<AddCoursePage/>}/>
-      <Route path="/admin/courses/enroll" element = {<EnrollStudentsPage/>}/>
       <Route path="/admin/ecom/orders" element={<EcomOrdersPage />} />
       <Route path="/admin/ecom/orders/:id" element={<OrderDetailsPage />} />
       <Route path="/admin/ecom/customers" element={<CustomersPage/>}/>
       <Route path="/admin/ecom/customers/:id" element={<CustomerDetailsPage/>}/>
       <Route path="/admin/ecom/categories" element={<CategoriesPage/>}/>
       <Route path="/admin/ecom/transaction" element={<TransactionsPage/>}/>
-      <Route path="/admin/edit-profile" element={<AdminEditProfile/>}/>
+      
       <Route path="/admin/change-password" element={<AdminChangePassword/>}/>
       <Route path="/admin/settings" element={<SettingsPage/>}/>
       <Route path="/admin/ecom/products/add" element= {<AdminAddProduct/>}/>
@@ -244,6 +258,7 @@ function App() {
 <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
 
 
+      <Route path="/admin/courses/category"  element={<AdminCourseCategoryPage/>}/>
 
       <Route path="/ask-doubt" element={<AskDoubtSection />} />
        <Route path="/research-report" element={<ResearchReport />} />

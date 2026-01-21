@@ -1,70 +1,59 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ModuleCard from "./CourseManagementPage/ModuleCard";
 import { Plus } from "lucide-react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { courseContentApi } from "../../services/courseContent"; // ✅ CHANGED (adjust path)
+import { useNavigate } from "react-router-dom";
 
-export default function Modules() {
+export default function Modules({ course }) { // ✅ CHANGED
   const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true); // ✅ NEW
+  const navigate = useNavigate();
+  const courseId = course?._id; // ✅ NEW
 
-  // Helper to generate unique IDs
-  const makeId = (prefix = "m") =>
-    `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-
-  const addModule = () => {
-    const newModule = {
-      id: makeId("m"),
-      title: `Module ${modules.length + 1}`,
-      description: "",
-      lessons: [],
-    };
-    setModules((prev) => [...prev, newModule]);
+  const reload = async () => { // ✅ NEW
+    if (!courseId) return;
+    try {
+      setLoading(true);
+      const res = await courseContentApi.teacherModulesWithLessons(courseId);
+      setModules(res.data.modules || []);
+    } catch (e) {
+      console.log(e);
+      setModules([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteModule = (index) => {
-    setModules((prev) => prev.filter((_, i) => i !== index));
+  useEffect(() => { // ✅ NEW
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
+  const addModule = async () => { // ✅ CHANGED
+    if (!courseId) return;
+
+    try {
+      const payload = {
+        title: `Module ${modules.length + 1}`,
+        description: "",
+        order: modules.length + 1,
+        isPublished: true,
+      };
+
+      await courseContentApi.createModule(courseId, payload);
+      await reload();
+    } catch (e) {
+      console.log(e);
+      alert(e?.response?.data?.message || "Failed to create module");
+    }
   };
 
-  const editModule = (index, newTitle) => {
-    setModules((prev) => {
-      const copy = [...prev];
-      copy[index].title = newTitle;
-      return copy;
-    });
-  };
-const addLesson = (moduleIndex, lesson) => {
-  setModules((prev) => {
-    const copy = [...prev];
-
-    // deep clone the module so we don't mutate prev
-    const updatedModule = {
-      ...copy[moduleIndex],
-      lessons: [...copy[moduleIndex].lessons, lesson]
-    };
-
-    copy[moduleIndex] = updatedModule;
-    return copy;
-  });
-};
-
-  const deleteLesson = (moduleIndex, lessonIndex) => {
-    setModules((prev) => {
-      const copy = [...prev];
-      copy[moduleIndex].lessons.splice(lessonIndex, 1);
-      return copy;
-    });
-  };
-
-  // ⭐ New drag & drop handler using @hello-pangea/dnd
+  // Drag UI only (backend order save can be added later)
   const onDragEnd = useCallback((result) => {
     if (!result.destination) return;
-
     const sourceIndex = result.source.index;
     const destIndex = result.destination.index;
-
     if (sourceIndex === destIndex) return;
 
     setModules((prev) => {
@@ -93,39 +82,46 @@ const addLesson = (moduleIndex, lesson) => {
         <Droppable droppableId="modules-list">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
+             {loading ? (
+  <p className="text-sm text-gray-500">Loading modules...</p>
+) : modules.length === 0 ? (
+  <p className="text-sm text-gray-500">
+    No modules added yet. Click "Add Module" to start.
+  </p>
+) : (
+  modules.map((mod, index) => (
+    <Draggable key={mod._id} draggableId={String(mod._id)} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`transition ${
+            snapshot.isDragging ? "shadow-lg border border-green-300" : ""
+          }`}
+        >
+          <ModuleCard
+            module={mod}
+            index={index}
+            onView={() => navigate(`/teacher/course/${courseId}/module/${mod._id}`)}
+            onRename={async (newTitle) => {
+              await courseContentApi.updateModule(mod._id, { title: newTitle });
+              await reload();
+            }}
+            onDelete={async () => {
+              await courseContentApi.deleteModule(mod._id);
+              await reload();
+            }}
+             onRefresh={reload}
+          />
+        </div>
+      )}
+    </Draggable>
+  ))
+)}
 
-              {modules.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No modules added yet. Click "Add Module" to start.
-                </p>
-              ) : (
-                modules.map((mod, index) => (
-                  <Draggable key={mod.id} draggableId={mod.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`transition ${
-                          snapshot.isDragging ? "shadow-lg border border-green-300" : ""
-                        }`}
-                      >
-                        <ModuleCard
-                          module={mod}
-                          index={index}
-                          onDelete={() => deleteModule(index)}
-                         onEdit={(i, newTitle) => editModule(i, newTitle)}
+{provided.placeholder}
 
-                          onAddLesson={(i, lesson) => addLesson(i, lesson)}
-                          onDeleteLesson={(i, li) => deleteLesson(i, li)}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))
-              )}
-
-              {provided.placeholder}
             </div>
           )}
         </Droppable>

@@ -1,160 +1,162 @@
-// src/components/Teacher/CourseManagement/CourseOverviewTab.jsx
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Edit3, Play, Layers, CheckCircle } from "lucide-react";
+import React, { useMemo } from "react";
 
-export default function CourseOverviewTab() {
-  const { courseId } = useParams();
-  const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
+export default function CourseOverviewTab({ course }) {
+  const cost = useMemo(() => {
+    const price = Number(course?.price || 0);
+    const tax = Number(course?.tax || 0);
+    const discount = Number(course?.discount || 0);
 
-  useEffect(() => {
-    // courseId is an index (string). If your app stores an id, adapt accordingly.
-    const all = JSON.parse(localStorage.getItem("teacherCourses") || "[]");
-    const idx = parseInt(courseId, 10);
+    const discountAmt = (price * discount) / 100;
+    const taxAmt = (price * tax) / 100;
+    const total = price + taxAmt - discountAmt;
 
-    // defensive
-    if (!all || all.length === 0) {
-      setCourse(null);
-      return;
-    }
-
-    // If courseId is numeric index
-    const found =
-      Number.isInteger(idx) && idx >= 0 && idx < all.length ? all[idx] : null;
-
-    // If you stored a real id inside object, uncomment this block
-    // const found = all.find(c => c.id === courseId) || null;
-
-    setCourse(found);
-  }, [courseId]);
+    return { price, tax, discount, discountAmt, taxAmt, total };
+  }, [course]);
 
   if (!course) {
     return (
       <div className="bg-white p-6 rounded-xl border border-[#E6F4EC] shadow-sm">
-        <p className="text-[#124734]">Course not found. Make sure it is published or exists.</p>
+        <p className="text-[#124734]">Course not found.</p>
       </div>
     );
   }
 
-  // Basic aggregations
-  const modulesCount = (course.modules || []).length;
-  const studentsCount = course.students || course.studentsCount || 0;
-
-  // estimate completion: if you store progress, adapt logic. Fallback to 0
-  const completion = course.completion || 0;
-
-  const handleEdit = () => {
-    // navigate to edit/create page where you can prefill basic form
-    // we'll navigate to Create Course with state for editing
-    navigate("/teacher/create-course", { state: { courseToEdit: course, courseIndex: courseId } });
-  };
-
-  const handleManageModules = () => {
-    navigate("/teacher/course/" + courseId + "?tab=modules");
-  };
-
-  const togglePublish = () => {
-    const all = JSON.parse(localStorage.getItem("teacherCourses") || "[]");
-    const idx = parseInt(courseId, 10);
-    if (!Number.isInteger(idx) || !all[idx]) return;
-    all[idx].settings = all[idx].settings || {};
-    all[idx].settings.live = !all[idx].settings.live;
-    localStorage.setItem("teacherCourses", JSON.stringify(all));
-    setCourse(all[idx]);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* LEFT SIDE */}
+      <div className="col-span-1">
+        <div className="bg-white rounded-xl shadow overflow-hidden border border-[#E6F4EC]">
+          <img
+            src={course.img || "/placeholder-course.png"}
+            alt={course.title}
+            className="w-full h-40 object-contain bg-[#F0F5F2]"
+          />
 
-      {/* Header card */}
-      <div className="bg-white rounded-xl border border-[#E6F4EC] shadow-sm px-6 py-6 flex gap-6 items-start">
-        <div className="w-48 h-32 rounded-md overflow-hidden bg-[#F2FBF6] flex items-center justify-center">
-          {course.thumbnail ? (
-            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-contain" />
-          ) : (
-            <div className="text-[#124734]">No Image</div>
-          )}
-        </div>
+          <div className="p-4">
+            <h1 className="text-xl font-semibold text-[#124734]">
+              {course.title}
+            </h1>
 
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-[#124734]">{course.title}</h1>
-          <p className="text-sm text-[#5B7065] mt-1">{course.category} • {course.level} • {course.duration} hrs</p>
+            <p className="text-gray-600 mt-2">{course.short || "—"}</p>
 
-          <p className="text-sm text-[#5B7065] mt-3 max-w-3xl">{course.description}</p>
-
-          <div className="flex gap-4 mt-4 items-center">
-            <button
-              onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#A7E1B2] text-[#124734] hover:bg-[#8ccf9a]"
-            >
-              <Edit3 size={16} /> Edit Course
-            </button>
-
-            <button
-              onClick={handleManageModules}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-white border border-[#A7E1B2] text-[#124734] hover:bg-[#F2FBF6]"
-            >
-              <Layers size={16} /> Manage Modules
-            </button>
-
-            <button
-              onClick={togglePublish}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md ${course.settings?.live ? "bg-[#009846] text-white hover:bg-[#007a39]" : "bg-white border border-[#A7E1B2] text-[#124734]"}`}
-            >
-              <CheckCircle size={16} />
-              {course.settings?.live ? "Published" : "Publish"}
-            </button>
+            {/* Teacher-only info */}
+            
           </div>
         </div>
 
-        {/* right metrics */}
-        <div className="w-48 flex flex-col items-center justify-center gap-4">
-          <div className="text-center">
-            <p className="text-sm text-[#5B7065]">Students</p>
-            <p className="text-2xl font-semibold text-[#124734]">{studentsCount}</p>
+        {/* ABOUT COURSE */}
+        <div className="bg-white rounded-xl shadow p-5 mt-6 border border-[#E6F4EC]">
+          <h2 className="font-semibold text-[#124734] mb-3">About Course</h2>
+
+          <div className="grid grid-cols-2 gap-y-3 text-sm">
+            <p className="text-gray-500">Professor(s)</p>
+            <div className="font-medium flex flex-col">
+              {course.assignedTeachers?.length ? (
+                course.assignedTeachers.map((t, i) => (
+                  <span key={t._id || i}>• {t.fullName}</span>
+                ))
+              ) : (
+                <span>N/A</span>
+              )}
+            </div>
+
+            <p className="text-gray-500">Category</p>
+            <p className="font-medium">{course.category || "—"}</p>
+
+            <p className="text-gray-500">Start Date</p>
+            <p className="font-medium">{course.date || "—"}</p>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-[#5B7065]">Modules</p>
-            <p className="text-2xl font-semibold text-[#124734]">{modulesCount}</p>
-          </div>
+          {/* COST BREAKDOWN */}
+          <div className="mt-6 border-t pt-4">
+            <h3 className="font-semibold text-[#124734] mb-2">Cost Breakdown</h3>
 
-          <div className="text-center">
-            <p className="text-sm text-[#5B7065]">Completion</p>
-            <p className="text-2xl font-semibold text-[#124734]">{completion}%</p>
-          </div>
-        </div>
-      </div>
+            <table className="w-full text-sm">
+              <tbody className="text-gray-700">
+                <tr>
+                  <td className="py-2">Base Price</td>
+                  <td className="py-2 text-right font-medium">₹{cost.price}</td>
+                </tr>
 
-      {/* Quick analytics / CTA */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-4 rounded-xl border border-[#E6F4EC]">
-          <p className="text-sm text-[#5B7065]">Recent Activity</p>
-          <ul className="mt-3 space-y-2 text-sm text-[#124734]">
-            <li>{course.recentActivity?.[0] || "No recent activity"}</li>
-            <li>{course.recentActivity?.[1]}</li>
-          </ul>
-        </div>
+                {cost.discount > 0 && (
+                  <tr>
+                    <td className="py-2">Discount</td>
+                    <td className="py-2 text-right text-red-600">
+                      -₹{cost.discountAmt.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
 
-        <div className="bg-white p-4 rounded-xl border border-[#E6F4EC]">
-          <p className="text-sm text-[#5B7065]">Quick Actions</p>
-          <div className="mt-3 flex flex-col gap-2">
-            <button onClick={() => navigate(`/teacher/course/${courseId}?tab=modules`)} className="text-left px-3 py-2 rounded-md border border-[#A7E1B2] hover:bg-[#F2FBF6]">Add Lecture / Content</button>
-            <button onClick={() => navigate(`/teacher/course/${courseId}?tab=assessments`)} className="text-left px-3 py-2 rounded-md border border-[#A7E1B2] hover:bg-[#F2FBF6]">Create Assignment / Quiz</button>
-            <button onClick={() => navigate(`/teacher/course/${courseId}?tab=students`)} className="text-left px-3 py-2 rounded-md border border-[#A7E1B2] hover:bg-[#F2FBF6]">View Students</button>
-          </div>
-        </div>
+                {cost.tax > 0 && (
+                  <tr>
+                    <td className="py-2">Tax</td>
+                    <td className="py-2 text-right text-yellow-600">
+                      +₹{cost.taxAmt.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
 
-        <div className="bg-white p-4 rounded-xl border border-[#E6F4EC]">
-          <p className="text-sm text-[#5B7065]">Course Links</p>
-          <div className="mt-3 flex flex-col gap-2">
-            <a className="text-sm text-[#009846] hover:underline" href={`/course/${courseId}`} target="_blank" rel="noreferrer">View Public Course</a>
-            <button onClick={() => navigator.clipboard?.writeText(window.location.href)} className="text-sm text-[#5B7065]">Copy Management Link</button>
+                <tr className="border-t">
+                  <td className="py-3 font-semibold">Total</td>
+                  <td className="py-3 font-semibold text-right text-[#124734]">
+                    ₹{cost.total.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
+      {/* RIGHT SIDE */}
+      <div className="col-span-2">
+        <div className="bg-white rounded-xl shadow p-6 border border-[#E6F4EC]">
+          <h2 className="text-lg font-semibold text-[#124734] mb-4">
+            Course Description
+          </h2>
+          <p className="text-gray-600 mb-4">{course.description || "—"}</p>
+
+          <h2 className="text-lg font-semibold text-[#124734] mb-4">
+            Course Information
+          </h2>
+          <p className="text-gray-600">{course.info || course.description || "—"}</p>
+
+          <div className="mt-6">
+            <h3 className="font-semibold text-[#124734] mb-3">Tags</h3>
+            <div className="flex flex-wrap gap-2">
+              {course.tags?.length ? (
+                course.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 bg-[#ECF5EE] text-[#124734] rounded-full text-xs"
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-sm">No tags available</span>
+              )}
+            </div>
+          </div>
+
+          {/* Gallery */}
+          {course.gallery?.length ? (
+            <div className="mt-8">
+              <h3 className="font-semibold text-[#124734] mb-3">Gallery</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {course.gallery.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Gallery ${i + 1}`}
+                    className="h-28 w-full object-contain bg-[#F0F5F2] rounded-lg border"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

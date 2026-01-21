@@ -35,7 +35,6 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: Users,
       children: [
         { label: "All Students", path: "/admin/students" },
-        { label: "Add Student", path: "/admin/students/add" },
       ],
     },
 
@@ -44,7 +43,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: GraduationCap,
       children: [
         { label: "All Teachers", path: "/admin/teachers" },
-        { label: "Add Teacher", path: "/admin/teachers/add" },
+        { label: "Confirm Teacher", path: "/admin/confirmTeacher" },
       ],
     },
 
@@ -54,7 +53,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       children: [
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
-        { label: "Enroll Students", path: "/admin/courses/enroll" },
+        { label: "Category", path: "/admin/courses/category" },
         {label: "Course Purchase List", path: "/admin/courses/purchaseList"},
       ],
     },
@@ -96,6 +95,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
     { title: "Doubts", icon: Inbox, path: "/admin/doubts" },
     { title: "Contacts", icon: PhoneCall, path: "/admin/contacts" },
     { title: "Donations", icon: CreditCard, path: "/admin/donations" },
+    { title: "Confirm Admin", icon: GraduationCap, path: "/admin/confirm-admin" },
     { title: "Settings", icon: Settings, path: "/admin/settings" },
     
   ];

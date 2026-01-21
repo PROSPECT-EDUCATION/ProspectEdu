@@ -50,57 +50,7 @@ export default function ParentTopbar({
         {/* RIGHT CONTROLS (DESKTOP) */}
         <div className="hidden md:flex items-center gap-4">
 
-          {showStudentSwitcher && (
-            <div className="relative" ref={studentRef}>
-              <button
-                onClick={() => setStudentDropdownOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-2 border rounded-md text-[#124734] bg-[#F8FFFA] hover:bg-[#E6F4EC] transition"
-              >
-                {selectedStudent?.name || "Select Student"}
-                <span
-                  className={`transition-transform ${
-                    studentDropdownOpen ? "rotate-180" : ""
-                  }`}
-                >
-                  ▼
-                </span>
-              </button>
-
-          {studentDropdownOpen && (
-  <div
-    className="
-      absolute mt-2 
-      bg-white shadow-lg border border-[#E6F4EC] rounded-lg p-2 z-[2000]
-      max-h-60 overflow-y-auto
-      w-48 sm:w-56        /* SAFE width */
-      right-0 sm:right-0  /* desktop: stick right */
-      left-auto
-      translate-x-0
-    "
-    style={{
-      top: "100%",
-      // 🚀 Prevent overflow by clamping the dropdown inside viewport
-      maxWidth: "calc(100vw - 20px)",
-    }}
-  >
-    {students.map((s) => (
-      <div
-        key={s.id}
-        onClick={() => {
-          onSelectStudent(s);
-          setStudentDropdownOpen(false);
-        }}
-        className="px-3 py-2 rounded-md hover:bg-[#F2FBF6] cursor-pointer text-sm text-[#124734]"
-      >
-        {s.name}
-      </div>
-    ))}
-  </div>
-)}
-
-
-            </div>
-          )}
+          
 
           <StoreButton />
           <NotificationBell

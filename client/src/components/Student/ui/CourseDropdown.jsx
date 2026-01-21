@@ -5,7 +5,7 @@ export default function CourseDropdown({ role = "student" }) {
   const navigate = useNavigate();
 
   const redirectPath =
-    role === "teacher" ? "/teacher/courses" : "/student/all-courses";
+    role === "teacher" ? "/teacher-dashboard" : "/student/all-courses";
 
   return (
     <button

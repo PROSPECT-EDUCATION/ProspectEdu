@@ -6,7 +6,7 @@ import CourseDetail from "../../components/Admin/Courses/CourseDetail";
 
 export default function AdminCourseDetailPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { slug } = useParams();
+ const { courseId } = useParams();
   const navigate = useNavigate();
 
   const sidebarWidth = isCollapsed ? 80 : 256;
@@ -61,13 +61,12 @@ export default function AdminCourseDetailPage() {
               Courses
             </span>
             {" / "}
-            <span className="text-[#124734] font-semibold">
-              {slug.replace("-", " ")}
-            </span>
+            <span className="text-[#124734] font-semibold">Course Details</span>
+          
           </div>
 </div>
           {/* MAIN CONTENT COMPONENT */}
-          <CourseDetail slug={slug} />
+         <CourseDetail courseId={courseId} />
         </div>
       </div>
     </div>

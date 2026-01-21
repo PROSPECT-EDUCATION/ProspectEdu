@@ -52,15 +52,16 @@ export default function TeacherChangePassword() {
           <div className="w-full flex flex-col items-start">
 
             {/* Breadcrumb */}
-            <p className="text-sm text-[#5B7065] mb-3">
-              <span
-                className="cursor-pointer hover:text-[#009846] hover:underline"
-                onClick={() => navigate("/teacher-dashboard")}
-              >
-                Home
-              </span>{" "}
-              / <span className="text-[#124734] font-medium">Change Password</span>
-            </p>
+           <p className="text-sm text-[#5B7065] mb-3 text-center w-full">
+  <span
+    className="cursor-pointer hover:text-[#009846] hover:underline"
+    onClick={() => navigate("/teacher-dashboard")}
+  >
+    Home
+  </span>{" "}
+  / <span className="text-[#124734] font-medium">Change Password</span>
+</p>
+           
           </div>
         </div>
 

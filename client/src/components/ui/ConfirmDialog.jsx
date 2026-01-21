@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 
-export default function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
+export default function ConfirmDialog({ open, title, message, onCancel, onConfirm,confirmText, }) {
   if (!open) return null;
 
   return (
@@ -33,7 +33,7 @@ export default function ConfirmDialog({ open, title, message, onCancel, onConfir
             onClick={onConfirm}
             className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
           >
-            Remove
+           {confirmText|| "Confirm"}
           </button>
         </div>
       </div>

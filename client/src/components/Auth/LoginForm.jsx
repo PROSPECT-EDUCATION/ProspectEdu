@@ -33,6 +33,19 @@ export default function LoginForm() {
       // ✅ AuthContext token store
       login(accessToken);
 
+      // Optional safety: admin approval guard
+        if (user.role === "admin") {
+          const status = user.adminApproval?.status;
+          if (status && status !== "approved") {
+            sessionStorage.removeItem("accessToken");
+            sessionStorage.removeItem("user");
+            localStorage.removeItem("isLoggedIn");
+            setError("Admin account pending approval");
+            return;
+          }
+        }
+
+
       // ✅ IMPORTANT: keep compatibility with SupplierApply.jsx which reads sessionStorage accessToken
       sessionStorage.setItem("accessToken", accessToken);
 

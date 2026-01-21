@@ -1,15 +1,158 @@
 // src/pages/Student/EditProfile.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
+import {
+  getMyStudentProfile,
+  updateMyStudentProfile,
+} from "../../services/student.service";
 
 export default function EditProfile() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const navigate = useNavigate();
-
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // ✅ controlled form states
+  const [basic, setBasic] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    gender: "",
+    interested: "",
+    highestEducation: "",
+  });
+
+  const [education, setEducation] = useState({
+    currentlyPursuing: "",
+    preparingFor: "",
+    occupation: "",
+    lastExamName: "",
+    lastExamYear: "",
+    preparingSince: "",
+  });
+
+  // ✅ load profile on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await getMyStudentProfile();
+
+        const user = res.user || {};
+        const profile = res.profile || {};
+
+        setBasic((prev) => ({
+          ...prev,
+          fullName: user.fullName || "",
+          phone: user.phone || "",
+          email: user.email || "",
+          gender: profile.gender || "",
+          interested: profile.interested || "",
+          highestEducation: profile.highestEducation || "",
+        }));
+
+        setEducation((prev) => ({
+          ...prev,
+          currentlyPursuing: profile.currentlyPursuing || "",
+          preparingFor: profile.preparingFor || "",
+          occupation: profile.occupation || "",
+          lastExamName: profile.lastExamName || "",
+          lastExamYear: profile.lastExamYear || "",
+          preparingSince: profile.preparingSince || "",
+        }));
+      } catch (err) {
+        console.error(err);
+        alert(err?.response?.data?.message || "Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const onChangeBasic = (key) => (e) =>
+    setBasic((p) => ({ ...p, [key]: e.target.value }));
+
+  const onChangeEdu = (key) => (e) =>
+    setEducation((p) => ({ ...p, [key]: e.target.value }));
+
+  // ✅ submit basic
+  const submitBasic = async () => {
+    try {
+      setSaving(true);
+      const payload = {
+        fullName: basic.fullName,
+        phone: basic.phone,
+        gender: basic.gender,
+        interested: basic.interested,
+        highestEducation: basic.highestEducation,
+      };
+
+      const res = await updateMyStudentProfile(payload);
+
+      // refresh local state from server response (best practice)
+      const user = res.user || {};
+      const profile = res.profile || {};
+
+      setBasic((prev) => ({
+        ...prev,
+        fullName: user.fullName || prev.fullName,
+        phone: user.phone || prev.phone,
+        gender: profile.gender ?? prev.gender,
+        interested: profile.interested ?? prev.interested,
+        highestEducation: profile.highestEducation ?? prev.highestEducation,
+      }));
+      window.dispatchEvent(new Event("profile_refresh"));
+      alert("Basic details updated!");
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Failed to update basic details");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ✅ submit education
+  const submitEducation = async () => {
+    try {
+      setSaving(true);
+      const payload = { ...education };
+
+      const res = await updateMyStudentProfile(payload);
+
+      const profile = res.profile || {};
+      setEducation((prev) => ({
+        ...prev,
+        currentlyPursuing: profile.currentlyPursuing ?? prev.currentlyPursuing,
+        preparingFor: profile.preparingFor ?? prev.preparingFor,
+        occupation: profile.occupation ?? prev.occupation,
+        lastExamName: profile.lastExamName ?? prev.lastExamName,
+        lastExamYear: profile.lastExamYear ?? prev.lastExamYear,
+        preparingSince: profile.preparingSince ?? prev.preparingSince,
+      }));
+      window.dispatchEvent(new Event("profile_refresh"));
+      alert("Education details updated!");
+    } catch (err) {
+      console.error(err);
+      alert(
+        err?.response?.data?.message || "Failed to update education details"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -43,54 +186,49 @@ export default function EditProfile() {
           className="sticky top-[64px] bg-[#F9FAFB] border-b border-[#E6F4EC] px-4 py-2 z-[998]"
           style={{ left: sidebarWidth }}
         >
-            <div className="w-full flex flex-col items-start ">
-          {/* Breadcrumb */}
-          <p className="text-sm text-[#5B7065] mb-2">
-            <span
-              className="cursor-pointer hover:text-[#009846] hover:underline"
-              onClick={() => navigate("/student-dashboard")}
-            >
-              Home
-            </span>{" "}
-            / Profile /{" "}
-            <span className="text-[#124734] font-medium">
-              {activeTab === "basic" ? "Basic Details" : "Education Details"}
-            </span>
-          </p>
+          <div className="w-full flex flex-col items-start ">
+            <p className="text-sm text-[#5B7065] mb-2">
+              <span
+                className="cursor-pointer hover:text-[#009846] hover:underline"
+                onClick={() => navigate("/student-dashboard")}
+              >
+                Home
+              </span>{" "}
+              / Profile /{" "}
+              <span className="text-[#124734] font-medium">
+                {activeTab === "basic" ? "Basic Details" : "Education Details"}
+              </span>
+            </p>
 
-          {/* Tabs */}
-          <div className="flex gap-6 border-b border-[#E6F4EC]">
-            <button
-              onClick={() => setActiveTab("basic")}
-              className={`pb-2 text-sm font-medium ${
-                activeTab === "basic"
-                  ? "text-[#009846] border-b-2 border-[#009846]"
-                  : "text-[#5B7065]"
-              }`}
-            >
-              Basic Details
-            </button>
-            <button
-              onClick={() => setActiveTab("education")}
-              className={`pb-2 text-sm font-medium ${
-                activeTab === "education"
-                  ? "text-[#009846] border-b-2 border-[#009846]"
-                  : "text-[#5B7065]"
-              }`}
-            >
-              Education Details
-            </button>
+            <div className="flex gap-6 border-b border-[#E6F4EC]">
+              <button
+                onClick={() => setActiveTab("basic")}
+                className={`pb-2 text-sm font-medium ${
+                  activeTab === "basic"
+                    ? "text-[#009846] border-b-2 border-[#009846]"
+                    : "text-[#5B7065]"
+                }`}
+              >
+                Basic Details
+              </button>
+              <button
+                onClick={() => setActiveTab("education")}
+                className={`pb-2 text-sm font-medium ${
+                  activeTab === "education"
+                    ? "text-[#009846] border-b-2 border-[#009846]"
+                    : "text-[#5B7065]"
+                }`}
+              >
+                Education Details
+              </button>
+            </div>
           </div>
         </div>
-        </div>
+
         {/* Main Form Area */}
-        <main
-          className="flex-1 overflow-y-auto px-1 py-0"
-          style={{ marginTop: "80px" }}
-        >
-          {/* BASIC DETAILS FORM */}
+        <main className="flex-1 overflow-y-auto px-1 py-0" style={{ marginTop: "80px" }}>
           {activeTab === "basic" && (
-            <div className="max-w-3xl  bg-white p-5 rounded-xl shadow-sm border border-[#E6F4EC] ml-4">
+            <div className="max-w-3xl bg-white p-5 rounded-xl shadow-sm border border-[#E6F4EC] ml-4">
               <h2 className="text-2xl font-heading text-[#124734] mb-2">
                 Basic Details
               </h2>
@@ -99,158 +237,127 @@ export default function EditProfile() {
               </p>
 
               <div className="space-y-5">
-                {/* Name */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">* Name</label>
                   <input
                     type="text"
-                    defaultValue="Pratima Kumari"
+                    value={basic.fullName}
+                    onChange={onChangeBasic("fullName")}
                     className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
                   />
                 </div>
 
-                {/* Gender */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">* Select Gender</label>
-                  <select className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none">
-                    <option>Others</option>
-                    <option>Female</option>
-                    <option>Male</option>
+                  <select
+                    value={basic.gender}
+                    onChange={onChangeBasic("gender")}
+                    className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
+                  >
+                    <option value="">Select</option>
+                    <option value="Others">Others</option>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
                   </select>
                 </div>
 
-                {/* Interested */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">* Interested</label>
-                  <select className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none">
-                    <option>Please select your interest</option>
-                  </select>
+                  <input
+                    value={basic.interested}
+                    onChange={onChangeBasic("interested")}
+                    className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
+                    placeholder="Engineering / Law / Management ..."
+                  />
                 </div>
 
-                {/* Education */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">
                     * Highest Education
                   </label>
-                  <select className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none">
-                    <option>Please select your Education</option>
-                  </select>
+                  <input
+                    value={basic.highestEducation}
+                    onChange={onChangeBasic("highestEducation")}
+                    className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
+                    placeholder="12th / Graduate / Post Graduate ..."
+                  />
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">* Email Address</label>
                   <input
                     type="email"
-                    defaultValue="kumaripratima337@gmail.com"
+                    value={basic.email}
                     className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 bg-[#F3F3F3] outline-none"
                     readOnly
                   />
                 </div>
 
-                {/* Phone */}
                 <div>
                   <label className="block text-sm mb-1 text-[#124734]">* Phone Number</label>
                   <input
                     type="text"
-                    defaultValue="+91 9876543210"
+                    value={basic.phone}
+                    onChange={onChangeBasic("phone")}
                     className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
                   />
                 </div>
 
-                {/* Update Button */}
-                <button className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium">
-                  Update Basic Details
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={submitBasic}
+                  className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium disabled:opacity-60"
+                >
+                  {saving ? "Saving..." : "Update Basic Details"}
                 </button>
               </div>
             </div>
           )}
 
-          {/* EDUCATION TAB PLACEHOLDER */}
           {activeTab === "education" && (
-  <div className="max-w-5xl  bg-white p-8 rounded-xl shadow-sm border border-[#E6F4EC] ml-4">
-    <h2 className="text-2xl font-heading text-[#124734] mb-2">
-      Education Details
-    </h2>
+            <div className="max-w-5xl bg-white p-8 rounded-xl shadow-sm border border-[#E6F4EC] ml-4">
+              <h2 className="text-2xl font-heading text-[#124734] mb-2">
+                Education Details
+              </h2>
 
-    <p className="text-sm text-[#5B7065] mb-6">
-      Edit your Education Details in below fields
-    </p>
+              <p className="text-sm text-[#5B7065] mb-6">
+                Edit your Education Details in below fields
+              </p>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Currently Pursuing */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * Currently Pursuing
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  ["currentlyPursuing", "Currently Pursuing"],
+                  ["preparingFor", "Preparing For"],
+                  ["occupation", "Occupation"],
+                  ["lastExamName", "Last Exam Name"],
+                  ["lastExamYear", "Last Exam Year"],
+                  ["preparingSince", "How long you are preparing for"],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-sm mb-1 text-[#124734]">
+                      * {label}
+                    </label>
+                    <input
+                      type="text"
+                      value={education[key]}
+                      onChange={onChangeEdu(key)}
+                      className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
 
-      {/* Preparing For */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * Preparing For
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
-
-      {/* Occupation */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * Occupation
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
-
-      {/* Last Exam Name */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * Last Exam Name
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
-
-      {/* Last Exam Year */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * Last Exam Year
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
-
-      {/* How long preparing */}
-      <div>
-        <label className="block text-sm mb-1 text-[#124734]">
-          * How long you are preparing for
-        </label>
-        <input
-          type="text"
-          className="w-full border border-[#A7E1B2] rounded-lg px-4 py-2 outline-none"
-        />
-      </div>
-    </div>
-
-    {/* Button */}
-    <button className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium">
-      Update Education Details
-    </button>
-  </div>
-)}
+              <button
+                type="button"
+                disabled={saving}
+                onClick={submitEducation}
+                className="mt-8 px-6 py-3 bg-[#009846] text-white rounded-md shadow-sm hover:bg-[#007d39] transition text-sm font-medium disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Update Education Details"}
+              </button>
+            </div>
+          )}
         </main>
       </div>
     </div>

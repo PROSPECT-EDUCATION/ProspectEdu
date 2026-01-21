@@ -14,6 +14,8 @@ import {
   Newspaper,
  PenTool,
  Bell,
+  Library,
+  CreditCard,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
@@ -26,27 +28,18 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
   // =====================
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/teacher-dashboard" },
-
-    {
-      label: "Courses",
-      icon: BookOpen,
-      path: "/teacher/courses",
-    },
-    {
-      label: "Assessments",
-      icon: ClipboardList,
-      path: "/teacher/assessments",
-    },
-    {
-      label: "Review Submissions",
-      icon: FilePlus2,
-      path: "/teacher/assessments/review",
-    },
+    
+   
 
     {
       label: "Students",
       icon: Users,
       path: "/teacher/students/performance",
+    },
+    {
+      label: "Payments",
+      icon: CreditCard,
+      path: "/teacher/payments",
     },
 
     {
@@ -67,6 +60,7 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
     { label: "Announcements", icon: Bell, path: "/teacher/announcements" },
 
 
+    { label: "Study Materials", icon: Library, path: "/teacher/studymaterials" },
   ];
 
   return (

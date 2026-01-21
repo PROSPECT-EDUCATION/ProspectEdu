@@ -1,129 +1,251 @@
-// src/pages/Teacher/StudentsPerformancePage.jsx
+import { useEffect, useMemo, useState } from "react";
+import { Search, Save, Loader2, RefreshCcw } from "lucide-react";
 
-import { useMemo, useState } from "react";
-
-// Layout Components
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
+import { performanceApi } from "../../services/performance";
 
-// Performance Components
-import PerformanceStats from "../../components/Teacher/Performance/PerformanceStats";
-import SearchBar from "../../components/Teacher/Performance/SearchBar";
-import StudentsTable from "../../components/Teacher/Performance/StudentsTable";
-import StudentDetailModal from "../../components/Teacher/Performance/StudentDetailModal";
+function clampUI(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function initials(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  return (parts[0]?.[0] || "S") + (parts[1]?.[0] || "");
+}
+
+function Field({ value, onChange }) {
+  return (
+    <input
+      type="number"
+      min={0}
+      max={100}
+      value={value}
+      onChange={(e) => onChange(clampUI(e.target.value))}
+      className="w-20 rounded-xl border border-[#A7E1B2] bg-white px-2 py-1.5 text-sm text-[#124734] outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+    />
+  );
+}
+
+function safeDate(d) {
+  try {
+    if (!d) return "—";
+    return new Date(d).toLocaleString();
+  } catch {
+    return "—";
+  }
+}
 
 export default function StudentsPerformancePage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   const [query, setQuery] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [savingId, setSavingId] = useState(null);
+  const [error, setError] = useState("");
 
-  // Example dataset
-  const [students] = useState([
-    {
-      id: 1,
-      name: "Riya Sharma",
-      roll: "IT-23-001",
-      email: "riya@example.com",
-      assignments: [
-        { id: "a1", title: "DSA Assignment 1", score: 78 },
-        { id: "a2", title: "Trees & Graphs", score: 85 },
-      ],
-      quizzes: [
-        { id: "q1", title: "Stack Quiz", score: 80 },
-        { id: "q2", title: "Queue Quiz", score: 72 },
-      ],
-      attendance: 92,
-      progress: 68,
-    },
-    {
-      id: 2,
-      name: "Rahul Jain",
-      roll: "IT-23-002",
-      email: "rahul@example.com",
-      assignments: [
-        { id: "a1", title: "DSA Assignment 1", score: 92 },
-        { id: "a2", title: "Trees & Graphs", score: 88 },
-      ],
-      quizzes: [
-        { id: "q1", title: "Stack Quiz", score: 90 },
-        { id: "q2", title: "Queue Quiz", score: 94 },
-      ],
-      attendance: 98,
-      progress: 90,
-    },
-  ]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
 
-  // Filter logic
-  const filtered = students.filter(
-    (s) =>
-      s.name.toLowerCase().includes(query.toLowerCase()) ||
-      s.roll.toLowerCase().includes(query.toLowerCase()) ||
-      s.email.toLowerCase().includes(query.toLowerCase())
-  );
+    return rows.filter((r) => {
+      const s = r.student || {};
+      return (
+        String(s.fullName || "").toLowerCase().includes(q) ||
+        String(s.email || "").toLowerCase().includes(q) ||
+        String(s.phone || "").toLowerCase().includes(q)
+      );
+    });
+  }, [rows, query]);
 
-  // Metrics
   const metrics = useMemo(() => {
-    const avg = (arr) =>
-      Math.round(arr.reduce((a, b) => a + b, 0) / (arr.length || 1));
-
-    const assignmentScores = students.flatMap((s) =>
-      s.assignments.map((a) => a.score)
-    );
-
-    const quizScores = students.flatMap((s) =>
-      s.quizzes.map((q) => q.score)
-    );
+    const avg = (arr) => {
+      const nums = arr.map(Number).filter(Number.isFinite);
+      if (!nums.length) return 0;
+      return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+    };
 
     return {
-      avgAssignment: avg(assignmentScores),
-      avgQuiz: avg(quizScores),
-      completionRate: avg(students.map((s) => s.progress)),
-      activeCount: students.length,
+      avgAssignment: avg(rows.map((r) => r.performance?.assignmentAvg ?? 0)),
+      avgQuiz: avg(rows.map((r) => r.performance?.quizAvg ?? 0)),
+      avgAttendance: avg(rows.map((r) => r.performance?.attendance ?? 0)),
+      avgProgress: avg(rows.map((r) => r.performance?.progress ?? 0)),
+      count: rows.length,
     };
-  }, [students]);
+  }, [rows]);
+
+  async function load() {
+    try {
+      setError("");
+      setLoading(true);
+      const res = await performanceApi.teacherOverallStudents();
+      setRows(res?.data?.rows || []);
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || "Failed to load students.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function updateLocal(studentId, patch) {
+    setRows((prev) =>
+      prev.map((r) =>
+        String(r.student?._id) !== String(studentId)
+          ? r
+          : { ...r, performance: { ...(r.performance || {}), ...patch } }
+      )
+    );
+  }
+
+  async function saveRow(studentId) {
+    const row = rows.find((r) => String(r.student?._id) === String(studentId));
+    if (!row) return;
+
+    const payload = {
+      assignmentAvg: clampUI(row.performance?.assignmentAvg ?? 0),
+      quizAvg: clampUI(row.performance?.quizAvg ?? 0),
+      attendance: clampUI(row.performance?.attendance ?? 0),
+      progress: clampUI(row.performance?.progress ?? 0),
+    };
+
+    try {
+      setSavingId(studentId);
+      setError("");
+      const res = await performanceApi.updateOverallStudent(studentId, payload);
+      const p = res?.data?.performance;
+      if (p) updateLocal(studentId, p);
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || "Failed to save.");
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-
-      {/* FIXED SIDEBAR */}
+      {/* SIDEBAR */}
       <div
         className="fixed left-0 top-0 h-full transition-all duration-300"
         style={{ width: sidebarWidth }}
       >
-        <TeacherSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: sidebarWidth }}
       >
-        {/* FULL-WIDTH TOPBAR */}
-        <TeacherTopbar pageTitle="Students · Performance" />
+        <TeacherTopbar pageTitle="Students · Overall Performance" />
 
-        {/* PAGE CONTENT */}
         <div className="p-6 overflow-y-auto max-h-screen">
-          <p className="text-sm text-[#5B7065] mb-6">
-            Full overview of academic performance
+          <h2 className="text-lg font-semibold text-[#124734] text-left">Overall Report Card</h2>
+          <p className="text-sm text-[#5B7065] mt-1 text-left">
+            Update Assignment Avg, Quiz Avg, Attendance, Progress (0–100).
           </p>
 
-          <PerformanceStats metrics={metrics} />
+          {/* METRICS */}
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 my-6">
+            {[
+              { label: "Avg Assignment", value: `${metrics.avgAssignment}%` },
+              { label: "Avg Quiz", value: `${metrics.avgQuiz}%` },
+              { label: "Avg Attendance", value: `${metrics.avgAttendance}%` },
+              { label: "Avg Progress", value: `${metrics.avgProgress}%` },
+              { label: "Students", value: metrics.count },
+            ].map((c) => (
+              <div
+                key={c.label}
+                className="p-4 rounded-2xl border border-[#A7E1B2] bg-white shadow-sm"
+              >
+                <div className="text-xs text-[#5B7065]">{c.label}</div>
+                <div className="text-xl font-semibold text-[#124734] mt-1">
+                  {c.value}
+                </div>
+              </div>
+            ))}
+          </div>
 
-          <SearchBar query={query} setQuery={setQuery} />
+          {/* TABLE */}
+          <div className="bg-white border border-[#A7E1B2] rounded-2xl overflow-hidden shadow-sm">
+            <table className="w-full">
+              <thead className="bg-[#F9FAFB] text-sm text-[#5B7065]">
+                <tr>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Phone</th>
+                  <th className="px-4 py-3">Assignment Avg</th>
+                  <th className="px-4 py-3">Quiz Avg</th>
+                  <th className="px-4 py-3">Attendance</th>
+                  <th className="px-4 py-3">Progress</th>
+                  <th className="px-4 py-3 text-right">Save</th>
+                </tr>
+              </thead>
 
-          <StudentsTable students={filtered} onSelect={setSelectedStudent} />
+              <tbody>
+                {filtered.map((r) => {
+                  const s = r.student || {};
+                  const p = r.performance || {};
+                  const isSaving = savingId === s._id;
 
-          {selectedStudent && (
-            <StudentDetailModal
-              student={selectedStudent}
-              onClose={() => setSelectedStudent(null)}
-            />
-          )}
+                  return (
+                    <tr key={s._id} className="border-t border-[#A7E1B2]">
+                      <td className="px-4 py-3 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-[#A7E1B2] text-[#124734] flex items-center justify-center font-semibold">
+                          {initials(s.fullName)}
+                        </div>
+                        <span className="font-medium text-[#124734]">
+                          {s.fullName || "—"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3 text-[#124734]">{s.email || "—"}</td>
+                      <td className="px-4 py-3 text-[#124734]">{s.phone || "—"}</td>
+
+                      <td className="px-4 py-3">
+                        <Field value={p.assignmentAvg ?? 0} onChange={(v) => updateLocal(s._id, { assignmentAvg: v })} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Field value={p.quizAvg ?? 0} onChange={(v) => updateLocal(s._id, { quizAvg: v })} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Field value={p.attendance ?? 0} onChange={(v) => updateLocal(s._id, { attendance: v })} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Field value={p.progress ?? 0} onChange={(v) => updateLocal(s._id, { progress: v })} />
+                      </td>
+
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => saveRow(s._id)}
+                          disabled={isSaving}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#009846] text-white hover:bg-[#00803B] disabled:opacity-60"
+                        >
+                          {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                          Save
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {!loading && filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-10 text-center text-[#5B7065]">
+                      No students found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

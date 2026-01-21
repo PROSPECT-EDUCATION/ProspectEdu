@@ -1,6 +1,7 @@
 // src/components/Teacher/EditProfile/TeacherEditProfileForm.jsx
 
-import { useState } from "react";
+import {useEffect, useState } from "react";
+import { getMyTeacherProfile, updateMyTeacherProfile } from "../../../services/teacherProfile";
 import SubjectCheckboxGroup from "./SubjectCheckboxGroup";
 
 export default function TeacherEditProfileForm() {
@@ -31,11 +32,40 @@ export default function TeacherEditProfileForm() {
       };
     });
   };
+useEffect(() => {
+  getMyTeacherProfile().then((res) => {
+    const p = res.data.profile;
+    setForm({
+      fullName: p.fullName || "",
+      email: p.email || "",
+      phone: p.phone || "",
+      teacherId: p.teacherId || "",
+      department: p.department || "",
+      designation: p.designation || "",
+      experience: p.experience || "",
+      qualification: p.qualification || "",
+      subjects: p.subjects || [],
+    });
+  });
+}, []);
 
-  const submit = (e) => {
-    e.preventDefault();
-    console.log("Saved Profile:", form);
-  };
+  const submit = async (e) => {
+  e.preventDefault();
+
+  await updateMyTeacherProfile({
+    fullName: form.fullName,
+    phone: form.phone,
+    teacherId: form.teacherId,
+    department: form.department,
+    designation: form.designation,
+    experience: Number(form.experience),
+    qualification: form.qualification,
+    subjects: form.subjects,
+  });
+
+  alert("Profile updated successfully");
+};
+
 
   return (
     <form
@@ -62,11 +92,12 @@ export default function TeacherEditProfileForm() {
 
           <div>
             <label className="text-sm text-[#5B7065]">Email</label>
-            <input
-              className="w-full mt-1 border rounded-md p-2 outline-[#009846]"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-            />
+           <input
+  disabled
+  className="w-full mt-1 border rounded-md p-2 bg-gray-100"
+  value={form.email}
+/>
+
           </div>
 
           <div>

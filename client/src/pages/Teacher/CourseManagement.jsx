@@ -9,7 +9,8 @@ import CourseOverviewTab from "../../components/Teacher/CourseManagementPage/Cou
 import Modules from "../../components/Teacher/Modules";
 import AssessmentDashboard from "../../components/Teacher/Assessments/AssessmentDashboard";
 import StudentsPage from "../../components/Teacher/StudentsPage";
-import CourseSettingsPage from "../../components/Teacher/CourseSettingsPage";
+
+import { coursesApi } from "../../services/courses";
 
 export default function CourseManagementPage() {
   const { courseId } = useParams();
@@ -18,21 +19,27 @@ export default function CourseManagementPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [course, setCourse] = useState(null);
-
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   // ✅ Load course from localStorage
-  useEffect(() => {
-    const allCourses = JSON.parse(localStorage.getItem("teacherCourses") || "[]");
-
-    const idx = parseInt(courseId, 10);
-
-    if (Number.isInteger(idx) && allCourses[idx]) {
-      setCourse(allCourses[idx]);
-    } else {
+useEffect(() => {
+  const load = async () => {
+    try {
+       if (!courseId || courseId.length !== 24) {
+        setCourse(null);
+        return;
+      }
+      const res = await coursesApi.getTeacherCourseById(courseId);
+      setCourse(res.data.course);
+    } catch (e) {
+      console.log(e);
       setCourse(null);
     }
-  }, [courseId]);
+  };
+
+  if (courseId) load();
+}, [courseId]);
+
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
@@ -60,7 +67,7 @@ export default function CourseManagementPage() {
             /{" "}
             <span
               className="hover:text-[#009846] cursor-pointer hover:underline"
-              onClick={() => navigate("/teacher/courses")}
+              onClick={() => navigate("/teacher-dashboard")}
             >
               Courses
             </span>{" "}
@@ -81,15 +88,15 @@ export default function CourseManagementPage() {
             <button onClick={() => setActiveTab("modules")} className={`${activeTab === "modules" && "border-b-2 border-[#009846]"}`}>Modules</button>
             <button onClick={() => setActiveTab("assessments")} className={`${activeTab === "assessments" && "border-b-2 border-[#009846]"}`}>Assessments</button>
             <button onClick={() => setActiveTab("students")} className={`${activeTab === "students" && "border-b-2 border-[#009846]"}`}>Students</button>
-            <button onClick={() => setActiveTab("settings")} className={`${activeTab === "settings" && "border-b-2 border-[#009846]"}`}>Settings</button>
           </div>
 
           {/* TAB CONTENT */}
-          {activeTab === "overview" && <CourseOverviewTab />}
-          {activeTab === "modules" && <Modules />}
-          {activeTab === "assessments" && <AssessmentDashboard />}
-          {activeTab === "students" && <StudentsPage />} 
-          {activeTab === "settings" && <CourseSettingsPage />}
+         {activeTab === "overview" && <CourseOverviewTab course={course} />}
+{activeTab === "modules" && <Modules course={course} />}
+{activeTab === "assessments" && <AssessmentDashboard course={course} />}
+{activeTab === "students" && <StudentsPage courseId={courseId} />}
+
+
         </div>
       </div>
     </div>

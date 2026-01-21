@@ -1,62 +1,34 @@
 import React from "react";
 
-export default function AdminStatsGrid({ index }) {
-  const stats = [
-    {
-      title: "Total Students",
-      value: "3280",
-      progress: "80%",
-      barColor: "#1D5C3F",
-      text: "80% Increase in 20 Days",
-    },
-    {
-      title: "New Students",
-      value: "245",
-      progress: "50%",
-      barColor: "#E53935",
-      text: "50% Increase in 25 Days",
-    },
-    {
-      title: "Total Courses",
-      value: "28",
-      progress: "76%",
-      barColor: "#8BC34A",
-      text: "76% Increase in 20 Days",
-    },
-    {
-      title: "Fees Collection",
-      value: "25160$",
-      progress: "30%",
-      barColor: "#4CAF50",
-      text: "30% Increase in 30 Days",
-    },
-  ];
-
-  const item = stats[index];
-
+export default function AdminStatsGrid({ stats = [] }) {
   return (
-  <div className="bg-white rounded-2xl shadow-md p-6 h-[160px] flex flex-col justify-between">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {stats.map((item) => (
+        <div
+          key={item.key}
+          className="bg-white rounded-2xl shadow-md p-6 h-[160px] flex flex-col justify-between"
+        >
+          <h3 className="text-lg font-semibold text-[#124734]">{item.title}</h3>
 
-      {/* Title */}
-      <h3 className="text-lg font-semibold text-[#124734]">{item.title}</h3>
+          <p className="text-3xl font-bold text-[#124734]">{item.value}</p>
 
-      {/* Value */}
-      <p className="text-3xl font-bold text-[#124734]">{item.value}</p>
+          <div>
+            <div className="w-full h-2 bg-gray-200 rounded-full">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: item.progress || "0%",
+                  backgroundColor: item.barColor || "#1D5C3F",
+                }}
+              />
+            </div>
 
-      {/* Progress */}
-      <div>
-        <div className="w-full h-2 bg-gray-200 rounded-full">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: item.progress,
-              backgroundColor: item.barColor,
-            }}
-          ></div>
+            {item.text ? (
+              <p className="text-sm text-gray-600 mt-2">{item.text}</p>
+            ) : null}
+          </div>
         </div>
-
-        <p className="text-sm text-gray-600 mt-2">{item.text}</p>
-      </div>
+      ))}
     </div>
   );
 }
