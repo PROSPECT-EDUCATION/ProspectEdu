@@ -3,6 +3,10 @@ import { User } from "../users/user.model.js";
 import { updateMeSchema } from "./students.validators.js";
 import { ensureStudentProfile } from "./students.service.js"; 
 import mongoose from "mongoose";
+import {StudentOverallPerformance} from "../performance/studentOverallPerformance.model.js";
+import {Enrollment} from "../courses/enrollment.model.js";
+import { Course } from "../courses/course.model.js";
+import { ParentProfile } from "../parents/parentProfile.model.js";
 
 const USER_SELECT = "fullName email phone role";
 const ADMIN_USER_SELECT =
@@ -93,6 +97,113 @@ export async function getStudentProfileByIdAdmin(req, res, next) {
     const profile = await ensureStudentProfile(user._id);
 
     return res.json({ success: true, user, profile });
+  } catch (e) {
+    next(e);
+  }
+}
+
+
+/**
+ * GET /api/v1/students/:studentId/details
+ */
+export async function getStudentDetails(req, res, next) {
+  try {
+    const { studentId } = req.params;
+    const requester = req.user;
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: "Invalid studentId" });
+    }
+
+    // 1️⃣ Student basic info
+    const student = await User.findOne({
+      _id: studentId,
+      role: "student",
+    }).select("_id fullName email phone isActive createdAt");
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    /**
+     * 2️⃣ Authorization
+     * - Admin → always allowed
+     * - Parent → only if child is linked
+     * - Teacher → allowed (you may restrict later)
+     */
+    if (requester.role === "parent") {
+      const prof = await ParentProfile.findOne({
+        user: requester.id,
+        "children.studentUserId": studentId,
+      }).select("_id");
+
+      if (!prof) {
+        return res.status(403).json({ success: false, message: "Forbidden" });
+      }
+    }
+
+    // 3️⃣ Latest performance (teacher maintained)
+    const performance = await StudentOverallPerformance.findOne({
+      studentId,
+    })
+      .sort({ updatedAt: -1 })
+      .select("assignmentAvg quizAvg attendance progress updatedAt")
+      .lean();
+
+    // 4️⃣ Enrolled courses
+    const enrollments = await Enrollment.find({
+      studentUserId: studentId,
+      status: "active",
+    })
+      .populate("courseId", "title slug img")
+      .select("courseId enrolledAt")
+      .lean();
+
+    const courses = enrollments
+      .filter((e) => e.courseId)
+      .map((e) => ({
+        _id: e.courseId._id,
+        title: e.courseId.title,
+        slug: e.courseId.slug,
+        img: e.courseId.img || "",
+        enrolledAt: e.enrolledAt,
+      }));
+
+    // 5️⃣ Optional recent activity (safe, derived)
+    const recentActivity = performance
+      ? [
+          {
+            label: "Attendance Updated",
+            value: `${performance.attendance}%`,
+            at: performance.updatedAt,
+          },
+          {
+            label: "Progress Updated",
+            value: `${performance.progress}%`,
+            at: performance.updatedAt,
+          },
+        ]
+      : [];
+
+    return res.json({
+      success: true,
+      student: {
+        _id: student._id,
+        fullName: student.fullName,
+        email: student.email,
+        phone: student.phone || "",
+        isActive: student.isActive,
+        joinedAt: student.createdAt,
+      },
+      performance: performance || {
+        assignmentAvg: 0,
+        quizAvg: 0,
+        attendance: 0,
+        progress: 0,
+      },
+      courses,
+      recentActivity,
+    });
   } catch (e) {
     next(e);
   }

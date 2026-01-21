@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../../middlewares/auth.js";
-import { getMyStudentProfile, updateMyStudentProfile, getStudentProfileByIdAdmin } from "./students.controller.js";
+import { getMyStudentProfile, updateMyStudentProfile, getStudentDetails, getStudentProfileByIdAdmin } from "./students.controller.js";
 
 const router = Router();
 
@@ -13,4 +13,5 @@ router.get(
   requireRole("admin"),
   getStudentProfileByIdAdmin
 );
+router.get("/:studentId/details", requireAuth, getStudentDetails);
 export default router;

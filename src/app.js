@@ -22,6 +22,8 @@ import activityRoutes from "./modules/activity/activity.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import teacherProfileRoutes from "./modules/teachers/teacherProfile.routes.js";
 import overallPerformanceRoutes from "./modules/performance/overallPerformance.routes.js";
+import parentsRoutes from "./modules/parents/parents.routes.js";
+import paymentsRoutes from "./modules/teacherparentpayments/payments.routes.js";
 export function createApp() {
   const app = express();
 
@@ -51,7 +53,8 @@ export function createApp() {
   app.use("/api/v1/admin", adminDashboardRouter);
   app.use("/api/v1/study-materials", studyMaterialsRoutes);
   app.use("/api/v1/performance", overallPerformanceRoutes);
-
+  app.use("/api/v1/parents", parentsRoutes);
+  app.use("/api/v1/payments", paymentsRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;
