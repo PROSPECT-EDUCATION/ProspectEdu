@@ -1,0 +1,20 @@
+import mongoose from "mongoose";
+
+const contactSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    phone: { type: String, required: true, trim: true },
+    issue: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+
+    status: {
+      type: String,
+      enum: ["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"],
+      default: "PENDING",
+    },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("ContactRequest", contactSchema);
