@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import AdminStatsGrid from "../../components/Admin/Dashboard/AdminStatsGrid";
-import IncomeExpenseChart from "../../components/Admin/Dashboard/IncomeExpenseChart";
 import ProfessorsList from "../../components/Admin/Dashboard/ProfessorsList";
 import StudentList from "../../components/Admin/Dashboard/StudentList";
 
@@ -105,10 +104,13 @@ export default function AdminDashboardPage() {
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto space-y-10">
           {/* ✅ Stats + Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8">
-            <AdminStatsGrid stats={stats} />
-            <IncomeExpenseChart />
-          </div>
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+  <div className="mx-auto max-w-7xl">
+    <AdminStatsGrid stats={stats} />
+  </div>
+</div>
+
+
 
           <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
             <ProfessorsList />

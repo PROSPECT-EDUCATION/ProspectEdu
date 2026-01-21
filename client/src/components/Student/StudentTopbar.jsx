@@ -28,7 +28,7 @@ export default function StudentTopbar({ isCollapsed = false, pageTitle }) {
           ) : (
             <>
               <p className="text-sm text-[#5B7065] font-body">
-                Hello <span className="font-semibold text-[#124734]">Pratima</span>, Welcome Back!
+                Hello , Welcome Back!
               </p>
               <h2 className="text-lg font-heading font-semibold text-[#124734]">
                 Your Dashboard Today
