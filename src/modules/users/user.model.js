@@ -1,3 +1,4 @@
+// server/modules/users/user.model.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -5,10 +6,21 @@ const { Schema } = mongoose;
 
 export const USER_ROLES = ["admin", "student", "parent", "teacher", "supplier"];
 
+const approvalSchema = {
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: null,
+    index: true,
+  },
+  reviewedAt: { type: Date, default: null },
+  reviewedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  note: { type: String, trim: true, default: "" },
+};
+
 const userSchema = new Schema(
   {
     fullName: { type: String, required: true, trim: true, maxlength: 120 },
-
     email: {
       type: String,
       required: true,
@@ -17,9 +29,7 @@ const userSchema = new Schema(
       unique: true,
       index: true,
     },
-
-    phone: { type: String, trim: true, unique: true, sparse: true }, // optional
-
+    phone: { type: String, trim: true, unique: true, sparse: true },
     passwordHash: { type: String, required: true, select: false },
 
     role: {
@@ -30,8 +40,15 @@ const userSchema = new Schema(
     },
 
     isActive: { type: Boolean, default: true },
+    state: { type: String, trim: true },
+    city: { type: String, trim: true },
 
-    // For refresh-token rotation (we’ll use this later in Auth module)
+    // ✅ Teacher approval workflow
+    teacherApproval: approvalSchema,
+
+    // ✅ NEW: Admin approval workflow
+    adminApproval: approvalSchema,
+
     refreshTokenHash: { type: String, select: false, default: null },
 
         addresses: [
@@ -53,9 +70,35 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// ✅ Keep approval states only for the right roles
+userSchema.pre("save", function () {
+  // Teacher defaults
+  if (this.role !== "teacher") {
+    this.teacherApproval = undefined;
+  } else if (!this.teacherApproval?.status) {
+    this.teacherApproval = {
+      status: "pending",
+      reviewedAt: null,
+      reviewedBy: null,
+      note: "",
+    };
+  }
+
+  // Admin defaults
+  if (this.role !== "admin") {
+    this.adminApproval = undefined;
+  } else if (!this.adminApproval?.status) {
+    this.adminApproval = {
+      status: "pending",
+      reviewedAt: null,
+      reviewedBy: null,
+      note: "",
+    };
+  }
+  next();
+});
 
 userSchema.methods.comparePassword = async function comparePassword(password) {
-  // passwordHash may be not selected by default
   if (!this.passwordHash) return false;
   return bcrypt.compare(password, this.passwordHash);
 };

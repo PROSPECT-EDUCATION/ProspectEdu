@@ -9,8 +9,13 @@ import { notFound } from "./middlewares/notFound.js";
 import { errorHandler } from "./middlewares/error.js";
 
 
+import studentsRoutes from "./modules/students/students.routes.js";
 // routes (we’ll add auth first)
 import authRoutes from "./modules/auth/auth.routes.js";
+import studyMaterialsRoutes from "./modules/study-materials/studyMaterials.routes.js";
+import assignmentsRoutes from "./modules/assignments/assignments.routes.js";
+import quizzesRouter from "./modules/quizzes/quizzes.routes.js";
+import adminDashboardRouter from "./modules/adminDashboard/adminDashboard.routes.js";
 import usersRoutes from "./modules/users/users.routes.js"
 import addressesRoutes from "./modules/addresses/addresses.routes.js";
 import supplierRoutes from "./modules/suppliers/supplier.routes.js";
@@ -44,6 +49,16 @@ import razorpayRoutes from "./modules/payments/razorpay.routes.js";
 
 
 
+import coursesRoutes from "./modules/courses/courses.routes.js";
+import contentRoutes from "./modules/courses/content.routes.js";
+import categoryRoutes from "./modules/courseCategories/category.routes.js";
+import purchaseRoutes from "./modules/purchases/purchase.routes.js";
+import activityRoutes from "./modules/activity/activity.routes.js";
+import uploadsRoutes from "./modules/uploads/uploads.routes.js";
+import teacherProfileRoutes from "./modules/teachers/teacherProfile.routes.js";
+import overallPerformanceRoutes from "./modules/performance/overallPerformance.routes.js";
+import parentsRoutes from "./modules/parents/parents.routes.js";
+import paymentsRoutes from "./modules/teacherparentpayments/payments.routes.js";
 export function createApp() {
   const app = express();
 
@@ -89,7 +104,23 @@ export function createApp() {
  
 
 
+  app.use("/api/v1/students", studentsRoutes);
+  app.use("/api/v1/courses", coursesRoutes);
+  app.use("/api/v1/content", contentRoutes);
 
+  app.use("/api/v1/course-categories", categoryRoutes);
+  app.use("/api/v1/purchases", purchaseRoutes);
+  app.use("/api/v1/activity", activityRoutes);
+  app.use("/api/v1/uploads", uploadsRoutes);
+
+  app.use("/api/v1/teachers/profile", teacherProfileRoutes);
+  app.use("/api/v1/assignments", assignmentsRoutes);
+  app.use("/api/v1/quizzes", quizzesRouter);
+  app.use("/api/v1/admin", adminDashboardRouter);
+  app.use("/api/v1/study-materials", studyMaterialsRoutes);
+  app.use("/api/v1/performance", overallPerformanceRoutes);
+  app.use("/api/v1/parents", parentsRoutes);
+  app.use("/api/v1/payments", paymentsRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;

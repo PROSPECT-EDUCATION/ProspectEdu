@@ -1,26 +1,46 @@
 import bcrypt from "bcryptjs";
 import { User } from "../users/user.model.js";
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../../utils/jwt.js";
+import { ensureStudentProfile } from "../students/students.service.js";
 
-export async function registerUser({ fullName, email, phone, password, role }) {
+export async function registerUser({ fullName, email, phone, password, role, state, city }) {
   const exists = await User.findOne({ email });
   if (exists) {
     const err = new Error("Email already in use");
     err.statusCode = 409;
     throw err;
   }
-const passwordHash = await bcrypt.hash(password, 10);
- let user;
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  let user;
   try {
     user = await User.create({
       fullName,
       email,
       phone,
       role,
+      state,
+      city,
       passwordHash,
-    });
+
+      // ✅ if teacher -> pending approval
+      teacherApproval:
+        role === "teacher"
+          ? { status: "pending", reviewedAt: null, reviewedBy: null, note: "" }
+          : { status: null, reviewedAt: null, reviewedBy: null, note: "" },
+    
+
+          adminApproval:
+    role === "admin"
+      ? { status: "pending", reviewedAt: null, reviewedBy: null, note: "" }
+      : { status: null, reviewedAt: null, reviewedBy: null, note: "" },
+        });
+
+    if (user.role === "student") {
+      await ensureStudentProfile(user._id, { state: "", city: "" });
+    }
   } catch (e) {
-    // ✅ Handle Mongo duplicate key
     if (e?.code === 11000) {
       const field = Object.keys(e.keyPattern || {})[0] || "field";
       const err = new Error(`${field} already in use`);
@@ -29,19 +49,34 @@ const passwordHash = await bcrypt.hash(password, 10);
     }
     throw e;
   }
-// load fresh doc with refreshTokenHash selectable
-const fresh = await User.findById(user._id).select("+refreshTokenHash");
 
+  // ✅ If teacher, stop here: pending approval (NO tokens)
+  if (user.role === "teacher") {
+    return {
+      user: sanitizeUser(user),
+      pendingApproval: true,
+      message: "Teacher account created. Please wait for admin approval.",
+    };
+  }
+  if (user.role === "admin") {
+  return {
+    user: sanitizeUser(user),
+    pendingApproval: true,
+    message: "Admin request sent. Please wait for approval from existing admin.",
+  };
+}
 
+  // normal flow for others (student/parent/admin/supplier)
+  const fresh = await User.findById(user._id).select("+refreshTokenHash");
   const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
   const refreshToken = signRefreshToken({ sub: user._id.toString(), role: user.role });
 
-  // Store refresh token hash in DB (recommended)
   fresh.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
   await fresh.save();
 
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
+
 
 export async function loginUser({ phone, password }) {
   const user = await User.findOne({ phone }).select("+passwordHash +refreshTokenHash");
@@ -57,6 +92,21 @@ export async function loginUser({ phone, password }) {
     err.statusCode = 401;
     throw err;
   }
+
+if (user.role === "teacher") {
+  if (!user.teacherApproval || !user.teacherApproval.status) {
+    const err = new Error("Teacher approval data missing. Contact admin.");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (user.teacherApproval.status !== "approved") {
+    const err = new Error("Teacher account pending admin approval");
+    err.statusCode = 403;
+    throw err;
+  }
+}
+
 
   user.lastLoginAt = new Date();
 
@@ -76,10 +126,15 @@ export function sanitizeUser(user) {
     email: user.email,
     phone: user.phone,
     role: user.role,
+    state: user.state,
+    city: user.city,
     isActive: user.isActive,
+    teacherApproval: user.teacherApproval || null,
+    adminApproval: user.adminApproval || null,  // ✅ add
     createdAt: user.createdAt,
   };
 }
+
 export async function refreshSession({ refreshToken }) {
   if (!refreshToken) {
     const err = new Error("Missing refresh token");
@@ -158,3 +213,36 @@ export async function changePassword({ userId, oldPassword, newPassword }) {
 }
 
 
+export async function changePassword({ userId, oldPassword, newPassword }) {
+  const user = await User.findById(userId).select("+passwordHash +refreshTokenHash");
+  if (!user) {
+    const err = new Error("User not found");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // ✅ 1) define ok first, then use it
+  const ok = await bcrypt.compare(oldPassword, user.passwordHash);
+  if (!ok) {
+    const err = new Error("Old password is incorrect");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // ✅ 2) define same first, then use it
+  const same = await bcrypt.compare(newPassword, user.passwordHash);
+  if (same) {
+    const err = new Error("New password must be different");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // ✅ 3) hash new password
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+
+  // ✅ 4) logout from all devices (recommended)
+  user.refreshTokenHash = null;
+
+  await user.save();
+  return true;
+}

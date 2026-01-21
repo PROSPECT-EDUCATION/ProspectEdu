@@ -10,14 +10,13 @@ router.post("/login", AuthController.login);
 router.post("/refresh", AuthController.refresh);
 router.post("/logout", AuthController.logout);
 
-// ✅ Change Password (update => PATCH is best practice)
+// Change Password
 router.patch("/change-password", requireAuth, AuthController.changeMyPassword);
 
-// ✅ test RBAC quickly
-router.get("/me", requireAuth, (req, res) => {
-  res.json({ success: true, user: req.user });
-});
+// Me
+router.get("/me", requireAuth, AuthController.me);
 
+// test RBAC quickly
 router.get("/admin-only", requireAuth, requireRole("admin"), (req, res) => {
   res.json({ success: true, message: "Welcome admin!" });
 });
