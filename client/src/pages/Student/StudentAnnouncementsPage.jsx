@@ -1,0 +1,86 @@
+import { useEffect, useState } from "react";
+import StudentSidebar from "../../components/Student/StudentSidebar";
+import StudentTopbar from "../../components/Student/StudentTopbar";
+
+import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
+import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
+import { api } from "../../lib/api";
+
+export default function StudentAnnouncementsPage() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    try {
+      setLoading(true);
+
+      // ✅ student will receive only those announcements where recipients includes "student"
+      const res = await api.get("/announcements/me/for-me");
+      setItems(res?.data?.data || []);
+    } catch (e) {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      // ✅ when opening announcements page -> mark all as read -> bell count becomes 0
+      try {
+        await api.post("/announcements/me/mark-all-read");
+        window.dispatchEvent(new Event("announcements:refresh"));
+
+      } catch (e) {
+        // ignore
+      }
+      load();
+    })();
+  }, []);
+
+  return (
+    <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* SIDEBAR */}
+      <div
+        className="fixed top-0 left-0 h-full transition-all duration-300"
+        style={{ width: sidebarWidth }}
+      >
+        <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      </div>
+
+      {/* MAIN */}
+      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
+        <StudentTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
+
+        <div className="p-6 space-y-4 overflow-y-auto text-left">
+          {loading ? (
+            <p className="text-gray-500">Loading...</p>
+          ) : items.length === 0 ? (
+            <p className="text-gray-500">No announcements.</p>
+          ) : (
+            items.map((a) => (
+              <AnnouncementCard
+                key={a._id}
+                a={{ ...a, id: a._id }}
+
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* MODAL */}
+      {selectedAnnouncement && (
+        <AnnouncementModal
+          announcement={selectedAnnouncement}
+          onClose={() => setSelectedAnnouncement(null)}
+        />
+      )}
+    </div>
+  );
+}
