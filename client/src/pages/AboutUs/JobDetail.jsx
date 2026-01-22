@@ -1,40 +1,81 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import hiringImg from "../../assets/hiring2.webp";
 import ContactUs from "../../components/Contact";
-import { JobData } from "../../data/JobData"; // ✅ IMPORTED JOB DATA
 import HeaderSection from "../../components/HeaderSection";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
+import { api } from "../../lib/api"; // ✅ NEW
 
 const JobDetail = () => {
   const { id } = useParams();
+
   const [showForm, setShowForm] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
 
-  // ---------------- Job Data ----------------
-  const job = JobData.find((item) => item.id === Number(id));
+  // ✅ NEW: job from backend
+  const [job, setJob] = useState(null);
+  const [loadingJob, setLoadingJob] = useState(true);
 
-  if (!job)
-    return <h2 className="text-center mt-10 text-red-600">Job not found</h2>;
+  // ✅ Apply form state (same fields, layout same)
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    highestEducation: "",
+    canRelocate: "",
+    fluentIn: "",
+  });
+  const [resumeFile, setResumeFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const res = await api.get(`/careers/jobs/${id}`);
+        if (!mounted) return;
+        setJob(res?.data?.job || null);
+      } catch (e) {
+        console.error("Failed to load job:", e);
+        if (!mounted) return;
+        setJob(null);
+      } finally {
+        if (!mounted) return;
+        setLoadingJob(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
   // ---------------- Auto-extract list items (NO content change) ----------------
-  const descLines = job.description.split("\n").map((l) => l.trim());
+  const { responsibilities, requirements } = useMemo(() => {
+    const desc = (job?.description || "").toString();
+    const descLines = desc.split("\n").map((l) => l.trim());
 
-  const responsibilitiesStart = descLines.indexOf("Responsibilities:");
-  const requirementsStart = descLines.indexOf("Requirements:");
+    const responsibilitiesStart = descLines.indexOf("Responsibilities:");
+    const requirementsStart = descLines.indexOf("Requirements:");
 
-  const responsibilities =
-    responsibilitiesStart !== -1
-      ? descLines
-          .slice(responsibilitiesStart + 1, requirementsStart)
-          .filter((l) => l.startsWith("•"))
-      : [];
+    const responsibilitiesList =
+      responsibilitiesStart !== -1 && requirementsStart !== -1
+        ? descLines
+            .slice(responsibilitiesStart + 1, requirementsStart)
+            .filter((l) => l.startsWith("•"))
+        : responsibilitiesStart !== -1
+        ? descLines.slice(responsibilitiesStart + 1).filter((l) => l.startsWith("•"))
+        : [];
 
-  const requirements =
-    requirementsStart !== -1
-      ? descLines.slice(requirementsStart + 1).filter((l) => l.startsWith("•"))
-      : [];
+    const requirementsList =
+      requirementsStart !== -1
+        ? descLines.slice(requirementsStart + 1).filter((l) => l.startsWith("•"))
+        : [];
+
+    return { responsibilities: responsibilitiesList, requirements: requirementsList };
+  }, [job]);
 
   // ---------------- Copy to Clipboard ----------------
   const copyLink = () => {
@@ -43,21 +84,95 @@ const JobDetail = () => {
     setTimeout(() => setShowCopied(false), 2000);
   };
 
-  return (
-     <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
-          <Navbar />
-    
-          <HeaderSection
-            page="Career"
-            title="Join the Future of Education"
-            subtitle="Unlock your potential and make a difference in the lives  
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
+  };
+
+  const submitApplication = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      if (resumeFile) fd.append("resume", resumeFile);
+
+      await api.post(`/careers/jobs/${id}/apply`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Application submitted ✅");
+      setShowForm(false);
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        highestEducation: "",
+        canRelocate: "",
+        fluentIn: "",
+      });
+      setResumeFile(null);
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Failed to submit application");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loadingJob) {
+    return (
+      <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+        <Navbar />
+        <HeaderSection
+          page="Career"
+          title="Join the Future of Education"
+          subtitle="Unlock your potential and make a difference in the lives  
             of millions of learners worldwide."
-            image={hiringImg}
-          />
+          image={hiringImg}
+        />
+        <h2 className="text-center mt-10">Loading...</h2>
+        <div className="pt-10">
+          <Footer />
+        </div>
+      </section>
+    );
+  }
+
+  if (!job) {
+    return (
+      <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+        <Navbar />
+        <HeaderSection
+          page="Career"
+          title="Join the Future of Education"
+          subtitle="Unlock your potential and make a difference in the lives  
+            of millions of learners worldwide."
+          image={hiringImg}
+        />
+        <h2 className="text-center mt-10 text-red-600">Job not found</h2>
+        <div className="pt-10">
+          <Footer />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+      <Navbar />
+
+      <HeaderSection
+        page="Career"
+        title="Join the Future of Education"
+        subtitle="Unlock your potential and make a difference in the lives  
+            of millions of learners worldwide."
+        image={hiringImg}
+      />
 
       {/* ------------ Job Details Section ------------ */}
       <div className="max-w-7xl mx-auto py-12 flex flex-col lg:flex-row gap-10 text-left">
-
         {/* Left - Main Details */}
         <div className="w-full lg:w-3/4">
           <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
@@ -69,7 +184,9 @@ const JobDetail = () => {
           </p>
 
           {/* Responsibilities */}
-          <h3 className="text-xl font-semibold mt-8 mb-3">1. Responsibilities:</h3>
+          <h3 className="text-xl font-semibold mt-8 mb-3">
+            1. Responsibilities:
+          </h3>
           <ul className="list-disc pl-6 space-y-1">
             {responsibilities.map((item, i) => (
               <li key={i}>{item.replace("•", "").trim()}</li>
@@ -95,7 +212,9 @@ const JobDetail = () => {
 
         {/* Right - Share Section */}
         <div className="w-full lg:w-1/4">
-          <h3 className="text-lg font-semibold mb-3">Share this opening with friends</h3>
+          <h3 className="text-lg font-semibold mb-3">
+            Share this opening with friends
+          </h3>
 
           <button
             onClick={copyLink}
@@ -116,7 +235,6 @@ const JobDetail = () => {
       {showForm && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center p-4 z-50">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl p-6 relative max-h-[80vh] overflow-y-auto">
-
             <button
               className="absolute top-3 right-4 text-2xl text-gray-500 hover:text-gray-700"
               onClick={() => setShowForm(false)}
@@ -124,52 +242,92 @@ const JobDetail = () => {
               ×
             </button>
 
-            <h2 className="text-2xl font-bold text-[#124734]">Join Our Journey</h2>
+            <h2 className="text-2xl font-bold text-[#124734]">
+              Join Our Journey
+            </h2>
             <p className="text-gray-600 mb-4 text-sm">
               Your email and phone number will not be shared.
             </p>
 
-            <form className="space-y-4 text-left">
+            {/* ✅ ONLY: added onSubmit + controlled values (layout same) */}
+            <form onSubmit={submitApplication} className="space-y-4 text-left">
               <div>
                 <label className="block mb-1">Name</label>
-                <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]" />
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                />
               </div>
 
               <div>
                 <label className="block mb-1">Email Address</label>
-                <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]" />
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                />
               </div>
 
               <div>
                 <label className="block mb-1">Phone Number</label>
-                <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]" />
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                />
               </div>
 
               <div>
                 <label className="block mb-1">Highest Education</label>
-                <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]">
-                  <option>-- Select option --</option>
-                  <option>12th Pass</option>
-                  <option>Graduate</option>
-                  <option>Post Graduate</option>
+                <select
+                  name="highestEducation"
+                  value={form.highestEducation}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                >
+                  <option value="">-- Select option --</option>
+                  <option value="12th Pass">12th Pass</option>
+                  <option value="Graduate">Graduate</option>
+                  <option value="Post Graduate">Post Graduate</option>
                 </select>
               </div>
 
               <div>
                 <label className="block mb-1">Can you relocate?</label>
-                <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]">
-                  <option>-- Select option --</option>
-                  <option>Yes</option>
-                  <option>No</option>
+                <select
+                  name="canRelocate"
+                  value={form.canRelocate}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                >
+                  <option value="">-- Select option --</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </div>
 
               <div>
                 <label className="block mb-1">Fluent In</label>
-                <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]">
-                  <option>-- Select option --</option>
-                  <option>English</option>
-                  <option>Hindi</option>
+                <select
+                  name="fluentIn"
+                  value={form.fluentIn}
+                  onChange={onChange}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1E5631]"
+                  required
+                >
+                  <option value="">-- Select option --</option>
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi</option>
                 </select>
               </div>
 
@@ -177,12 +335,18 @@ const JobDetail = () => {
                 <label className="block mb-1">Upload Resume (PDF)</label>
                 <input
                   type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                   className="w-full border rounded-lg file:bg-[#A7E1B2] file:text-[#124734] file:px-4 file:py-2 file:rounded-lg"
                 />
               </div>
 
-              <button className="bg-[#1E5631] w-full text-white py-3 rounded-lg text-lg font-semibold hover:bg-[#154727] transition">
-                Submit Application
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-[#1E5631] w-full text-white py-3 rounded-lg text-lg font-semibold hover:bg-[#154727] transition disabled:opacity-60"
+              >
+                {submitting ? "Submitting..." : "Submit Application"}
               </button>
             </form>
           </div>
@@ -190,8 +354,12 @@ const JobDetail = () => {
       )}
 
       {/* ------------ Contact Us Section ------------ */}
-      <div className="text-left"><ContactUs /></div>
-       <div className="pt-10"><Footer /></div>
+      <div className="text-left">
+        <ContactUs />
+      </div>
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

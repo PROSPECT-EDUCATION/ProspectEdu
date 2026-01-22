@@ -3,10 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
 import Footer from "../../components/Footer";
-import { api } from "../../lib/api"; // ✅ ADDED
-
-// PRODUCT DATA IMPORT (keep trending + management static)
-import { trendingProducts } from "../../data/ProductData";
+import { api } from "../../lib/api";
 
 const ProductListPage = () => {
   const { type } = useParams();
@@ -43,6 +40,8 @@ const ProductListPage = () => {
             outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
             category: (p.category || "").trim(),
             customCategory: p.customCategory || "",
+            createdAt: p.createdAt,
+            isTrending: !!p.isTrending, // ✅ IMPORTANT (Trending)
           };
         });
 
@@ -62,43 +61,53 @@ const ProductListPage = () => {
     };
   }, []);
 
+  const normalize = (s) => String(s || "").trim().toLowerCase();
+
+  // ✅ type examples:
+  // 1) trending-products  => show isTrending true
+  // 2) it-books-products  => show category "IT Books"
+  // 3) management-books-products => show category "Management Books"
   const products = useMemo(() => {
-    const isCat = (prod, cat) =>
-      (prod.category || "").toLowerCase() === cat.toLowerCase();
+    if (!type) return [];
 
-    if (type === "trending-products") return trendingProducts; // ✅ same
-   
+    // ✅ Trending View All (DB based)
+    if (type === "trending-products") {
+      return allProducts.filter((p) => p.isTrending === true);
+    }
 
-    if (type === "engineering-products") {
-      // ✅ Home page logic: IT + Electrical + Civil in one list
+    // ✅ Generic: "<category-slug>-products"
+    // ex: "it-books-products" => "it books" => match product.category
+    if (type.endsWith("-products")) {
+      const categorySlug = type.replace(/-products$/, ""); // "it-books"
+      if (categorySlug === "trending") {
+        return allProducts.filter((p) => p.isTrending === true);
+      }
+
+      const categoryNameGuess = categorySlug.replace(/-/g, " "); // "it books"
       return allProducts.filter(
-        (p) => isCat(p, "IT Books") || isCat(p, "Electrical Books") || isCat(p, "Civil Books")
+        (p) => normalize(p.category) === normalize(categoryNameGuess)
       );
-    }
-
-    if (type === "law-products") {
-      return allProducts.filter((p) => isCat(p, "Law Books"));
-    }
-
-    if (type === "medical-products") {
-      return allProducts.filter((p) => isCat(p, "Medical Books"));
-    }
-
-    if (type === "merchandise-products") {
-      return allProducts.filter((p) => isCat(p, "Merchandise"));
-    }
-    if (type === "management-products") {
-      return allProducts.filter((p) => isCat(p, "Management Books"));
     }
 
     return [];
   }, [type, allProducts]);
 
-  // ------- FORMAT TITLE -------
-  const formatTitle = (t) => t.replace("-", " ").replace("-", " ").toUpperCase();
+  const pageTitle = useMemo(() => {
+    if (!type) return "PRODUCTS";
+
+    if (type === "trending-products") return "TRENDING PRODUCTS";
+
+    if (type.endsWith("-products")) {
+      const categorySlug = type.replace(/-products$/, "");
+      const categoryNameGuess = categorySlug.replace(/-/g, " ");
+      return `${categoryNameGuess}`.toUpperCase();
+    }
+
+    return type.replace(/-/g, " ").toUpperCase();
+  }, [type]);
 
   return (
-    <section className=" pt-36">
+    <section className="pt-36">
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-[Open_Sans] pb-20 text-left">
@@ -110,23 +119,16 @@ const ProductListPage = () => {
           >
             Home
           </span>{" "}
-          &gt; {type.replace("-", " ")}
+          &gt; {type?.replace(/-/g, " ")}
         </p>
 
         {/* Page Title */}
         <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-[#124734]">
-          {formatTitle(type)} ({products.length} Products Found)
+          {pageTitle} ({products.length} Products Found)
         </h2>
 
-        {/* PRODUCT GRID (layout same) */}
-        <ProductNoSlider
-          products={products}
-          cartItems={[]}
-          wishlist={[]}
-          onCart={() => {}}
-          onWishlist={() => {}}
-          columns={4} // ⭐ KEEPING DESKTOP EXACTLY SAME
-        />
+        {/* Product Grid */}
+        <ProductNoSlider products={products} columns={4} />
       </div>
 
       <div className="pt-10">

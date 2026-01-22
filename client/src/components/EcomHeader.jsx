@@ -10,6 +10,8 @@ import {
 import { FaShoppingBag, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { IoSearch, IoPersonCircle } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { api } from "../lib/api";
+
 
 const AUTH_KEY = "isLoggedIn";
 
@@ -57,6 +59,43 @@ function slugify(str) {
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
 }
+function normalizeForDetail(p) {
+  const price = Number(p?.price || 0);
+  const offer = Number(p?.offerPrice || 0);
+  const finalPrice = offer > 0 ? offer : price;
+
+  return {
+    id: p?._id || p?.id,
+    _id: p?._id || p?.id,
+
+    // ✅ ProductDetail mostly uses "title"
+    title: p?.title || p?.name || p?.productName || "",
+    name: p?.name || p?.title || "",
+
+    description: p?.description || "",
+    category: p?.category || p?.categoryName || "",
+
+    // ✅ Images
+    img:
+      p?.thumbnail ||
+      p?.image ||
+      p?.img ||
+      (Array.isArray(p?.images) ? p.images[0] : null) ||
+      "https://via.placeholder.com/300x300?text=Product",
+
+    images: Array.isArray(p?.images) ? p.images : [],
+
+    // ✅ Pricing (same style as EcommerceHome mapping)
+    oldPrice: price,
+    price: finalPrice,
+    offerPrice: offer,
+    save: Math.max(0, price - finalPrice),
+
+    outOfStock: Boolean(p?.outOfStock) || Number(p?.quantity || 0) <= 0,
+    quantity: p?.quantity,
+  };
+}
+
 
 const EcomHeader = () => {
   const navigate = useNavigate();
@@ -94,56 +133,48 @@ const EcomHeader = () => {
    *   "http://localhost:8080/api/v1/products"
    *   (change 8080 to your backend port)
    */
-  const PRODUCTS_API = "/api/v1/products";
+  // ✅ Products loaded from DB (for search)
+useEffect(() => {
+  let mounted = true;
 
-  /** ---------- Load products once for search ---------- */
-  useEffect(() => {
-    const controller = new AbortController();
+  async function loadProducts() {
+    try {
+      // ✅ api.js will hit your backend baseURL correctly
+      const res = await api.get("/products"); // means /api/v1/products if baseURL ends with /api/v1
+      const data = res?.data;
 
-    async function loadProducts() {
-      try {
-        const res = await fetch(PRODUCTS_API, { signal: controller.signal });
+      // supports: [] OR {products:[]} OR {data:[]} OR {items:[]} OR {data:{products:[]}}
+      const list =
+        Array.isArray(data)
+          ? data
+          : Array.isArray(data?.products)
+          ? data.products
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data?.data?.products)
+          ? data.data.products
+          : [];
 
-        // if backend returns non-json error page (like HTML), this avoids crash
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error("Products API did not return JSON:", text);
-          setAllProducts([]);
-          setProductsLoaded(true);
-          return;
-        }
-
-        const data = await res.json();
-
-        // supports: [] OR {products:[]} OR {data:[]} OR {items:[]} OR {success:true, data:{products:[]}}
-        const list =
-          Array.isArray(data)
-            ? data
-            : Array.isArray(data?.products)
-            ? data.products
-            : Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.items)
-            ? data.items
-            : Array.isArray(data?.data?.products)
-            ? data.data.products
-            : [];
-
-        setAllProducts(list);
-      } catch (e) {
-        if (e?.name !== "AbortError") {
-          console.error("Header product load failed:", e);
-          setAllProducts([]);
-        }
-      } finally {
-        setProductsLoaded(true);
-      }
+      if (!mounted) return;
+      setAllProducts(list);
+    } catch (e) {
+      console.error("Header product load failed:", e);
+      if (!mounted) return;
+      setAllProducts([]);
+    } finally {
+      if (!mounted) return;
+      setProductsLoaded(true);
     }
+  }
 
-    loadProducts();
-    return () => controller.abort();
-  }, []);
+  loadProducts();
+  return () => {
+    mounted = false;
+  };
+}, []);
+
 
   /** ---------- Search ---------- */
   const handleSearch = (value) => {
@@ -246,7 +277,9 @@ const EcomHeader = () => {
                 key={getProductId(p)}
                 className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer"
                 onClick={() => {
-                  navigate(`/product/${slugify(title)}`, { state: p });
+                  const normalized = normalizeForDetail(p);
+                navigate(`/product/${slugify(normalized.title)}`, { state: normalized });
+
                   setSearchQuery("");
                   setSearchResults([]);
                   if (isMobile) setMobileMenu(false);
@@ -318,7 +351,7 @@ const EcomHeader = () => {
         {/* DESKTOP NAV */}
         <div className="hidden sm:flex items-center gap-6 text-[#124734] font-medium">
           {/* SEARCH */}
-          <div className="relative w-64 md:w-80">
+          <div className="relative w-64 md:w-100">
             <div className="flex items-center bg-[#A7E1B2] rounded-full shadow-lg py-2 px-4">
               <IoSearch size={20} className="text-[#124734]" />
               <input

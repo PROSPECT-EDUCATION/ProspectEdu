@@ -144,6 +144,8 @@ import ParentMessagesPage from "./pages/Parent/ParentMessagesPage";
 import TeacherParentDoubtsPage from "./pages/Teacher/TeacherParentDoubtsPage";
 import SupplierApprovalPage from './pages/Admin/Ecom/SupplierApprovalPage';
 import DonationConfirmation from './pages/Donation/DonationConfirmation';
+import AdminCareerJobs from "./pages/Admin/Career/AdminCareerJobs";
+import AdminCareerApplications from "./pages/Admin/Career/AdminCareerApplications";
   
 
 
@@ -300,6 +302,8 @@ function App() {
         <Route path="/student/series/:seriesId/tests/:testId/report" element={<TestReport />} />
         <Route path="/student/announcements" element={<StudentAnnouncementsPage />} />
         <Route path="/teacher/announcements" element={<TeacherAnnouncementsPage />} />
+        <Route path="/admin/career/jobs" element={<AdminCareerJobs />} />
+<Route path="/admin/career/applications" element={<AdminCareerApplications />} />
 
 
 

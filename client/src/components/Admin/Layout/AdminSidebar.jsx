@@ -13,6 +13,9 @@ import {
   Trophy ,
   Inbox,
   PhoneCall,
+  Briefcase,
+  BookOpen,
+  UserCog,
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
@@ -49,7 +52,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
 
     {
       title: "Courses",
-      icon: GraduationCap,
+      icon: BookOpen,
       children: [
         { label: "All Courses", path: "/admin/courses" },
         { label: "Add Course", path: "/admin/courses/add" },
@@ -81,6 +84,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "All Orders", path: "/admin/ecom/orders" },
       ],
     },  
+    
 
     {
       title: "Announcements",
@@ -90,12 +94,21 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         { label: "Create Announcement", path: "/admin/announcements/create" },
       ],
     },
+    {
+  title: "Career",
+  icon: Briefcase,
+  children: [
+    { label: "Post Job", path: "/admin/career/jobs" },
+    { label: "Applications", path: "/admin/career/applications" },
+  ],
+},
+
     
     { title: "Achievers", icon: Trophy, path: "/admin/achievers" },
     { title: "Doubts", icon: Inbox, path: "/admin/doubts" },
     { title: "Contacts", icon: PhoneCall, path: "/admin/contacts" },
     { title: "Donations", icon: CreditCard, path: "/admin/donations" },
-    { title: "Confirm Admin", icon: GraduationCap, path: "/admin/confirm-admin" },
+    { title: "Confirm Admin", icon: UserCog, path: "/admin/confirm-admin" },
     { title: "Settings", icon: Settings, path: "/admin/settings" },
     
   ];
