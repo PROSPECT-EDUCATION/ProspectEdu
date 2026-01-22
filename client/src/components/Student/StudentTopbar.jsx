@@ -1,7 +1,6 @@
 // src/components/Student/StudentTopbar.jsx
 import { useState} from "react";
 import CourseDropdown from "./ui/CourseDropdown";
-import SearchBar from "./ui/SearchBar";
 import StoreButton from "./ui/StoreButton";
 import NotificationBell from "./ui/NotificationBell";
 import ProfileAvatar from "./ui/ProfileAvatar";
@@ -43,7 +42,6 @@ export default function StudentTopbar({ isCollapsed = false, pageTitle }) {
         {/* DESKTOP RIGHT CONTROLS */}
         <div className="hidden md:flex items-center gap-4">
           <CourseDropdown />
-          <SearchBar />
           <StoreButton />
           <NotificationBell onClick={() => navigate("/student/announcements")} />
           <ProfileAvatar />
