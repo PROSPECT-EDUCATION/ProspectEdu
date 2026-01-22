@@ -48,8 +48,12 @@ export async function adminUpdateContactStatus(req, res, next) {
     if (!allowed.has(status)) {
       return res.status(400).json({ success: false, message: "Invalid status" });
     }
+    const update = {
+  status,
+  closedAt: status === "CLOSED" ? new Date() : null,
+};
 
-    const updated = await ContactRequest.findByIdAndUpdate(id, { status }, { new: true });
+const updated = await ContactRequest.findByIdAndUpdate(id, update, { new: true });
     if (!updated) return res.status(404).json({ success: false, message: "Request not found" });
 
     return res.json({ success: true, message: "Status updated", data: updated });

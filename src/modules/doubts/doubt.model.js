@@ -23,8 +23,12 @@ const doubtSchema = new mongoose.Schema(
 
     mailSent: { type: Boolean, default: false },
     mailSentAt: { type: Date, default: null },
+    closedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
+// ✅ TTL: auto-delete 10 days after closedAt
+// TTL works only when closedAt is a Date (not null)
+doubtSchema.index({ closedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 10 });
 
 export default mongoose.model("Doubt", doubtSchema);

@@ -13,8 +13,9 @@ const contactSchema = new mongoose.Schema(
       enum: ["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"],
       default: "PENDING",
     },
+    closedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
-
+contactSchema.index({ closedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 10 });
 export default mongoose.model("ContactRequest", contactSchema);

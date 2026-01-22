@@ -95,7 +95,7 @@ userSchema.pre("save", function () {
       note: "",
     };
   }
-  next();
+  
 });
 
 userSchema.methods.comparePassword = async function comparePassword(password) {

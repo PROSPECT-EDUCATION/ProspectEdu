@@ -198,6 +198,7 @@ export async function changePassword({ userId, oldPassword, newPassword }) {
     throw err;
   }
 
+  // 1) verify old password
   const ok = await user.comparePassword(oldPassword);
   if (!ok) {
     const err = new Error("Old password is incorrect");
@@ -205,31 +206,7 @@ export async function changePassword({ userId, oldPassword, newPassword }) {
     throw err;
   }
 
-  user.passwordHash = await bcrypt.hash(newPassword, 10);
-  user.refreshTokenHash = null; // ✅ revoke refresh after password change
-  await user.save();
-
-  return { success: true };
-}
-
-
-export async function changePassword({ userId, oldPassword, newPassword }) {
-  const user = await User.findById(userId).select("+passwordHash +refreshTokenHash");
-  if (!user) {
-    const err = new Error("User not found");
-    err.statusCode = 404;
-    throw err;
-  }
-
-  // ✅ 1) define ok first, then use it
-  const ok = await bcrypt.compare(oldPassword, user.passwordHash);
-  if (!ok) {
-    const err = new Error("Old password is incorrect");
-    err.statusCode = 400;
-    throw err;
-  }
-
-  // ✅ 2) define same first, then use it
+  // 2) ensure new != old
   const same = await bcrypt.compare(newPassword, user.passwordHash);
   if (same) {
     const err = new Error("New password must be different");
@@ -237,12 +214,11 @@ export async function changePassword({ userId, oldPassword, newPassword }) {
     throw err;
   }
 
-  // ✅ 3) hash new password
+  // 3) update password + revoke refresh token
   user.passwordHash = await bcrypt.hash(newPassword, 10);
-
-  // ✅ 4) logout from all devices (recommended)
   user.refreshTokenHash = null;
-
   await user.save();
-  return true;
+
+  return { success: true };
 }
+

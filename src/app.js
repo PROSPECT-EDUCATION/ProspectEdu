@@ -39,6 +39,7 @@ import parentDoubtRoutes from "./modules/parentDoubts/parentDoubt.routes.js";
 import supportTicketRoutes from "./modules/support/supportTicket.routes.js";
 import categoryRoutes from "./modules/categories/category.routes.js";
 import razorpayRoutes from "./modules/payments/razorpay.routes.js";
+import careerRoutes from "./modules/careers/career.routes.js";
 
 
 
@@ -51,7 +52,7 @@ import razorpayRoutes from "./modules/payments/razorpay.routes.js";
 
 import coursesRoutes from "./modules/courses/courses.routes.js";
 import contentRoutes from "./modules/courses/content.routes.js";
-import categoryRoutes from "./modules/courseCategories/category.routes.js";
+import CoursecategoryRoutes from "./modules/courseCategories/category.routes.js";
 import purchaseRoutes from "./modules/purchases/purchase.routes.js";
 import activityRoutes from "./modules/activity/activity.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
@@ -95,7 +96,10 @@ export function createApp() {
   app.use("/api/v1/support-tickets", supportTicketRoutes);
   app.use("/api/v1/categories", categoryRoutes);
   app.use("/api/v1/payments", razorpayRoutes);
+ app.use("/api/v1/careers", careerRoutes);
 
+// static for resumes
+app.use("/uploads", express.static("uploads"));
 
 
   
@@ -108,7 +112,7 @@ export function createApp() {
   app.use("/api/v1/courses", coursesRoutes);
   app.use("/api/v1/content", contentRoutes);
 
-  app.use("/api/v1/course-categories", categoryRoutes);
+  app.use("/api/v1/course-categories", CoursecategoryRoutes);
   app.use("/api/v1/purchases", purchaseRoutes);
   app.use("/api/v1/activity", activityRoutes);
   app.use("/api/v1/uploads", uploadsRoutes);
