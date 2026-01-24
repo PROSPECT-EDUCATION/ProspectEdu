@@ -1,9 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import SupplierSidebar from "../../../components/SupplierEcommerce/Sidebar";
 import SupplierTopbar from "../../../components/SupplierEcommerce/Topbar";
 import { api } from "../../../lib/api";
 
 export default function AddProduct() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Supplier Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/supplier`
+              : "/supplier",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Add Product",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // ✅ store selected files (max 4)
@@ -39,14 +73,12 @@ export default function AddProduct() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // store file
     setImageFiles((prev) => {
       const next = [...prev];
       next[index] = file;
       return next;
     });
 
-    // preview
     const url = URL.createObjectURL(file);
     setPreviews((prev) => {
       const next = [...prev];
@@ -56,25 +88,20 @@ export default function AddProduct() {
   };
 
   const loadSupplierCategories = async () => {
-  setLoadingCats(true);
-  setError("");
-  try {
-    // ✅ load Admin predefined categories
-    const res = await api.get("/categories");
-    const items = res?.data?.categories || [];
-
-    // ✅ you are using supplierCategories as string list in dropdown,
-    // so keep it as array of category names
-    const names = items.map((c) => c.name);
-    setSupplierCategories(names);
-  } catch (e) {
-    setSupplierCategories([]);
-    setError(e?.response?.data?.message || "Failed to load categories");
-  } finally {
-    setLoadingCats(false);
-  }
-};
-
+    setLoadingCats(true);
+    setError("");
+    try {
+      const res = await api.get("/categories");
+      const items = res?.data?.categories || [];
+      const names = items.map((c) => c.name);
+      setSupplierCategories(names);
+    } catch (e) {
+      setSupplierCategories([]);
+      setError(e?.response?.data?.message || "Failed to load categories");
+    } finally {
+      setLoadingCats(false);
+    }
+  };
 
   useEffect(() => {
     loadSupplierCategories();
@@ -103,11 +130,9 @@ export default function AddProduct() {
       return setError("Invalid offer price");
     if (form.quantity === "" || Number(form.quantity) < 0) return setError("Invalid quantity");
 
-    // ✅ FINAL category to save in DB
     const finalCategory =
       form.category === ENGINEERING_PARENT ? subCategory : form.category;
 
-    // ✅ at least 1 image recommended (optional: you can enforce)
     const chosenFiles = imageFiles.filter(Boolean);
     if (chosenFiles.length === 0) {
       return setError("Please upload at least 1 product image");
@@ -118,7 +143,6 @@ export default function AddProduct() {
 
     setSaving(true);
     try {
-      // ✅ FormData (multipart) for image upload
       const fd = new FormData();
       fd.append("name", form.name.trim());
       fd.append("description", form.description.trim());
@@ -127,7 +151,6 @@ export default function AddProduct() {
       fd.append("offerPrice", String(form.offerPrice));
       fd.append("quantity", String(form.quantity));
 
-      // backend expects: upload.array("images", 5)
       chosenFiles.forEach((file) => fd.append("images", file));
 
       await api.post("/products", fd, {
@@ -136,7 +159,6 @@ export default function AddProduct() {
 
       setSuccess("Product added successfully ✅");
 
-      // reset
       setForm({
         name: "",
         description: "",
@@ -157,6 +179,17 @@ export default function AddProduct() {
 
   return (
     <div className="flex bg-[#F9FAFB] min-h-screen text-left">
+      <Helmet>
+        <title>Add Product | Supplier Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Add a new product to your ProspectEdu supplier store with images/dashboard controls."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <SupplierSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
@@ -203,9 +236,15 @@ export default function AddProduct() {
                           img ||
                           "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/e-commerce/uploadArea.png"
                         }
-                        alt="upload"
+                        alt={
+                          img
+                            ? `Selected product image ${index + 1}`
+                            : `Upload product image slot ${index + 1}`
+                        }
                         width={100}
                         height={100}
+                        loading="lazy"
+                        decoding="async"
                         className="cursor-pointer rounded-lg hover:scale-105 transition shadow"
                       />
                     </label>

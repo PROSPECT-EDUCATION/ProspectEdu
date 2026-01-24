@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import donateImg from "../../assets/donate.webp";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import HeaderSection from "../../components/HeaderSection";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
@@ -8,25 +9,73 @@ import Footer from "../../components/Footer";
 const Donate = () => {
   const navigate = useNavigate();
 
+  // ✅ Base URL for canonical/OG (set VITE_SITE_URL in prod)
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = useMemo(() => `${SITE_URL}/donate`, [SITE_URL]);
+
+  const pageTitle = "Donate | ProspectEdu";
+  const pageDescription =
+    "Support Prospect Education & Social Welfare Society. Your donation helps provide education, resources, and opportunities to students who need them most.";
+
+  const jsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "DonateAction",
+      name: "Donate to Prospect Education",
+      description: pageDescription,
+      target: canonicalUrl,
+      recipient: {
+        "@type": "Organization",
+        name: "Prospect Education and Social Welfare Society",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Bhopal",
+          addressRegion: "Madhya Pradesh",
+          addressCountry: "IN",
+        },
+      },
+    };
+  }, [canonicalUrl, pageDescription]);
+
   const goToDonateAmount = () => {
     navigate("/donate-amount");
   };
 
   return (
-    
-       <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
-            <Navbar />
-      
-            {/* ---------------- Header Section ---------------- */}
-      
-            <HeaderSection
-                page="Donate"
-                title="Make a Difference with Your Donation."
-                subtitle=" Your support helps provide education, resources, and opportunities
+    <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${SITE_URL}${donateImg}`} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={`${SITE_URL}${donateImg}`} />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
+      <Navbar />
+
+      {/* ---------------- Header Section ---------------- */}
+      <HeaderSection
+        page="Donate"
+        title="Make a Difference with Your Donation."
+        subtitle=" Your support helps provide education, resources, and opportunities
               to students who need them most. Together, we can build a stronger
               and brighter future for everyone."
-                image={donateImg}
-              />
+        image={donateImg}
+      />
 
       {/* ---------------- Donate Us Section ---------------- */}
       <div className="bg-white py-16 px-6 md:px-8 text-center shadow-sm">
@@ -71,21 +120,21 @@ const Donate = () => {
 
       {/* ---------------- Donate Online & Bank Transfer ---------------- */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start justify-between gap-10 bg-white rounded-xl shadow-md p-6 md:p-8 border border-gray-200">
-        
         {/* Left: Donate Online */}
         <div className="flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-red-600 mb-2 underline underline-offset-4">
             Donate Us Online
           </h2>
           <p className="text-gray-700 mb-6 text-[17px] leading-relaxed">
-            You can donate to us online using <b>Net Banking</b>, <b>Debit Card</b>, 
-            <b> Credit Card</b>, <b>UPI</b>, or <b>QR Code</b>.  
+            You can donate to us online using <b>Net Banking</b>, <b>Debit Card</b>,
+            <b> Credit Card</b>, <b>UPI</b>, or <b>QR Code</b>.
             To donate online, click the button below.
           </p>
           <div className="flex justify-center md:justify-start">
             <button
               onClick={goToDonateAmount}
               className="flex items-center gap-3 bg-[#1E5631] hover:bg-[#144923] text-white font-semibold text-lg px-6 py-2 rounded-full shadow-md transition"
+              type="button"
             >
               <span className="text-xl">➤</span> DONATE NOW
             </button>
@@ -108,12 +157,10 @@ const Donate = () => {
             <li><b>BANK BRANCH ADDRESS:</b> TT Nagar, Bhopal (M.P.) 462023</li>
           </ul>
         </div>
-
       </div>
 
       {/* ---------------- What Does Donation Support ---------------- */}
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10 px-6 md:px-8 py-16 text-left">
-
         {/* Left Content */}
         <div className="w-full md:w-2/3">
           <h2 className="text-3xl font-bold text-[#1E5631] mb-6 text-center md:text-left">
@@ -145,7 +192,6 @@ const Donate = () => {
             Bhopal, Madhya Pradesh – 462011
           </p>
         </div>
-
       </div>
 
       {/* ---------------- How Else Can You Help ---------------- */}
@@ -166,7 +212,8 @@ const Donate = () => {
           Thank you for considering a donation to our organization. Together, we can create a brighter future.
         </p>
       </div>
-      <div className="pt-10"><Footer /></div> 
+
+      <div className="pt-10"><Footer /></div>
     </section>
   );
 };

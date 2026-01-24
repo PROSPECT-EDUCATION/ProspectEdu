@@ -11,6 +11,7 @@ import {
   createTestSeriesRazorpayOrder,
   verifyTestSeriesRazorpayPayment,
 } from "../../lib/testPurchaseApi";
+import { Helmet } from "react-helmet-async";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -34,6 +35,45 @@ export default function CheckoutTestLearning() {
 
   const token = sessionStorage.getItem("accessToken");
   const isLoggedIn = !!token;
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/checkout-test-learning/${id}`;
+
+  const pageTitle = useMemo(() => {
+    return series?.title ? `Checkout - ${series.title} | ProspectEdu` : "Checkout | ProspectEdu";
+  }, [series]);
+
+  const pageDescription = useMemo(() => {
+    return series?.title
+      ? `Complete checkout for ${series.title} on ProspectEdu.`
+      : "Complete your test series checkout on ProspectEdu.";
+  }, [series]);
+
+  const ogImage = useMemo(() => {
+    const img = series?.imageUrl || testImg;
+    if (typeof img === "string" && /^https?:\/\//i.test(img)) return img;
+    return `${SITE_URL}${img}`;
+  }, [series, SITE_URL]);
+
+  // ✅ JSON-LD for checkout page
+  const jsonLd = useMemo(() => {
+    if (!series) return null;
+    const price = Number(series?.price || 0);
+    return {
+      "@context": "https://schema.org",
+      "@type": "CheckoutPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price,
+        url: canonicalUrl,
+        availability: "https://schema.org/InStock",
+      },
+    };
+  }, [series, pageTitle, pageDescription, canonicalUrl]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -81,7 +121,6 @@ export default function CheckoutTestLearning() {
   const onPayNow = async () => {
     if (!series) return;
 
-    // ✅ Free series -> direct unlock (no Razorpay)
     if (Number(series.price || 0) === 0) {
       setPaying(true);
       try {
@@ -108,7 +147,6 @@ export default function CheckoutTestLearning() {
         return;
       }
 
-      // ✅ Step-1: create order from backend
       const order = await createTestSeriesRazorpayOrder(series._id);
 
       const options = {
@@ -121,7 +159,6 @@ export default function CheckoutTestLearning() {
 
         handler: async (response) => {
           try {
-            // ✅ Step-2: verify payment + save purchase in DB
             await verifyTestSeriesRazorpayPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -137,10 +174,7 @@ export default function CheckoutTestLearning() {
           }
         },
 
-        modal: {
-          ondismiss: () => setPaying(false),
-        },
-
+        modal: { ondismiss: () => setPaying(false) },
         theme: { color: "#009846" },
       };
 
@@ -149,8 +183,6 @@ export default function CheckoutTestLearning() {
     } catch (e) {
       console.error(e);
       alert(e?.response?.data?.message || "Payment failed");
-    } finally {
-      // keep paying true while modal is open; handler/ondismiss will update
     }
   };
 
@@ -173,6 +205,13 @@ export default function CheckoutTestLearning() {
   if (purchased) {
     return (
       <div className="min-h-screen bg-[#F9FAFB]">
+        <Helmet>
+          <title>{pageTitle}</title>
+          <meta name="description" content={pageDescription} />
+          <meta name="robots" content="noindex, nofollow" />
+          <link rel="canonical" href={canonicalUrl} />
+        </Helmet>
+
         <Navbar />
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="bg-white rounded-2xl shadow-sm border border-[#E6F4EC] p-8 text-center">
@@ -181,6 +220,7 @@ export default function CheckoutTestLearning() {
             <button
               onClick={() => navigate("/student/test-series")}
               className="mt-6 px-5 py-2 rounded-xl bg-[#009846] text-white fsont-semibold"
+              type="button"
             >
               Go to My Test Series
             </button>
@@ -193,17 +233,38 @@ export default function CheckoutTestLearning() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={ogImage} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={ogImage} />
+
+        {jsonLd ? <script type="application/ld+json">{JSON.stringify(jsonLd)}</script> : null}
+      </Helmet>
+
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-6 py-10 text-left">
+      <main className="max-w-6xl mx-auto px-6 py-10 text-left">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left */}
           <div className="flex-1 bg-white rounded-2xl shadow-sm border border-[#E6F4EC] overflow-hidden">
             <div className="relative">
               <img
                 src={series.imageUrl || testImg}
                 alt={series.title}
                 className="w-full h-56 object-contain bg-[#F9FAFB]"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-[#124734] text-white">
                 {series.type}
@@ -230,7 +291,6 @@ export default function CheckoutTestLearning() {
             </div>
           </div>
 
-          {/* Right - Summary */}
           <div className="w-full lg:w-[380px]">
             <div className="bg-white rounded-2xl shadow-sm border border-[#E6F4EC] p-6 sticky top-24">
               <h2 className="text-lg font-extrabold text-[#124734]">Order Summary</h2>
@@ -271,23 +331,20 @@ export default function CheckoutTestLearning() {
                     ? "bg-gray-200 text-gray-600 cursor-wait"
                     : "bg-[#009846] text-white hover:opacity-95"
                 }`}
+                type="button"
               >
                 {paying ? "Processing..." : price === 0 ? "Unlock Now" : "Pay Now"}
               </button>
 
-              {/* layout preserved - just updated note */}
               <p className="text-xs text-[#5B7065] mt-3">
                 Note: You will be redirected after successful payment confirmation.
               </p>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>
   );
 }
-
-
-

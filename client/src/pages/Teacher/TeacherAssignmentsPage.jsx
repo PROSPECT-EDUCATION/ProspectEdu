@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
@@ -11,13 +12,29 @@ export default function TeacherAssignmentsPage() {
 
   const navigate = useNavigate();
   const { state } = useLocation();
-const { courseId } = useParams(); // ✅ works
+  const { courseId } = useParams();
 
   const { showToast } = useToast();
 
-
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+
+  const canonicalUrl = useMemo(() => {
+    // keep canonical stable even if courseId changes
+    return courseId
+      ? `${SITE_URL}/teacher/assignments/${encodeURIComponent(courseId)}`
+      : `${SITE_URL}/teacher/assignments`;
+  }, [SITE_URL, courseId]);
+
+  const pageTitle = courseId
+    ? "Teacher Assignments | ProspectEdu"
+    : "Teacher Assignments | ProspectEdu";
+
+  const pageDescription = courseId
+    ? "Manage and review assignments created for your course in ProspectEdu."
+    : "Manage and review your assignments in ProspectEdu.";
 
   const load = async () => {
     if (!courseId) {
@@ -55,22 +72,43 @@ const { courseId } = useParams(); // ✅ works
       showToast?.(e?.response?.data?.message || "Delete failed", "error");
     }
   };
-const openAttachment = async (assignmentId) => {
-  try {
-    const res = await assignmentsApi.getFileBlob(assignmentId);
-    const mime = res.headers?.["content-type"] || "application/octet-stream";
-    const blob = new Blob([res.data], { type: mime });
 
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-  } catch (e) {
-    console.log(e);
-    showToast?.("Failed to open attachment", "error");
-  }
-};
+  const openAttachment = async (assignmentId) => {
+    try {
+      const res = await assignmentsApi.getFileBlob(assignmentId);
+      const mime = res.headers?.["content-type"] || "application/octet-stream";
+      const blob = new Blob([res.data], { type: mime });
+
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to open attachment", "error");
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Private dashboard page */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Teacher Assignments</h1>
+
       {/* SIDEBAR */}
       <div className={`${isCollapsed ? "w-20" : "w-64"} fixed left-0 top-0 h-full transition-all`}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -80,27 +118,28 @@ const openAttachment = async (assignmentId) => {
       <div className="flex flex-col flex-1" style={{ marginLeft: sidebarWidth }}>
         <TeacherTopbar pageTitle="Assignments" />
 
-        <div className="px-8 pt-[20px] pb-10 overflow-y-auto">
+        <main className="px-8 pt-[20px] pb-10 overflow-y-auto">
           {/* Breadcrumb */}
           <div className="w-full flex flex-col items-start ">
-          <p className="text-sm text-[#5B7065] mb-6">
-            <span
-              className="hover:text-[#009846] cursor-pointer hover:underline"
-              onClick={() => navigate("/teacher-dashboard")}
-            >
-              Dashboard
-            </span>
-            {" / "}
-            <span
-              className="hover:text-[#009846] cursor-pointer hover:underline"
-              onClick={() => navigate("/teacher-dashboard")}
-            >
-              Courses
-            </span>
-            {" / "}
-            <span className="text-[#124734] font-medium">Assignments</span>
-          </p>
-</div>
+            <p className="text-sm text-[#5B7065] mb-6">
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher-dashboard")}
+              >
+                Dashboard
+              </span>
+              {" / "}
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher-dashboard")}
+              >
+                Courses
+              </span>
+              {" / "}
+              <span className="text-[#124734] font-medium">Assignments</span>
+            </p>
+          </div>
+
           {/* Header row */}
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -136,7 +175,8 @@ const openAttachment = async (assignmentId) => {
                     <div>
                       <div className="text-lg font-semibold text-[#124734]">{a.title}</div>
                       <div className="text-sm text-[#5B7065] mt-1">
-                        Due: <span className="text-[#124734] font-medium">{a.dueDate?.slice(0, 10)}</span>
+                        Due:{" "}
+                        <span className="text-[#124734] font-medium">{a.dueDate?.slice(0, 10)}</span>
                         {"  "}•{"  "}
                         Max Marks: <span className="text-[#124734] font-medium">{a.maxMarks}</span>
                       </div>
@@ -144,17 +184,16 @@ const openAttachment = async (assignmentId) => {
                       {a.instructions ? (
                         <div className="text-sm text-[#5B7065] mt-2">{a.instructions}</div>
                       ) : null}
-{a.fileUrl ? (
-  <button
-    onClick={() => openAttachment(a._id)}
-    className="inline-block text-sm text-[#009846] hover:underline mt-2 text-left"
-    type="button"
-  >
-    View Attachment ({a.fileName || "file"})
-  </button>
-) : null}
 
-
+                      {a.fileUrl ? (
+                        <button
+                          onClick={() => openAttachment(a._id)}
+                          className="inline-block text-sm text-[#009846] hover:underline mt-2 text-left"
+                          type="button"
+                        >
+                          View Attachment ({a.fileName || "file"})
+                        </button>
+                      ) : null}
                     </div>
 
                     <div className="flex gap-3">
@@ -175,7 +214,7 @@ const openAttachment = async (assignmentId) => {
           <button onClick={() => navigate(-1)} className="mt-5 text-sm underline text-[#124734]">
             ← Back
           </button>
-        </div>
+        </main>
       </div>
     </div>
   );

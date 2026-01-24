@@ -10,6 +10,7 @@ import {
 } from "../../lib/testSeriesApi";
 import { Plus, Trash2, Pencil, Image as ImageIcon, X, Search, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const emptyForm = {
   title: "",
@@ -174,8 +175,38 @@ export default function TeacherTestLearning() {
   const publishedCount = useMemo(() => items.filter((x) => x.isPublished).length, [items]);
   const hiddenCount = useMemo(() => items.filter((x) => !x.isPublished).length, [items]);
 
+  // ✅ SEO
+  const seoTitle = "Teacher Test & Learning | ProspectEdu";
+  const seoDesc = "Create and manage MCQ test series, publish or hide them, and manage tests inside the teacher dashboard.";
+  const canonical = typeof window !== "undefined" ? window.location.href : "";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: seoTitle,
+    description: seoDesc,
+    url: canonical,
+  };
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta name="robots" content="noindex,nofollow" />
+        {canonical ? <link rel="canonical" href={canonical} /> : null}
+
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        {canonical ? <meta property="og:url" content={canonical} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDesc} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
@@ -238,6 +269,7 @@ export default function TeacherTestLearning() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by title or language..."
                     className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#CDE8D5] bg-white outline-none focus:ring-2 focus:ring-[#009846]/20"
+                    aria-label="Search test series"
                   />
                 </div>
 
@@ -246,6 +278,7 @@ export default function TeacherTestLearning() {
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                     className="px-3 py-2 rounded-xl border border-[#CDE8D5] bg-white text-sm font-semibold text-[#124734]"
+                    aria-label="Filter by type"
                   >
                     <option>All</option>
                     <option>Online</option>
@@ -256,6 +289,7 @@ export default function TeacherTestLearning() {
                     value={filterVis}
                     onChange={(e) => setFilterVis(e.target.value)}
                     className="px-3 py-2 rounded-xl border border-[#CDE8D5] bg-white text-sm font-semibold text-[#124734]"
+                    aria-label="Filter by visibility"
                   >
                     <option>All</option>
                     <option>Published</option>
@@ -282,8 +316,10 @@ export default function TeacherTestLearning() {
                     <div className="relative">
                       <img
                         src={x.imageUrl || "/src/assets/test1.webp"}
-                        alt={x.title}
+                        alt={x.title ? `Test series cover: ${x.title}` : "Test series cover"}
                         className="w-full h-44 object-contain bg-[#F9FAFB]"
+                        loading="lazy"
+                        decoding="async"
                       />
 
                       <span
@@ -335,6 +371,7 @@ export default function TeacherTestLearning() {
                           <button
                             onClick={() => openEdit(x)}
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#CDE8D5] text-[#124734] hover:bg-[#E6F4EC] font-semibold"
+                            aria-label={`Edit ${x.title}`}
                           >
                             <Pencil size={16} /> Edit
                           </button>
@@ -342,6 +379,7 @@ export default function TeacherTestLearning() {
                           <button
                             onClick={() => onDelete(x._id)}
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-semibold"
+                            aria-label={`Delete ${x.title}`}
                           >
                             <Trash2 size={16} /> Delete
                           </button>
@@ -358,8 +396,9 @@ export default function TeacherTestLearning() {
         </main>
       </div>
 
+      {/* Modal remains same (no SEO changes needed inside) */}
       {open && (
-        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6F4EC] bg-white sticky top-0 z-10">
               <div>
@@ -368,13 +407,16 @@ export default function TeacherTestLearning() {
                 </h3>
                 <p className="text-xs text-[#5B7065] mt-1">Question type is fixed: MCQ.</p>
               </div>
-              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-gray-100">
+              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close modal">
                 <X />
               </button>
             </div>
 
             <div className="max-h-[78vh] overflow-y-auto">
               <form onSubmit={submit} className="p-6">
+                {/* (rest of your modal code unchanged) */}
+                {/* ... keep exactly as you had ... */}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                   <div className="lg:col-span-2 space-y-4">
                     <div>
@@ -462,7 +504,13 @@ export default function TeacherTestLearning() {
 
                       <div className="w-full h-44 rounded-2xl border border-[#E6F4EC] overflow-hidden bg-white flex items-center justify-center">
                         {imgPreview ? (
-                          <img src={imgPreview} alt="preview" className="w-full h-full object-contain bg-white" />
+                          <img
+                            src={imgPreview}
+                            alt={form.title ? `Preview cover: ${form.title}` : "Preview cover image"}
+                            className="w-full h-full object-contain bg-white"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         ) : (
                           <div className="text-[#5B7065] flex items-center gap-2">
                             <ImageIcon size={18} /> No image

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
 import SupplierSidebar from "../../../components/SupplierEcommerce/Sidebar";
 import SupplierTopbar from "../../../components/SupplierEcommerce/Topbar";
 import { api } from "../../../lib/api";
@@ -7,6 +8,40 @@ import { FiSave, FiLock } from "react-icons/fi";
 
 export default function EditProfile() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ SEO: canonical URL (safe)
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  // ✅ SEO: breadcrumb schema (dashboard/private)
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Supplier Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/supplier`
+              : "/supplier",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Edit Profile",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const user = useMemo(() => {
@@ -54,10 +89,12 @@ export default function EditProfile() {
 
   const [categoryOptions, setCategoryOptions] = useState(["Others"]);
 
-
   const updateForm = (key, value) => setForm((p) => ({ ...p, [key]: value }));
   const updatePickup = (key, value) =>
-    setForm((p) => ({ ...p, pickupAddress: { ...p.pickupAddress, [key]: value } }));
+    setForm((p) => ({
+      ...p,
+      pickupAddress: { ...p.pickupAddress, [key]: value },
+    }));
   const updateBank = (key, value) =>
     setForm((p) => ({ ...p, bank: { ...p.bank, [key]: value } }));
 
@@ -87,7 +124,9 @@ export default function EditProfile() {
 
     // prevent duplicates (case-insensitive)
     const lower = val.toLowerCase();
-    const existsInCustom = customCategories.some((c) => c.toLowerCase() === lower);
+    const existsInCustom = customCategories.some(
+      (c) => c.toLowerCase() === lower
+    );
     const existsInFixed = categoryOptions
       .filter((c) => c !== "Others")
       .some((c) => c.toLowerCase() === lower);
@@ -106,31 +145,30 @@ export default function EditProfile() {
   };
 
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  const loadAdminCategories = async () => {
-    try {
-      const res = await api.get("/categories");
-      const items = res?.data?.categories || [];
-      const names = items.map((c) => c.name).filter(Boolean);
+    const loadAdminCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        const items = res?.data?.categories || [];
+        const names = items.map((c) => c.name).filter(Boolean);
 
-      const next = [...names, "Others"]; // keep Others
-      if (!mounted) return;
+        const next = [...names, "Others"]; // keep Others
+        if (!mounted) return;
 
-      setCategoryOptions(next);
-    } catch {
-      if (!mounted) return;
-      setCategoryOptions(["Others"]);
-    }
-  };
+        setCategoryOptions(next);
+      } catch {
+        if (!mounted) return;
+        setCategoryOptions(["Others"]);
+      }
+    };
 
-  loadAdminCategories();
+    loadAdminCategories();
 
-  return () => {
-    mounted = false;
-  };
-}, []);
-
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const loadProfile = async () => {
     setLoading(true);
@@ -149,7 +187,9 @@ export default function EditProfile() {
       // ✅ Map categories from DB:
       // Known categories => buttons
       // Unknown categories => customCategories, and auto-select "Others"
-      const knownSet = new Set((categoryOptions || []).filter((c) => c !== "Others"));
+      const knownSet = new Set(
+        (categoryOptions || []).filter((c) => c !== "Others")
+      );
       const dbCats = data.categories || [];
 
       const knownCats = dbCats.filter((c) => knownSet.has(c));
@@ -268,6 +308,20 @@ export default function EditProfile() {
 
   return (
     <div className="flex bg-[#F9FAFB] min-h-screen text-left">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Edit Supplier Profile | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Update your supplier profile, pickup address, categories and bank details on ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbJsonLd)}
+        </script>
+      </Helmet>
+
       <SupplierSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <div
@@ -331,7 +385,9 @@ export default function EditProfile() {
                     <form onSubmit={onSave} className="space-y-8">
                       {/* Basic */}
                       <div>
-                        <h2 className="text-lg font-semibold text-[#124734]">Basic Info</h2>
+                        <h2 className="text-lg font-semibold text-[#124734]">
+                          Basic Info
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                           <input
                             value={form.shopName}
@@ -449,7 +505,9 @@ export default function EditProfile() {
 
                       {/* Pickup Address */}
                       <div>
-                        <h2 className="text-lg font-semibold text-[#124734]">Pickup Address</h2>
+                        <h2 className="text-lg font-semibold text-[#124734]">
+                          Pickup Address
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                           <input
                             value={form.pickupAddress.addressLine1}
@@ -492,7 +550,9 @@ export default function EditProfile() {
 
                       {/* Bank */}
                       <div>
-                        <h2 className="text-lg font-semibold text-[#124734]">Bank Details </h2>
+                        <h2 className="text-lg font-semibold text-[#124734]">
+                          Bank Details
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                           <input
                             value={form.bank.accountHolderName}

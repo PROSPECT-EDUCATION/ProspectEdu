@@ -1,5 +1,7 @@
 // src/pages/Parent/ParentStudentsPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +16,38 @@ function clampPct(v) {
 }
 
 export default function ParentStudentsPage() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/parent`
+              : "/parent",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "My Students",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
   const navigate = useNavigate();
@@ -48,6 +82,18 @@ export default function ParentStudentsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO */}
+      <Helmet>
+        <title>My Students | Parent Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View linked students and access student profiles from the parent dashboard in ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div
         className="fixed top-0 left-0 h-full transition-all duration-300"

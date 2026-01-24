@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import { FaFacebookF } from "react-icons/fa";
@@ -13,7 +14,12 @@ import { api } from "../../lib/api"; // ✅ NEW (needed for notify api)
 
 const ProductDetail = () => {
   const navigate = useNavigate();
-  const currentUrl = window.location.href;
+
+  const currentUrl =
+    typeof window !== "undefined" ? window.location.href : "";
+  const canonicalUrl =
+    typeof window !== "undefined" ? window.location.href.split("?")[0] : "";
+
   const { addToCart, cart } = useCart();
   const { wishlist, toggleWishlist } = useWishlist();
 
@@ -87,9 +93,80 @@ const ProductDetail = () => {
     }
   };
 
+  // ✅ SEO: JSON-LD (Product + Breadcrumb)
+  const productName = product?.title || "Product";
+  const productDesc =
+    (product?.description || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160) || `Buy ${productName} on ProspectEdu.`;
+
+  const productImage = thumbnail || images?.[0] || product?.img || "";
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: productName,
+    description: product?.description || productDesc,
+    image: images?.filter(Boolean) || (productImage ? [productImage] : []),
+    category: product?.category || undefined,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price: String(product?.price ?? ""),
+      availability: product?.outOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+      url: canonicalUrl || currentUrl,
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/ecommerce-home`
+            : "/ecommerce-home",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: productName,
+        item: canonicalUrl || currentUrl,
+      },
+    ],
+  };
 
   return (
     <section className="pt-36">
+      <Helmet>
+        <title>{productName} | ProspectEdu Store</title>
+        <meta name="description" content={productDesc} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        {/* Open Graph */}
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={`${productName} | ProspectEdu Store`} />
+        <meta property="og:description" content={productDesc} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        {productImage ? <meta property="og:image" content={productImage} /> : null}
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${productName} | ProspectEdu Store`} />
+        <meta name="twitter:description" content={productDesc} />
+        {productImage ? <meta name="twitter:image" content={productImage} /> : null}
+
+        <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white shadow-xl px-6 py-2 rounded-full text-[#124734] border z-[9999]">
           {toast}
@@ -121,14 +198,26 @@ const ProductDetail = () => {
                   onClick={() => setThumbnail(image)}
                   className="border w-20 h-20 sm:w-24 sm:h-24 border-gray-300 rounded cursor-pointer"
                 >
-                  <img src={image} className="w-full h-full object-contain" />
+                  <img
+                    src={image}
+                    className="w-full h-full object-contain"
+                    alt={`${productName} thumbnail ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               ))}
             </div>
 
             {/* Main Image */}
             <div className="order-1 sm:order-2 border border-gray-300 w-full sm:w-80 md:w-96 rounded overflow-hidden mx-auto">
-              <img src={thumbnail} className="w-full h-full object-contain" />
+              <img
+                src={thumbnail}
+                className="w-full h-full object-contain"
+                alt={`${productName} image`}
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           </div>
 
@@ -141,6 +230,11 @@ const ProductDetail = () => {
               <button
                 onClick={() => toggleWishlist(product, navigate)}
                 className="p-2 rounded-full bg-[#A7E1B2]/40 hover:bg-[#A7E1B2] transition"
+                aria-label={
+                  wishlist.some((item) => item.id === product.id)
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
               >
                 {wishlist.some((item) => item.id === product.id) ? (
                   <FaHeart className="text-[#124734] text-2xl" />
@@ -208,6 +302,7 @@ const ProductDetail = () => {
                     ? "bg-gray-100 text-red-500 cursor-not-allowed"
                     : "bg-white border-[#124734]"
                 }`}
+                aria-label="Quantity"
               />
             </div>
 
@@ -291,6 +386,7 @@ const ProductDetail = () => {
                 <button
                   onClick={shareFacebook}
                   className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                  aria-label="Share on Facebook"
                 >
                   <FaFacebookF className="text-indigo-700" />
                 </button>
@@ -298,6 +394,7 @@ const ProductDetail = () => {
                 <button
                   onClick={shareTwitter}
                   className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                  aria-label="Share on Twitter"
                 >
                   <FaXTwitter className="text-black" />
                 </button>
@@ -305,6 +402,7 @@ const ProductDetail = () => {
                 <button
                   onClick={shareWhatsApp}
                   className="w-10 h-10 flex items-center justify-center rounded-md bg-[#A7E1B2]"
+                  aria-label="Share on WhatsApp"
                 >
                   <FaWhatsapp className="text-green-600 text-xl" />
                 </button>
@@ -314,7 +412,6 @@ const ProductDetail = () => {
         </div>
       </div>
 
-     
       <div className="pt-10">
         <Footer />
       </div>

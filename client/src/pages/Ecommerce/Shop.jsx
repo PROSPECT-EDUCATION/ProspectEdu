@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
 import Footer from "../../components/Footer";
@@ -11,9 +12,19 @@ const Shop = () => {
   const urlParams = new URLSearchParams(location.search);
   const initialCategory = urlParams.get("category");
 
-  // ✅ same as backend predefined + Other
- const [categories, setCategories] = useState(["Other"]);
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/shop${initialCategory ? `?category=${encodeURIComponent(initialCategory)}` : ""}`;
 
+  const pageTitle = initialCategory
+    ? `${initialCategory} Products | Shop | Prospect Ecommerce`
+    : "Shop All Products | Prospect Ecommerce";
+
+  const pageDescription = initialCategory
+    ? `Browse ${initialCategory} products on Prospect Ecommerce. Filter by category, price and sort easily.`
+    : "Browse all products on Prospect Ecommerce. Filter by category, price and sort easily.";
+
+  // ✅ same as backend predefined + Other
+  const [categories, setCategories] = useState(["Other"]);
 
   const [selectedCategories, setSelectedCategories] = useState(
     initialCategory ? [initialCategory] : []
@@ -22,58 +33,56 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState([1, 5000]);
   const [sortOption, setSortOption] = useState("Latest");
 
-  // ✅ products from backend
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  let mounted = true;
-  (async () => {
-    try {
-      const res = await api.get("/categories");
-      const items = res?.data?.categories || [];
-      const names = items.map((c) => c.name);
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get("/categories");
+        const items = res?.data?.categories || [];
+        const names = items.map((c) => c.name);
 
-      if (!mounted) return;
-      setCategories([...names, "Other"]);
-    } catch {
-      if (mounted) setCategories(["Other"]);
-    }
-  })();
+        if (!mounted) return;
+        setCategories([...names, "Other"]);
+      } catch {
+        if (mounted) setCategories(["Other"]);
+      }
+    })();
 
-  return () => {
-    mounted = false;
-  };
-}, []);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-
-  // ✅ Fetch products for everyone
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
         setLoading(true);
-        const res = await api.get("/products"); // => /api/v1/products (based on your api baseURL)
+        const res = await api.get("/products");
 
         const products = (res?.data?.products || []).map((p) => {
           const price = Number(p.price || 0);
           const offer = Number(p.offerPrice || 0);
 
-          // oldPrice show as price, and offer as current (like your UI)
           const oldPrice = price;
           const finalPrice = offer > 0 ? offer : price;
 
           return {
             id: p._id,
             title: p.name,
-            img: (p.images && p.images[0]) || "https://via.placeholder.com/300x300?text=Product",
+            img:
+              (p.images && p.images[0]) ||
+              "https://via.placeholder.com/300x300?text=Product",
             images: Array.isArray(p.images) ? p.images : [],
             oldPrice: oldPrice,
             price: finalPrice,
             save: Math.max(0, oldPrice - finalPrice),
             outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
-            category: (p.category || "").trim(), // predefined OR "Other"
+            category: (p.category || "").trim(),
             customCategory: p.customCategory || "",
             description: p.description || "",
           };
@@ -93,7 +102,6 @@ const Shop = () => {
     };
   }, []);
 
-  // Category toggle
   const toggleCategory = (cat) => {
     if (selectedCategories.includes(cat)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== cat));
@@ -124,12 +132,49 @@ const Shop = () => {
     return list;
   }, [allProducts, selectedCategories, priceRange, sortOption]);
 
+  const jsonLd = useMemo(() => {
+    const items = (filtered || []).slice(0, 50).map((p, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: p.title,
+      url: `${SITE_URL}/product/${p.id}`,
+    }));
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: items,
+      },
+    };
+  }, [filtered, SITE_URL, pageTitle, pageDescription, canonicalUrl]);
+
   return (
     <section className="pt-36">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-left pb-20">
-        {/* Breadcrumb */}
         <p className="text-gray-600 text-sm sm:text-md mb-4 sm:mb-5">
           <span
             className="cursor-pointer text-[#124734] hover:underline"
@@ -140,7 +185,6 @@ const Shop = () => {
           &gt; Shop
         </p>
 
-        {/* TOP SECTION */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-[#124734]">
             All Products
@@ -157,18 +201,13 @@ const Shop = () => {
           </select>
         </div>
 
-        {/* LAYOUT GRID */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* SIDEBAR */}
           <div className="border rounded-xl p-4 sm:p-6 shadow bg-[#A7E1B2] h-fit md:sticky md:top-36">
             <h2 className="text-lg sm:text-xl font-bold mb-4">Category</h2>
 
             <div className="space-y-2">
               {categories.map((cat) => (
-                <label
-                  key={cat}
-                  className="flex gap-2 items-center text-sm sm:text-base"
-                >
+                <label key={cat} className="flex gap-2 items-center text-sm sm:text-base">
                   <input
                     type="checkbox"
                     checked={selectedCategories.includes(cat)}
@@ -196,7 +235,6 @@ const Shop = () => {
             </p>
           </div>
 
-          {/* PRODUCTS */}
           <div className="md:col-span-3">
             {loading ? (
               <div className="p-6 text-[#124734] font-semibold">Loading products...</div>

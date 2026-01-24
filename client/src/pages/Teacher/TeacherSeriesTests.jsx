@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
-import {
-  fetchTeacherSeriesById,
-} from "../../lib/testSeriesApi";
+import { fetchTeacherSeriesById } from "../../lib/testSeriesApi";
 import {
   addSeriesTest,
   deleteSeriesTest,
@@ -24,13 +23,58 @@ const emptyTest = {
 export default function TeacherSeriesTests() {
   const { id } = useParams(); // seriesId
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
   const [series, setSeries] = useState(null);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Test & Learning",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Manage Series Tests",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
+  const seoTitle = series?.title
+    ? `${series.title} | Manage Series Tests | Teacher Dashboard | ProspectEdu`
+    : "Manage Series Tests | Teacher Dashboard | ProspectEdu";
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("create"); // create | edit
@@ -130,7 +174,23 @@ export default function TeacherSeriesTests() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta
+          name="description"
+          content="Create, edit and manage tests under a test series in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
+      <aside
+        className={`${
+          isCollapsed ? "w-20" : "w-64"
+        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+      >
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -138,7 +198,10 @@ export default function TeacherSeriesTests() {
         className="flex flex-col flex-1 h-screen transition-all duration-300 text-left"
         style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
       >
-        <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
+        <header
+          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
+          style={{ left: sidebarWidthPx, right: 0 }}
+        >
           <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Manage Series Tests" />
         </header>
 
@@ -210,12 +273,14 @@ export default function TeacherSeriesTests() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                           <button
-                    onClick={() => navigate(`/teacher/series-tests/${id}/tests/${t._id}/questions`)}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#009846] text-[#009846] hover:bg-[#E6F4EC] font-semibold"
-                  >
-                    Add Questions
-                  </button>
+                          <button
+                            onClick={() =>
+                              navigate(`/teacher/series-tests/${id}/tests/${t._id}/questions`)
+                            }
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#009846] text-[#009846] hover:bg-[#E6F4EC] font-semibold"
+                          >
+                            Add Questions
+                          </button>
                           <button
                             onClick={() => openEdit(t)}
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#CDE8D5] text-[#124734] hover:bg-[#E6F4EC] font-semibold"
@@ -291,12 +356,12 @@ export default function TeacherSeriesTests() {
                     type="number"
                     min="0"
                     value={form.totalQuestions}
-                  onChange={(e) =>
-                        setForm((p) => ({
-                          ...p,
-                          totalQuestions: e.target.value === "" ? "" : Number(e.target.value),
-                        }))
-                      }
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        totalQuestions: e.target.value === "" ? "" : Number(e.target.value),
+                      }))
+                    }
                     className="mt-1 w-full border rounded-xl px-4 py-2"
                     placeholder="eg. 50"
                   />
@@ -307,13 +372,13 @@ export default function TeacherSeriesTests() {
                     type="number"
                     min="0"
                     value={form.totalMarks}
-                   onChange={(e) =>
-                        setForm((p) => ({
-                          ...p,
-                          totalMarks: e.target.value === "" ? "" : Number(e.target.value),
-                        }))
-                      }
-                       className="mt-1 w-full border rounded-xl px-4 py-2"
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        totalMarks: e.target.value === "" ? "" : Number(e.target.value),
+                      }))
+                    }
+                    className="mt-1 w-full border rounded-xl px-4 py-2"
                     placeholder="eg. 100"
                   />
                 </div>
@@ -323,13 +388,12 @@ export default function TeacherSeriesTests() {
                     type="number"
                     min="0"
                     value={form.durationMinutes}
-                   onChange={(e) =>
-  setForm((p) => ({
-    ...p,
-    durationMinutes: e.target.value === "" ? "" : Number(e.target.value),
-  }))
-}
-
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        durationMinutes: e.target.value === "" ? "" : Number(e.target.value),
+                      }))
+                    }
                     className="mt-1 w-full border rounded-xl px-4 py-2"
                     placeholder="eg. 60"
                   />
@@ -337,8 +401,6 @@ export default function TeacherSeriesTests() {
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
-               
-
                 <button
                   type="button"
                   onClick={closeModal}

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { quizzesApi } from "../../services/quizzes";
@@ -11,7 +12,39 @@ export default function TeacherQuizzesPage() {
 
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Course Quizzes",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +83,18 @@ export default function TeacherQuizzesPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Quizzes | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Manage quizzes created for a course in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <div className={`${isCollapsed ? "w-20" : "w-64"} fixed left-0 top-0 h-full transition-all`}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
@@ -58,17 +103,25 @@ export default function TeacherQuizzesPage() {
         <TeacherTopbar pageTitle="Quizzes" />
 
         <div className="px-8 pt-[20px] pb-10 overflow-y-auto">
-            <div className="w-full flex flex-col items-start ">
-          <p className="text-sm text-[#5B7065] mb-6">
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher-dashboard")}>
-              Dashboard
-            </span>{" / "}
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher-dashboard")}>
-              Courses
-            </span>{" / "}
-            <span className="text-[#124734] font-medium">Quizzes</span>
-          </p>
-</div>
+          <div className="w-full flex flex-col items-start ">
+            <p className="text-sm text-[#5B7065] mb-6">
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher-dashboard")}
+              >
+                Dashboard
+              </span>{" "}
+              /{" "}
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher-dashboard")}
+              >
+                Courses
+              </span>{" "}
+              / <span className="text-[#124734] font-medium">Quizzes</span>
+            </p>
+          </div>
+
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-2xl font-semibold text-[#124734]">My Quizzes</h2>
@@ -91,15 +144,24 @@ export default function TeacherQuizzesPage() {
             ) : (
               <div className="space-y-4">
                 {quizzes.map((q) => (
-                  <div key={q._id} className="border border-[#E6F4EC] rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div
+                    key={q._id}
+                    className="border border-[#E6F4EC] rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                  >
                     <div>
                       <div className="text-lg font-semibold text-[#124734]">{q.title}</div>
                       <div className="text-sm text-[#5B7065] mt-1">
                         Status: <span className="text-[#124734] font-medium">{q.status}</span>
                         {"  "}•{"  "}
-                        Timer: <span className="text-[#124734] font-medium">{q.durationMinutes || 0} min</span>
+                        Timer:{" "}
+                        <span className="text-[#124734] font-medium">
+                          {q.durationMinutes || 0} min
+                        </span>
                         {"  "}•{"  "}
-                        Questions: <span className="text-[#124734] font-medium">{q.questions?.length || 0}</span>
+                        Questions:{" "}
+                        <span className="text-[#124734] font-medium">
+                          {q.questions?.length || 0}
+                        </span>
                       </div>
                     </div>
 

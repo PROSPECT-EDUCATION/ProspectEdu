@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
@@ -9,11 +10,53 @@ import ChangePasswordForm from "../../components/Profile/ChangePasswordForm";
 export default function ParentChangePasswordPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/parent`
+              : "/parent",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Change Password",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Change Password | Parent Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Change your parent account password securely in the ProspectEdu parent dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
 
       {/* Sidebar */}
       <div
@@ -21,30 +64,22 @@ export default function ParentChangePasswordPage() {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <ParentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* Main Content */}
       <div
         className="flex flex-col flex-1 md:ml-[sidebarWidth] ml-0"
-       style={{
-  marginLeft: sidebarWidth,
-}}
-
+        style={{
+          marginLeft: sidebarWidth,
+        }}
       >
-
         {/* Topbar */}
         <div
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
           style={{ left: sidebarWidth, right: 0 }}
         >
-          <ParentTopbar
-            pageTitle="Change Password"
-            showStudentSwitcher={false}
-          />
+          <ParentTopbar pageTitle="Change Password" showStudentSwitcher={false} />
         </div>
 
         {/* Sub-header */}
@@ -53,7 +88,6 @@ export default function ParentChangePasswordPage() {
           style={{ left: sidebarWidth }}
         >
           <div className="w-full flex flex-col items-start">
-
             {/* Breadcrumb */}
             <p className="text-sm text-[#5B7065] mb-3">
               <span
@@ -64,15 +98,11 @@ export default function ParentChangePasswordPage() {
               </span>{" "}
               / <span className="text-[#124734] font-medium">Change Password</span>
             </p>
-
           </div>
         </div>
 
         {/* Body */}
-        <main
-          className="flex-1 overflow-y-auto px-1 py-10"
-          style={{ marginTop: "50px" }}
-        >
+        <main className="flex-1 overflow-y-auto px-1 py-10" style={{ marginTop: "50px" }}>
           <ChangePasswordForm />
         </main>
       </div>

@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import EcomHeader from "../../components/EcomHeader";
 import Footer from "../../components/Footer";
-import { api } from "../../lib/api"; // ✅ add
+import { api } from "../../lib/api";
 
 const Categories = () => {
   const navigate = useNavigate();
-
-  // ✅ admin-created categories from backend
   const [categories, setCategories] = useState([]);
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/categories`;
+
+  const pageTitle = "All Categories | Prospect Ecommerce";
+  const pageDescription =
+    "Explore all product categories on Prospect Ecommerce. Browse categories and shop products easily.";
 
   useEffect(() => {
     let mounted = true;
@@ -26,7 +32,7 @@ const Categories = () => {
 
     const load = async () => {
       try {
-        const res = await api.get("/categories"); // /api/v1/categories
+        const res = await api.get("/categories");
         const items = res?.data?.categories || [];
 
         const mapped = items.map((c, idx) => ({
@@ -50,8 +56,46 @@ const Categories = () => {
     };
   }, []);
 
+  const jsonLd = useMemo(() => {
+    const items = (categories || []).slice(0, 100).map((c, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: c.name,
+      url: `${SITE_URL}/shop?category=${encodeURIComponent(c.name)}`,
+    }));
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: items,
+      },
+    };
+  }, [categories, SITE_URL, pageTitle, pageDescription, canonicalUrl]);
+
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10 pb-20 text-left">
@@ -67,9 +111,9 @@ const Categories = () => {
         </p>
 
         {/* Heading */}
-        <h2 className="text-xl sm:text-2xl font-bold text-[#2E2E2E] mb-10">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#2E2E2E] mb-10">
           Explore All Categories ({categories.length} Categories Found)
-        </h2>
+        </h1>
 
         {/* Categories GRID */}
         <div
@@ -97,11 +141,12 @@ const Categories = () => {
                 "
                 style={{ backgroundColor: cat.color }}
               >
-                {/* ✅ ONLY change: icon -> image (layout same) */}
                 <img
                   src={cat.img}
                   alt={cat.name}
                   className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
 
@@ -112,8 +157,8 @@ const Categories = () => {
           ))}
         </div>
       </div>
+
       <div className="pt-10">
-        {" "}
         <Footer />
       </div>
     </section>

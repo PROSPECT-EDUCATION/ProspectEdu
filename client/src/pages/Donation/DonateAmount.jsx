@@ -1,6 +1,7 @@
 // src/pages/Donate/DonateAmount.jsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import logoImg from "../../assets/logo.webp";
 import { api } from "../../lib/api";
 
@@ -17,6 +18,14 @@ const loadRazorpayScript = () =>
 
 const DonateAmount = () => {
   const navigate = useNavigate();
+
+  // ✅ Base URL for canonical/OG (set VITE_SITE_URL in prod)
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = useMemo(() => `${SITE_URL}/donate-amount`, [SITE_URL]);
+
+  const pageTitle = "Donate Online | ProspectEdu";
+  const pageDescription =
+    "Donate securely online to support Prospect Education & Social Welfare Society. Pay via UPI, cards, net banking and help students in need.";
 
   const [amount, setAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
@@ -45,6 +54,24 @@ const DonateAmount = () => {
     /^[0-9]{10}$/.test(String(v || "").trim());
 
   const finalAmount = useMemo(() => Number(amount), [amount]);
+
+  // ✅ JSON-LD (DonateAction)
+  const jsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "DonateAction",
+      name: "Online donation",
+      description: pageDescription,
+      target: canonicalUrl,
+      amount: finalAmount > 0 ? finalAmount : undefined,
+      priceCurrency: "INR",
+      recipient: {
+        "@type": "Organization",
+        name: "Prospect Education and Social Welfare Society",
+        url: SITE_URL,
+      },
+    };
+  }, [canonicalUrl, pageDescription, finalAmount, SITE_URL]);
 
   const validate = () => {
     if (!finalAmount || finalAmount <= 0)
@@ -90,20 +117,19 @@ const DonateAmount = () => {
         keyId, // ✅ comes from backend
       } = res.data?.data || {};
 
-      if (!donationId || !orderId)
-        throw new Error("Order creation failed.");
+      if (!donationId || !orderId) throw new Error("Order creation failed.");
       if (!keyId)
         throw new Error(
           "Razorpay keyId not received from backend. Please add keyId in API response."
         );
 
       const options = {
-        key: keyId, // ✅ no frontend env needed
+        key: keyId,
         name: "Prospect Education",
         description: "Donation",
         image: logoImg,
         order_id: orderId,
-        amount: orderAmount, // paise
+        amount: orderAmount,
         currency: currency || "INR",
         prefill: {
           name: `${form.firstName} ${form.lastName}`.trim(),
@@ -154,7 +180,33 @@ const DonateAmount = () => {
 
   return (
     <div className="bg-[#F9FAFB] min-h-screen py-10 flex flex-col items-center font-[Open_Sans,sans-serif]">
-      <img src={logoImg} alt="Prospect Logo" className="w-52 mb-6" />
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
+      <img
+        src={logoImg}
+        alt="Prospect Logo"
+        className="w-52 mb-6"
+        loading="lazy"
+        decoding="async"
+      />
 
       <div className="bg-[#A7E1B2] max-w-4xl w-full rounded-xl shadow-md p-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">

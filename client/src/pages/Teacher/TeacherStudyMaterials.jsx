@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText, PenLine, Plus, Search, Trash2, UploadCloud, X } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
@@ -13,29 +14,6 @@ function badgeClass(type) {
     ? "bg-[#E8F3FF] text-[#0B4F9E] border border-[#CFE6FF]"
     : "bg-[#F3E8FF] text-[#5B21B6] border border-[#E9D5FF]";
 }
-function buildInlineViewUrl(url, filename, mimeType) {
-  try {
-    const u = new URL(url);
-
-    // Force inline display + filename
-    u.searchParams.set(
-      "response-content-disposition",
-      `inline; filename="${filename || "file.pdf"}"`
-    );
-
-    // Force correct content-type (especially for PDFs)
-    if (mimeType) {
-      u.searchParams.set("response-content-type", mimeType);
-    }
-
-    return u.toString();
-  } catch {
-    return url;
-  }
-}
-function docViewerUrl(fileUrl) {
-  return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(fileUrl)}`;
-}
 
 function safeName(name, fallback = "file.pdf") {
   const n = String(name || "").trim();
@@ -44,7 +22,7 @@ function safeName(name, fallback = "file.pdf") {
 }
 
 export default function TeacherStudyMaterials() {
-    const API_BASE =  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
@@ -75,7 +53,6 @@ export default function TeacherStudyMaterials() {
       ]);
       setItems(mineRes.data?.items || []);
       setCategories(catsRes.data?.categories || []);
-      // default category
       if (!category && (catsRes.data?.categories || []).length) {
         setCategory(catsRes.data.categories[0].name);
       }
@@ -83,22 +60,23 @@ export default function TeacherStudyMaterials() {
       setLoading(false);
     }
   }
+
   async function downloadFile(url, filename) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Download failed");
-  const blob = await res.blob();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
 
-  const a = document.createElement("a");
-  a.href = window.URL.createObjectURL(blob);
-  a.download = filename.endsWith(".pdf") || filename.endsWith(".doc") || filename.endsWith(".docx")
-    ? filename
-    : `${filename}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(a.href);
-}
-
+    const a = document.createElement("a");
+    a.href = window.URL.createObjectURL(blob);
+    a.download =
+      filename.endsWith(".pdf") || filename.endsWith(".doc") || filename.endsWith(".docx")
+        ? filename
+        : `${filename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(a.href);
+  }
 
   useEffect(() => {
     loadAll();
@@ -156,7 +134,7 @@ export default function TeacherStudyMaterials() {
     try {
       await studyMaterialsApi.create({
         title: title.trim(),
-        category: category.trim(), // backend lowercases
+        category: category.trim(),
         materialType,
         fileUrl: fileMeta.url,
         filePublicId: fileMeta.publicId,
@@ -164,7 +142,6 @@ export default function TeacherStudyMaterials() {
         mimeType: fileMeta.mimeType,
       });
 
-      // reset + reload
       setOpen(false);
       setTitle("");
       setMaterialType("pdf");
@@ -191,11 +168,50 @@ export default function TeacherStudyMaterials() {
     }
   }
 
+  // ✅ SEO (teacher dashboard pages should usually be "noindex")
+  const seoTitle = "Teacher Study Materials | ProspectEdu";
+  const seoDesc = "Upload and manage study materials (PDF/DOC/handwritten) by category inside the teacher dashboard.";
+  const canonical = typeof window !== "undefined" ? window.location.href : "";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: seoTitle,
+    description: seoDesc,
+    url: canonical,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "ProspectEdu",
+      url: canonical ? new URL(canonical).origin : "",
+    },
+  };
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta name="robots" content="noindex,nofollow" />
+        {canonical ? <link rel="canonical" href={canonical} /> : null}
+
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        {canonical ? <meta property="og:url" content={canonical} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDesc} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
+      {/* ✅ SR-only H1 for SEO hierarchy (no layout change) */}
+      <h1 className="sr-only">Teacher Study Materials</h1>
+
       {/* Sidebar */}
       <aside
         className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        aria-label="Teacher sidebar navigation"
       >
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
@@ -209,7 +225,10 @@ export default function TeacherStudyMaterials() {
         }}
       >
         {/* Topbar */}
-        <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
+        <header
+          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
+          style={{ left: sidebarWidthPx, right: 0 }}
+        >
           <TeacherTopbar pageTitle="Study Materials" />
         </header>
 
@@ -227,6 +246,7 @@ export default function TeacherStudyMaterials() {
               <button
                 onClick={() => setOpen(true)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#009846] text-white hover:bg-[#007a36] transition shadow-sm"
+                aria-label="Create study material"
               >
                 <Plus size={18} /> Create Study Material
               </button>
@@ -234,7 +254,7 @@ export default function TeacherStudyMaterials() {
 
             <div className="flex flex-col md:flex-row md:items-center gap-3">
               {/* Tabs */}
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="tablist" aria-label="Study material type filters">
                 {[
                   { key: "all", label: "All" },
                   { key: "pdf", label: "PDF/DOC" },
@@ -248,6 +268,8 @@ export default function TeacherStudyMaterials() {
                         ? "bg-white border-[#009846] text-[#009846]"
                         : "bg-transparent border-[#E6F4EC] text-[#5B7065] hover:bg-white"
                     }`}
+                    role="tab"
+                    aria-selected={tab === t.key}
                   >
                     {t.label}
                   </button>
@@ -256,12 +278,17 @@ export default function TeacherStudyMaterials() {
 
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5B7065]" size={18} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5B7065]"
+                  size={18}
+                  aria-hidden="true"
+                />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Search by title..."
                   className="w-full pl-10 pr-3 py-2 rounded-xl border border-[#E6F4EC] bg-white focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                  aria-label="Search study materials by title"
                 />
               </div>
             </div>
@@ -291,6 +318,7 @@ export default function TeacherStudyMaterials() {
                         onClick={() => removeItem(x._id)}
                         className="p-2 rounded-xl border border-[#F1D0D0] text-[#B42318] hover:bg-[#FFF3F3] transition"
                         title="Delete"
+                        aria-label={`Delete ${x.title}`}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -299,11 +327,16 @@ export default function TeacherStudyMaterials() {
                     <div className="mt-3 flex flex-wrap gap-2 items-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${badgeClass(x.materialType)}`}>
                         {x.materialType === "pdf" ? (
-                          <span className="inline-flex items-center gap-1"><FileText size={14} /> PDF</span>
+                          <span className="inline-flex items-center gap-1">
+                            <FileText size={14} /> PDF
+                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1"><PenLine size={14} /> Handwritten</span>
+                          <span className="inline-flex items-center gap-1">
+                            <PenLine size={14} /> Handwritten
+                          </span>
                         )}
                       </span>
+
                       <span className="text-xs px-2 py-1 rounded-full bg-[#ECF5EE] text-[#124734] border border-[#A7E1B2]">
                         {String(x.category || "").toUpperCase()}
                       </span>
@@ -311,18 +344,15 @@ export default function TeacherStudyMaterials() {
 
                     <p className="text-sm text-[#5B7065] mt-3 truncate">{x.fileName}</p>
 
-                   <div className="mt-4 flex gap-2">
- 
-
-  <button
-    onClick={() => downloadFile(x.fileUrl, x.fileName || `${x.title}.pdf`)}
-    className="flex-1 text-center px-4 py-2 rounded-xl bg-[#009846] text-white"
-  >
-    Download
-  </button>
-</div>
-
-
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => downloadFile(x.fileUrl, safeName(x.fileName, `${x.title}.pdf`))}
+                        className="flex-1 text-center px-4 py-2 rounded-xl bg-[#009846] text-white"
+                        aria-label={`Download ${x.title}`}
+                      >
+                        Download
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -333,14 +363,14 @@ export default function TeacherStudyMaterials() {
 
       {/* Create Modal */}
       {open && (
-        <div className="fixed inset-0 z-[2000] bg-black/30 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[2000] bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-[#E6F4EC]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#E6F4EC]">
               <div>
                 <h3 className="text-[#124734] font-semibold">Create Study Material</h3>
                 <p className="text-sm text-[#5B7065]">Title + category + upload file (PDF/DOC/DOCX)</p>
               </div>
-              <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-[#F2F4F7]">
+              <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-[#F2F4F7]" aria-label="Close modal">
                 <X />
               </button>
             </div>

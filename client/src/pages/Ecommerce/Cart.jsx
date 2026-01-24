@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import EcomHeader from "../../components/EcomHeader";
 import { useCart } from "../../context/CartContext";
 import Footer from "../../components/Footer";
@@ -8,6 +9,13 @@ const Cart = () => {
   const navigate = useNavigate();
   const { cart, decreaseQty, removeFromCart, increaseQty } = useCart();
 
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/cart`;
+
+  const pageTitle = "My Cart | Prospect Ecommerce";
+  const pageDescription =
+    "View items in your cart on Prospect Ecommerce. Update quantities, check discounts, and proceed to checkout securely.";
+
   const totalMRP = cart.reduce((sum, p) => sum + p.oldPrice * p.quantity, 0);
   const totalPrice = cart.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const discount = totalMRP - totalPrice;
@@ -15,8 +23,39 @@ const Cart = () => {
   const shipping = totalPrice < 1000 ? 99 : 0;
   const grandTotal = (totalPrice + shipping).toFixed(2);
 
+  // ✅ Optional JSON-LD for internal UX (still noindex)
+  const jsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+    };
+  }, [pageTitle, pageDescription, canonicalUrl]);
+
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Private page - do not index */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
@@ -40,6 +79,8 @@ const Cart = () => {
               src="https://cdn-icons-png.flaticon.com/512/16379/16379166.png"
               alt="Empty Cart"
               className="w-32 md:w-40 opacity-90"
+              loading="lazy"
+              decoding="async"
             />
 
             <p className="text-gray-600 text-base md:text-lg mt-2">
@@ -53,6 +94,7 @@ const Cart = () => {
             <button
               onClick={() => navigate("/shop")}
               className="mt-6 px-6 md:px-8 py-3 bg-[#124734] text-white rounded-lg shadow hover:bg-[#0f3c2b]"
+              type="button"
             >
               Start Shopping
             </button>
@@ -89,11 +131,12 @@ const Cart = () => {
                         <img
                           src={item.img}
                           className="w-24 h-28 object-contain rounded-lg cursor-pointer"
+                          loading="lazy"
+                          decoding="async"
+                          alt={item.title}
                           onClick={() =>
                             navigate(
-                              `/product/${item.title
-                                .toLowerCase()
-                                .replace(/ /g, "-")}`,
+                              `/product/${item.title.toLowerCase().replace(/ /g, "-")}`,
                               { state: item }
                             )
                           }
@@ -102,6 +145,8 @@ const Cart = () => {
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="absolute -top-2 -right-2 bg-gray-300 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                          type="button"
+                          aria-label="Remove from cart"
                         >
                           ✕
                         </button>
@@ -112,9 +157,7 @@ const Cart = () => {
                           className="font-semibold text-lg leading-tight cursor-pointer"
                           onClick={() =>
                             navigate(
-                              `/product/${item.title
-                                .toLowerCase()
-                                .replace(/ /g, "-")}`,
+                              `/product/${item.title.toLowerCase().replace(/ /g, "-")}`,
                               { state: item }
                             )
                           }
@@ -122,9 +165,7 @@ const Cart = () => {
                           {item.title}
                         </p>
 
-                        <p className="font-bold text-[#124734] mt-1">
-                          ₹{item.price}
-                        </p>
+                        <p className="font-bold text-[#124734] mt-1">₹{item.price}</p>
                       </div>
                     </div>
 
@@ -136,6 +177,8 @@ const Cart = () => {
                         <button
                           onClick={() => decreaseQty(item.id)}
                           className="px-3 py-1 bg-gray-200 rounded"
+                          type="button"
+                          aria-label="Decrease quantity"
                         >
                           –
                         </button>
@@ -145,6 +188,8 @@ const Cart = () => {
                         <button
                           onClick={() => increaseQty(item.id)}
                           className="px-3 py-1 bg-gray-200 rounded"
+                          type="button"
+                          aria-label="Increase quantity"
                         >
                           +
                         </button>
@@ -166,11 +211,12 @@ const Cart = () => {
                         <img
                           src={item.img}
                           className="w-24 h-28 object-contain rounded-lg cursor-pointer"
+                          loading="lazy"
+                          decoding="async"
+                          alt={item.title}
                           onClick={() =>
                             navigate(
-                              `/product/${item.title
-                                .toLowerCase()
-                                .replace(/ /g, "-")}`,
+                              `/product/${item.title.toLowerCase().replace(/ /g, "-")}`,
                               { state: item }
                             )
                           }
@@ -179,6 +225,8 @@ const Cart = () => {
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="absolute -top-2 -right-2 bg-gray-300 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                          type="button"
+                          aria-label="Remove from cart"
                         >
                           ✕
                         </button>
@@ -188,9 +236,7 @@ const Cart = () => {
                         className="font-semibold text-[20px] mt-8 leading-tight cursor-pointer"
                         onClick={() =>
                           navigate(
-                            `/product/${item.title
-                              .toLowerCase()
-                              .replace(/ /g, "-")}`,
+                            `/product/${item.title.toLowerCase().replace(/ /g, "-")}`,
                             { state: item }
                           )
                         }
@@ -209,6 +255,8 @@ const Cart = () => {
                       <button
                         onClick={() => decreaseQty(item.id)}
                         className="px-3 py-1 bg-gray-200 rounded"
+                        type="button"
+                        aria-label="Decrease quantity"
                       >
                         –
                       </button>
@@ -218,6 +266,8 @@ const Cart = () => {
                       <button
                         onClick={() => increaseQty(item.id)}
                         className="px-3 py-1 bg-gray-200 rounded"
+                        type="button"
+                        aria-label="Increase quantity"
                       >
                         +
                       </button>
@@ -237,6 +287,7 @@ const Cart = () => {
                 <button
                   onClick={() => navigate("/shop")}
                   className="px-6 py-2 border border-black text-black rounded-full hover:bg-[#124734] hover:text-white transition"
+                  type="button"
                 >
                   Back to Store
                 </button>
@@ -278,6 +329,7 @@ const Cart = () => {
               <button
                 onClick={() => navigate("/checkout")}
                 className="w-full mt-6 py-3 bg-[#124734] text-white rounded-lg text-lg"
+                type="button"
               >
                 Proceed To Checkout
               </button>
@@ -289,7 +341,10 @@ const Cart = () => {
           )}
         </div>
       </div>
-      <div className="pt-10"> <Footer /></div>
+
+      <div className="pt-10">
+        <Footer />
+      </div>
     </section>
   );
 };

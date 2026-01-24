@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import { Search, Save, Loader2, RefreshCcw } from "lucide-react";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
@@ -41,6 +43,38 @@ function safeDate(d) {
 export default function StudentsPerformancePage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  // ✅ SEO
+  const location = useLocation();
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Students Overall Performance",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -131,6 +165,18 @@ export default function StudentsPerformancePage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Students Performance | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View and update overall student performance metrics including attendance, progress, quizzes and assignments in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div
         className="fixed left-0 top-0 h-full transition-all duration-300"
@@ -166,9 +212,7 @@ export default function StudentsPerformancePage() {
                 className="p-4 rounded-2xl border border-[#A7E1B2] bg-white shadow-sm"
               >
                 <div className="text-xs text-[#5B7065]">{c.label}</div>
-                <div className="text-xl font-semibold text-[#124734] mt-1">
-                  {c.value}
-                </div>
+                <div className="text-xl font-semibold text-[#124734] mt-1">{c.value}</div>
               </div>
             ))}
           </div>
@@ -201,25 +245,35 @@ export default function StudentsPerformancePage() {
                         <div className="h-10 w-10 rounded-full bg-[#A7E1B2] text-[#124734] flex items-center justify-center font-semibold">
                           {initials(s.fullName)}
                         </div>
-                        <span className="font-medium text-[#124734]">
-                          {s.fullName || "—"}
-                        </span>
+                        <span className="font-medium text-[#124734]">{s.fullName || "—"}</span>
                       </td>
 
                       <td className="px-4 py-3 text-[#124734]">{s.email || "—"}</td>
                       <td className="px-4 py-3 text-[#124734]">{s.phone || "—"}</td>
 
                       <td className="px-4 py-3">
-                        <Field value={p.assignmentAvg ?? 0} onChange={(v) => updateLocal(s._id, { assignmentAvg: v })} />
+                        <Field
+                          value={p.assignmentAvg ?? 0}
+                          onChange={(v) => updateLocal(s._id, { assignmentAvg: v })}
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <Field value={p.quizAvg ?? 0} onChange={(v) => updateLocal(s._id, { quizAvg: v })} />
+                        <Field
+                          value={p.quizAvg ?? 0}
+                          onChange={(v) => updateLocal(s._id, { quizAvg: v })}
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <Field value={p.attendance ?? 0} onChange={(v) => updateLocal(s._id, { attendance: v })} />
+                        <Field
+                          value={p.attendance ?? 0}
+                          onChange={(v) => updateLocal(s._id, { attendance: v })}
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <Field value={p.progress ?? 0} onChange={(v) => updateLocal(s._id, { progress: v })} />
+                        <Field
+                          value={p.progress ?? 0}
+                          onChange={(v) => updateLocal(s._id, { progress: v })}
+                        />
                       </td>
 
                       <td className="px-4 py-3 text-right">
@@ -228,7 +282,11 @@ export default function StudentsPerformancePage() {
                           disabled={isSaving}
                           className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#009846] text-white hover:bg-[#00803B] disabled:opacity-60"
                         >
-                          {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                          {isSaving ? (
+                            <Loader2 className="animate-spin" size={16} />
+                          ) : (
+                            <Save size={16} />
+                          )}
                           Save
                         </button>
                       </td>
@@ -246,6 +304,8 @@ export default function StudentsPerformancePage() {
               </tbody>
             </table>
           </div>
+
+          {/* OPTIONAL: quick reload button already imported in file (kept) */}
         </div>
       </div>
     </div>

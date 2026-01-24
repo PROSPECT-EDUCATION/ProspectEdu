@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Plus, Trash2 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { quizzesApi } from "../../services/quizzes";
@@ -19,10 +20,51 @@ export default function CreateQuizPage() {
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { courseId } = useParams();
   const { showToast } = useToast();
 
-  const [quizId, setQuizId] = useState(null); // created after first save
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Assessments",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Create Quiz",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
+  const [quizId, setQuizId] = useState(null);
   const [title, setTitle] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -35,15 +77,10 @@ export default function CreateQuizPage() {
   );
 
   const addQuestion = () => setQuestions((prev) => [...prev, newQuestion()]);
-
-  const removeQuestion = (idx) => {
-    setQuestions((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const removeQuestion = (idx) => setQuestions((prev) => prev.filter((_, i) => i !== idx));
 
   const updateQuestion = (idx, patch) => {
-    setQuestions((prev) =>
-      prev.map((q, i) => (i === idx ? { ...q, ...patch } : q))
-    );
+    setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
 
   const updateOption = (qIdx, optIdx, value) => {
@@ -64,7 +101,10 @@ export default function CreateQuizPage() {
     questions: questions.map((q) => ({
       type: q.type,
       prompt: String(q.prompt || "").trim(),
-      options: q.type === "mcq" ? q.options.map((t) => ({ text: String(t || "").trim() })) : [],
+      options:
+        q.type === "mcq"
+          ? q.options.map((t) => ({ text: String(t || "").trim() }))
+          : [],
       correctIndex: q.type === "mcq" ? Number(q.correctIndex) : -1,
       marks: Number(q.marks || 1),
     })),
@@ -120,7 +160,6 @@ export default function CreateQuizPage() {
       setSaving(true);
       const payload = toApiPayload();
 
-      // ensure saved first
       let id = quizId;
       if (!id) {
         const res = await quizzesApi.create(courseId, payload);
@@ -144,6 +183,18 @@ export default function CreateQuizPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO */}
+      <Helmet>
+        <title>Create Quiz | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Create and publish quizzes for your course in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div className={`${isCollapsed ? "w-20" : "w-64"} fixed left-0 top-0 h-full transition-all`}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -154,29 +205,37 @@ export default function CreateQuizPage() {
         <TeacherTopbar pageTitle="Create Quiz" />
 
         <div className="px-8 pt-[20px] pb-10 overflow-y-auto">
-          {/* Breadcrumb */}
           <div className="w-full flex flex-col items-start ">
-          <p className="text-sm text-[#5B7065] mb-6">
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher-dashboard")}>
-              Dashboard
-            </span>
-            {" / "}
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate("/teacher/courses")}>
-              Courses
-            </span>
-            {" / "}
-            <span className="hover:text-[#009846] cursor-pointer hover:underline" onClick={() => navigate(-1)}>
-              Assessments
-            </span>
-            {" / "}
-            <span className="text-[#124734] font-medium">Create Quiz</span>
-          </p>
-</div>
-          {/* QUIZ CARD */}
+            <p className="text-sm text-[#5B7065] mb-6">
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher-dashboard")}
+              >
+                Dashboard
+              </span>
+              {" / "}
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate("/teacher/courses")}
+              >
+                Courses
+              </span>
+              {" / "}
+              <span
+                className="hover:text-[#009846] cursor-pointer hover:underline"
+                onClick={() => navigate(-1)}
+              >
+                Assessments
+              </span>
+              {" / "}
+              <span className="text-[#124734] font-medium">Create Quiz</span>
+            </p>
+          </div>
+
           <div className="bg-white border border-[#A7E1B2] p-6 rounded-xl shadow-sm max-w-4xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-[#124734]">Create Quiz</h2>
+                <h1 className="text-2xl font-semibold text-[#124734]">Create Quiz</h1>
                 <p className="text-sm text-[#5B7065] mt-1">
                   Total Questions: {questions.length} • Total Marks: {totalMarks}
                 </p>
@@ -184,25 +243,28 @@ export default function CreateQuizPage() {
 
               <div className="flex gap-2">
                 <button
-  type="button"
-  disabled={saving}
-  onClick={() => navigate(`/teacher/assessment/quizzes/${courseId}`)}
-  className={`px-4 py-2 rounded-md border border-[#A7E1B2] text-[#124734] hover:bg-[#F2FBF6] ${saving ? "opacity-60" : ""}`}
->
-  Show Quiz
-</button>
+                  type="button"
+                  disabled={saving}
+                  onClick={() => navigate(`/teacher/assessment/quizzes/${courseId}`)}
+                  className={`px-4 py-2 rounded-md border border-[#A7E1B2] text-[#124734] hover:bg-[#F2FBF6] ${
+                    saving ? "opacity-60" : ""
+                  }`}
+                >
+                  Show Quiz
+                </button>
 
                 <button
                   disabled={saving}
                   onClick={publish}
-                  className={`px-4 py-2 rounded-md bg-[#009846] text-white hover:bg-[#0d3a28] ${saving ? "opacity-60" : ""}`}
+                  className={`px-4 py-2 rounded-md bg-[#009846] text-white hover:bg-[#0d3a28] ${
+                    saving ? "opacity-60" : ""
+                  }`}
                 >
                   Publish
                 </button>
               </div>
             </div>
 
-            {/* Title */}
             <div className="mt-5">
               <label className="text-[#124734] font-medium">Quiz Title</label>
               <input
@@ -213,7 +275,6 @@ export default function CreateQuizPage() {
               />
             </div>
 
-            {/* Timer */}
             <div className="mt-4">
               <label className="text-[#124734] font-medium">Timer (minutes)</label>
               <input
@@ -225,7 +286,6 @@ export default function CreateQuizPage() {
               />
             </div>
 
-            {/* Instructions */}
             <div className="mt-4">
               <label className="text-[#124734] font-medium">Instructions (optional)</label>
               <textarea
@@ -237,7 +297,6 @@ export default function CreateQuizPage() {
               />
             </div>
 
-            {/* Questions */}
             <div className="mt-6 space-y-4">
               {questions.map((q, idx) => (
                 <div key={idx} className="border border-[#E6F4EC] rounded-xl p-4">
@@ -263,12 +322,14 @@ export default function CreateQuizPage() {
                     onChange={(e) => updateQuestion(idx, { prompt: e.target.value })}
                   />
 
-                  {/* Options */}
                   <div className="mt-4">
                     <div className="text-sm text-[#5B7065] mb-2">Options (select correct)</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {q.options.map((opt, oIdx) => (
-                        <label key={oIdx} className="flex items-center gap-2 border border-[#E6F4EC] rounded-lg px-3 py-2">
+                        <label
+                          key={oIdx}
+                          className="flex items-center gap-2 border border-[#E6F4EC] rounded-lg px-3 py-2"
+                        >
                           <input
                             type="radio"
                             name={`correct-${idx}`}
@@ -286,7 +347,6 @@ export default function CreateQuizPage() {
                     </div>
                   </div>
 
-                  {/* Marks */}
                   <div className="mt-4">
                     <label className="text-[#124734] font-medium">Marks</label>
                     <input
@@ -300,7 +360,6 @@ export default function CreateQuizPage() {
               ))}
             </div>
 
-            {/* Add question */}
             <button
               type="button"
               onClick={addQuestion}

@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
 import Footer from "../../components/Footer";
@@ -43,7 +45,6 @@ const statusPillStyle = (label) => {
 };
 
 // If multi-item order has mixed statuses, show a smart label.
-// (You can change this logic if you want.)
 const deriveOrderStatus = (items = []) => {
   const set = new Set((items || []).map((it) => uiStatus(it.status)));
   const arr = [...set];
@@ -51,29 +52,50 @@ const deriveOrderStatus = (items = []) => {
   if (arr.length === 0) return "ORDER RECEIVED";
   if (arr.length === 1) return arr[0];
 
-  // ✅ If ALL items rejected/canceled => show REJECTED
   const allRejected = (items || []).every((it) => {
     const s = uiStatus(it.status);
     return s === "REJECTED" || s === "CANCELED";
   });
   if (allRejected) return "REJECTED";
 
-  // otherwise show highest-progress
   if (set.has("ON THE WAY")) return "ON THE WAY";
   if (set.has("CONFIRMED")) return "CONFIRMED";
   if (set.has("DELIVERED")) return "DELIVERED";
   return "ORDER RECEIVED";
 };
 
-
 const MyOrder = () => {
+  const location = useLocation();
+  const canonicalUrl =
+    typeof window !== "undefined" ? `${window.location.origin}${location.pathname}` : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: typeof window !== "undefined" ? `${window.location.origin}/` : "/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "My Orders",
+          item: canonicalUrl,
+        },
+      ],
+    };
+  }, [canonicalUrl]);
+
   const [activeTab, setActiveTab] = useState("orders");
   const { addresses, addAddress, removeAddress } = useAddress();
 
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  // ✅ selectedOrder is now the full order card (not a single item)
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [orderFilter, setOrderFilter] = useState("All Orders");
@@ -82,7 +104,6 @@ const MyOrder = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ DB orders state
   const [orders, setOrders] = useState([]);
 
   const [newAddress, setNewAddress] = useState({
@@ -133,7 +154,6 @@ const MyOrder = () => {
     if (activeTab === "account") setActiveTab("orders");
   }, [activeTab]);
 
-  // ✅ Load orders from backend
   useEffect(() => {
     const load = async () => {
       try {
@@ -152,7 +172,6 @@ const MyOrder = () => {
     load();
   }, []);
 
-  // ✅ Build UI cards: 1 card per ORDER
   const uiOrders = useMemo(() => {
     const mapped = (orders || []).map((o) => {
       const items = (o.items || []).map((it) => {
@@ -171,7 +190,6 @@ const MyOrder = () => {
         };
       });
 
-      // Prefer backend totals if present
       const totalMRP = Number(o.totalMRP ?? 0);
       const totalPrice = Number(o.totalPrice ?? items.reduce((s, x) => s + x.subTotal, 0));
       const discount = Number(o.discount ?? Math.max(0, totalMRP - totalPrice));
@@ -195,11 +213,9 @@ const MyOrder = () => {
       };
     });
 
-    // newest first
     return mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [orders]);
 
-  // ✅ Filter: if user selects a status, show orders where ANY item matches that status
   const filteredOrders =
     orderFilter === "All Orders"
       ? uiOrders
@@ -207,37 +223,36 @@ const MyOrder = () => {
 
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>My Orders | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View your orders, item status updates, totals, and delivery details in your ProspectEdu account."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* private page - prevent indexing */}
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
-        {/* Breadcrumb */}
         <p className="text-gray-600 mb-5 text-sm md:text-base">
-          <span className="cursor-pointer text-[#124734] hover:underline">
-            Home
-          </span>{" "}
-          &gt; My Orders
+          <span className="cursor-pointer text-[#124734] hover:underline">Home</span> &gt; My Orders
         </p>
 
-        {/* Layout Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-10">
-          {/* LEFT SIDEBAR */}
           <div className="w-full">
-            <p className="text-2xl md:text-3xl font-semibold text-[#124734] mb-3">
-              My Orders
-            </p>
+            <p className="text-2xl md:text-3xl font-semibold text-[#124734] mb-3">My Orders</p>
 
-            <h2 className="text-lg font-bold text-gray-600 mb-6">
-              Quick Access
-            </h2>
+            <h2 className="text-lg font-bold text-gray-600 mb-6">Quick Access</h2>
 
             <div className="flex flex-col gap-4">
               <button
                 onClick={() => setActiveTab("orders")}
                 className={`border px-4 py-2 rounded-lg font-semibold w-full
-                ${activeTab === "orders"
-                    ? "bg-[#A7E1B2] text-[#124734]"
-                    : "text-gray-700 hover:text-[#124734]"}
-              `}
+                ${activeTab === "orders" ? "bg-[#A7E1B2] text-[#124734]" : "text-gray-700 hover:text-[#124734]"}`}
               >
                 My Orders
               </button>
@@ -245,22 +260,16 @@ const MyOrder = () => {
               <button
                 onClick={() => setActiveTab("addresses")}
                 className={`border px-4 py-2 rounded-lg font-semibold w-full
-                ${activeTab === "addresses"
-                    ? "bg-[#A7E1B2] text-[#124734]"
-                    : "text-gray-700 hover:text-[#124734]"}
-              `}
+                ${activeTab === "addresses" ? "bg-[#A7E1B2] text-[#124734]" : "text-gray-700 hover:text-[#124734]"}`}
               >
                 My Addresses
               </button>
             </div>
           </div>
 
-          {/* RIGHT CONTENT */}
           <div className="md:col-span-3 mt-4 md:mt-6">
-            {/* ORDERS TAB */}
             {activeTab === "orders" && (
               <div className="relative">
-                {/* FILTER BUTTON */}
                 <div className="flex justify-end mb-6 relative">
                   <button
                     onClick={() => setShowFilterMenu(!showFilterMenu)}
@@ -280,11 +289,7 @@ const MyOrder = () => {
                             setShowFilterMenu(false);
                           }}
                           className={`px-5 py-3 cursor-pointer transition text-sm
-                          ${orderFilter === opt
-                              ? "bg-[#A7E1B2] text-[#124734] font-bold"
-                              : "hover:bg-[#DFF5E1]"
-                            }
-                        `}
+                          ${orderFilter === opt ? "bg-[#A7E1B2] text-[#124734] font-bold" : "hover:bg-[#DFF5E1]"}`}
                         >
                           {opt}
                         </div>
@@ -293,19 +298,15 @@ const MyOrder = () => {
                   )}
                 </div>
 
-                {/* ORDERS LIST */}
                 <div className="space-y-6">
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
                       className="border border-[#A7E1B2] rounded-2xl p-4 md:p-6 shadow-sm bg-white hover:shadow-md transition"
                     >
-                      {/* Header */}
                       <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0">
                         <div>
-                          <p className="text-lg font-semibold text-[#124734]">
-                            Order ID: {order.id}
-                          </p>
+                          <p className="text-lg font-semibold text-[#124734]">Order ID: {order.id}</p>
                           <p className="text-gray-600 text-sm mt-1">
                             Ordered on: <b>{order.date}</b> • Items: <b>{order.items.length}</b>
                           </p>
@@ -319,7 +320,6 @@ const MyOrder = () => {
                         </span>
                       </div>
 
-                      {/* Items (compact list) */}
                       <div className="mt-5 space-y-4">
                         {order.items.map((it) => (
                           <div
@@ -329,7 +329,9 @@ const MyOrder = () => {
                             <img
                               src={it.productImg}
                               className="w-16 h-16 object-contain bg-white p-2 rounded-xl"
-                              alt=""
+                              alt={it.productName ? `${it.productName} image` : "Ordered item image"}
+                              loading="lazy"
+                              decoding="async"
                             />
 
                             <div className="flex-1 min-w-0">
@@ -360,7 +362,6 @@ const MyOrder = () => {
                         ))}
                       </div>
 
-                      {/* Totals Strip */}
                       <div className="mt-6 rounded-2xl bg-gradient-to-r from-[#A7E1B2]/40 to-[#DFF5E1]/60 border border-[#A7E1B2]/50 p-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm md:text-base">
                           <div>
@@ -401,28 +402,24 @@ const MyOrder = () => {
                   ))}
                 </div>
 
-                {/* EMPTY ORDERS NOTE */}
                 {filteredOrders.length === 0 && (
                   <div className="flex flex-col items-center mt-16">
                     <img
                       src="https://cdn-icons-png.flaticon.com/512/17009/17009305.png"
                       className="w-32 md:w-52 opacity-70"
-                      alt=""
+                      alt="No orders illustration"
+                      loading="lazy"
+                      decoding="async"
                     />
-                    <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">
-                      No Orders
-                    </p>
+                    <p className="text-lg md:text-xl text-gray-600 mt-4 font-semibold">No Orders</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* ADDRESS TAB */}
             {activeTab === "addresses" && (
               <div className="p-4 md:p-6 rounded-xl border shadow">
-                <h3 className="text-xl md:text-2xl font-bold text-[#124734] mb-6">
-                  My Addresses
-                </h3>
+                <h3 className="text-xl md:text-2xl font-bold text-[#124734] mb-6">My Addresses</h3>
 
                 {addresses.map((addr) => (
                   <div
@@ -430,9 +427,7 @@ const MyOrder = () => {
                     className="border-b pb-5 mb-5 flex flex-col md:flex-row justify-between gap-4"
                   >
                     <div>
-                      <h4 className="text-lg md:text-xl font-semibold">
-                        {addr.name}
-                      </h4>
+                      <h4 className="text-lg md:text-xl font-semibold">{addr.name}</h4>
                       <p className="text-gray-700 mt-1 text-sm md:text-base">
                         {addr.address}, {addr.state}, {addr.country}
                       </p>
@@ -442,10 +437,7 @@ const MyOrder = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <button
-                        onClick={() => startEdit(addr)}
-                        className="text-[#124734] font-medium"
-                      >
+                      <button onClick={() => startEdit(addr)} className="text-[#124734] font-medium">
                         Edit
                       </button>
 
@@ -471,72 +463,42 @@ const MyOrder = () => {
 
                 {showForm && (
                   <div className="mt-8 border p-6 rounded-xl">
-                    <h3 className="text-xl font-bold mb-4">
-                      {editingId ? "Edit Address" : "Add New Address"}
-                    </h3>
+                    <h3 className="text-xl font-bold mb-4">{editingId ? "Edit Address" : "Add New Address"}</h3>
 
-                    {/* Row 1 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <input
                         placeholder="Full Name"
                         className="border p-3 rounded-lg"
                         value={newAddress.name}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            name: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
                       />
                       <input
                         placeholder="Contact Number"
                         className="border p-3 rounded-lg"
                         value={newAddress.phone}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            phone: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
                       />
                     </div>
 
-                    {/* Address */}
                     <input
                       placeholder="Address"
                       className="border p-3 rounded-lg w-full mt-6"
                       value={newAddress.address}
-                      onChange={(e) =>
-                        setNewAddress({
-                          ...newAddress,
-                          address: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
                     />
 
-                    {/* Row 2 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                       <input
                         placeholder="State"
                         className="border p-3 rounded-lg"
                         value={newAddress.state}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            state: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
                       />
                       <input
                         placeholder="Pincode"
                         className="border p-3 rounded-lg"
                         value={newAddress.pincode}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            pincode: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
                       />
                     </div>
 
@@ -554,15 +516,11 @@ const MyOrder = () => {
         </div>
       </div>
 
-      {/* DELETE POPUP */}
       {showDeletePopup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-xs text-center">
             <div className="text-yellow-500 text-3xl mb-3">⚠️</div>
-
-            <p className="text-lg font-semibold mb-6">
-              Are you sure you want to delete this address?
-            </p>
+            <p className="text-lg font-semibold mb-6">Are you sure you want to delete this address?</p>
 
             <div className="flex gap-4">
               <button
@@ -586,184 +544,147 @@ const MyOrder = () => {
         </div>
       )}
 
-      {/* ORDER DETAILS MODAL (FULL ORDER) */}
-{selectedOrder && (
-  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 md:p-6">
-    {/* Modal Shell */}
-    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-      {/* Header (fixed) */}
-      <div className="bg-[#124734] text-white px-4 md:px-6 py-4 flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs md:text-sm opacity-90">Order Details</p>
-          <h2 className="text-lg md:text-2xl font-extrabold mt-1 truncate">
-            {selectedOrder.id}
-          </h2>
-          <p className="text-xs md:text-sm mt-1 opacity-90">
-            Date: <b>{selectedOrder.date}</b> • Items:{" "}
-            <b>{selectedOrder.items.length}</b>
-          </p>
-        </div>
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 md:p-6">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="bg-[#124734] text-white px-4 md:px-6 py-4 flex items-start justify-between">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm opacity-90">Order Details</p>
+                <h2 className="text-lg md:text-2xl font-extrabold mt-1 truncate">{selectedOrder.id}</h2>
+                <p className="text-xs md:text-sm mt-1 opacity-90">
+                  Date: <b>{selectedOrder.date}</b> • Items: <b>{selectedOrder.items.length}</b>
+                </p>
+              </div>
 
-        <button
-          onClick={() => setSelectedOrder(null)}
-          className="ml-3 shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5">
-        {/* Status + Summary row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <span
-            className="px-4 py-1 rounded-full text-sm font-semibold w-fit"
-            style={statusPillStyle(selectedOrder.status)}
-          >
-            {selectedOrder.status}
-          </span>
-
-          <div className="text-sm text-gray-600">
-            Items Total:{" "}
-            <b className="text-[#124734]">{money(selectedOrder.totals.totalPrice)}</b>
-            {"  "}•{"  "}
-            Shipping:{" "}
-            <b className="text-[#124734]">
-              {selectedOrder.totals.shipping === 0
-                ? "Free"
-                : money(selectedOrder.totals.shipping)}
-            </b>
-          </div>
-        </div>
-
-        {/* ✅ Shipping Address */}
-        <div className="border rounded-2xl p-4 bg-[#A7E1B2]/10 mb-5">
-          <p className="text-[#124734] font-bold text-sm md:text-base mb-2">
-            Shipping Address
-          </p>
-
-          {selectedOrder?.address ? (
-            <div className="text-sm md:text-[15px] text-gray-700 leading-relaxed">
-              <p className="font-semibold text-gray-900">
-                {selectedOrder.address?.name || "Customer"}
-                {selectedOrder.address?.phone ? ` • ${selectedOrder.address.phone}` : ""}
-              </p>
-
-              {/* address line */}
-              <p className="mt-1">
-                {selectedOrder.address?.address}
-                {selectedOrder.address?.city ? `, ${selectedOrder.address.city}` : ""}
-                {selectedOrder.address?.state ? `, ${selectedOrder.address.state}` : ""}
-              </p>
-
-              <p className="mt-1">
-                {selectedOrder.address?.pincode ? `Pincode: ${selectedOrder.address.pincode}` : ""}
-                {selectedOrder.address?.country ? ` • ${selectedOrder.address.country}` : ""}
-              </p>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="ml-3 shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl"
+                aria-label="Close"
+              >
+                ✕
+              </button>
             </div>
-          ) : (
-            <p className="text-sm text-gray-600">
-              Address not found for this order.
-            </p>
-          )}
-        </div>
 
-        {/* Items List */}
-        <div className="space-y-3">
-          {selectedOrder.items.map((it) => (
-            <div
-              key={it.itemId}
-              className="border rounded-2xl p-3 md:p-4 flex gap-3 md:gap-4 items-center"
-            >
-              <img
-                src={it.productImg}
-                className="w-14 h-14 md:w-16 md:h-16 object-contain bg-[#A7E1B2]/20 p-2 rounded-xl shrink-0"
-                alt=""
-              />
-
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#124734] truncate">
-                  {it.productName}
-                </p>
-                <p className="text-gray-600 text-sm mt-0.5">
-                  {money(it.price)} × {it.qty}
-                </p>
-
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <span
-                  className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={statusPillStyle(it.status)}
+                  className="px-4 py-1 rounded-full text-sm font-semibold w-fit"
+                  style={statusPillStyle(selectedOrder.status)}
                 >
-                  {it.status}
+                  {selectedOrder.status}
                 </span>
+
+                <div className="text-sm text-gray-600">
+                  Items Total: <b className="text-[#124734]">{money(selectedOrder.totals.totalPrice)}</b> • Shipping:{" "}
+                  <b className="text-[#124734]">
+                    {selectedOrder.totals.shipping === 0 ? "Free" : money(selectedOrder.totals.shipping)}
+                  </b>
+                </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <p className="text-gray-500 text-xs">Subtotal</p>
-                <p className="font-extrabold text-[#124734]">
-                  {money(it.subTotal)}
-                </p>
+              <div className="border rounded-2xl p-4 bg-[#A7E1B2]/10 mb-5">
+                <p className="text-[#124734] font-bold text-sm md:text-base mb-2">Shipping Address</p>
+
+                {selectedOrder?.address ? (
+                  <div className="text-sm md:text-[15px] text-gray-700 leading-relaxed">
+                    <p className="font-semibold text-gray-900">
+                      {selectedOrder.address?.name || "Customer"}
+                      {selectedOrder.address?.phone ? ` • ${selectedOrder.address.phone}` : ""}
+                    </p>
+                    <p className="mt-1">
+                      {selectedOrder.address?.address}
+                      {selectedOrder.address?.city ? `, ${selectedOrder.address.city}` : ""}
+                      {selectedOrder.address?.state ? `, ${selectedOrder.address.state}` : ""}
+                    </p>
+                    <p className="mt-1">
+                      {selectedOrder.address?.pincode ? `Pincode: ${selectedOrder.address.pincode}` : ""}
+                      {selectedOrder.address?.country ? ` • ${selectedOrder.address.country}` : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">Address not found for this order.</p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {selectedOrder.items.map((it) => (
+                  <div
+                    key={it.itemId}
+                    className="border rounded-2xl p-3 md:p-4 flex gap-3 md:gap-4 items-center"
+                  >
+                    <img
+                      src={it.productImg}
+                      className="w-14 h-14 md:w-16 md:h-16 object-contain bg-[#A7E1B2]/20 p-2 rounded-xl shrink-0"
+                      alt={it.productName ? `${it.productName} image` : "Ordered item image"}
+                      loading="lazy"
+                      decoding="async"
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#124734] truncate">{it.productName}</p>
+                      <p className="text-gray-600 text-sm mt-0.5">
+                        {money(it.price)} × {it.qty}
+                      </p>
+
+                      <span
+                        className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold"
+                        style={statusPillStyle(it.status)}
+                      >
+                        {it.status}
+                      </span>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <p className="text-gray-500 text-xs">Subtotal</p>
+                      <p className="font-extrabold text-[#124734]">{money(it.subTotal)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 border-t pt-5">
+                <p className="text-[#124734] font-extrabold text-base md:text-lg mb-3">Price Details</p>
+
+                <div className="space-y-2 text-sm md:text-base">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Total MRP</span>
+                    <b>{money(selectedOrder.totals.totalMRP)}</b>
+                  </div>
+
+                  <div className="flex justify-between text-gray-700">
+                    <span>Items Total</span>
+                    <b>{money(selectedOrder.totals.totalPrice)}</b>
+                  </div>
+
+                  <div className="flex justify-between text-gray-700">
+                    <span>Discount</span>
+                    <b className="text-green-700">- {money(selectedOrder.totals.discount)}</b>
+                  </div>
+
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping</span>
+                    <b>{selectedOrder.totals.shipping === 0 ? "Free" : money(selectedOrder.totals.shipping)}</b>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-4 rounded-2xl bg-[#A7E1B2]/25 flex justify-between items-center">
+                  <span className="text-[#124734] font-extrabold text-lg">Grand Total</span>
+                  <span className="text-[#124734] font-extrabold text-xl">{money(selectedOrder.totals.grandTotal)}</span>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Billing Summary */}
-        <div className="mt-6 border-t pt-5">
-          <p className="text-[#124734] font-extrabold text-base md:text-lg mb-3">
-            Price Details
-          </p>
-
-          <div className="space-y-2 text-sm md:text-base">
-            <div className="flex justify-between text-gray-700">
-              <span>Total MRP</span>
-              <b>{money(selectedOrder.totals.totalMRP)}</b>
-            </div>
-
-            <div className="flex justify-between text-gray-700">
-              <span>Items Total</span>
-              <b>{money(selectedOrder.totals.totalPrice)}</b>
-            </div>
-
-            <div className="flex justify-between text-gray-700">
-              <span>Discount</span>
-              <b className="text-green-700">- {money(selectedOrder.totals.discount)}</b>
-            </div>
-
-            <div className="flex justify-between text-gray-700">
-              <span>Shipping</span>
-              <b>
-                {selectedOrder.totals.shipping === 0
-                  ? "Free"
-                  : money(selectedOrder.totals.shipping)}
-              </b>
+            <div className="px-4 md:px-6 py-4 border-t bg-white">
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="w-full bg-[#124734] text-white py-3 rounded-full font-semibold shadow hover:bg-[#0f3a23] transition"
+              >
+                Close
+              </button>
             </div>
           </div>
-
-          <div className="mt-4 p-4 rounded-2xl bg-[#A7E1B2]/25 flex justify-between items-center">
-            <span className="text-[#124734] font-extrabold text-lg">
-              Grand Total
-            </span>
-            <span className="text-[#124734] font-extrabold text-xl">
-              {money(selectedOrder.totals.grandTotal)}
-            </span>
-          </div>
         </div>
-      </div>
-
-      {/* Footer (fixed) */}
-      <div className="px-4 md:px-6 py-4 border-t bg-white">
-        <button
-          onClick={() => setSelectedOrder(null)}
-          className="w-full bg-[#124734] text-white py-3 rounded-full font-semibold shadow hover:bg-[#0f3a23] transition"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
 
       <div className="pt-10">
         <Footer />

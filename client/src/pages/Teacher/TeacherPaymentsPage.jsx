@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import { Search, Plus, CheckCircle2, Clock, Trash2 } from "lucide-react";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
@@ -24,6 +26,39 @@ function formatDateInput(d) {
 export default function TeacherPaymentsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const location = useLocation();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Payments",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -103,6 +138,18 @@ export default function TeacherPaymentsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB]">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Payments | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Manage parent fee items, due dates, and payment status in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div className="fixed top-0 left-0 h-full transition-all duration-300" style={{ width: sidebarWidth }}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -124,10 +171,7 @@ export default function TeacherPaymentsPage() {
                   placeholder="Search parent (name/email/phone)"
                   className="w-full bg-transparent outline-none text-sm"
                 />
-                <button
-                  onClick={load}
-                  className="text-sm px-3 py-1 rounded-md bg-[#124734] text-white"
-                >
+                <button onClick={load} className="text-sm px-3 py-1 rounded-md bg-[#124734] text-white">
                   Search
                 </button>
               </div>

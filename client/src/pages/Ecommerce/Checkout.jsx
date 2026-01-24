@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import EcomHeader from "../../components/EcomHeader";
 import { useAddress } from "../../context/AddressContext";
 import { useCart } from "../../context/CartContext";
@@ -29,6 +30,13 @@ const Checkout = () => {
   const checkoutItems = product ? [product] : cart;
 
   const [selectedAddress, setSelectedAddress] = useState(null);
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/checkout`;
+
+  const pageTitle = "Checkout | Prospect Ecommerce";
+  const pageDescription =
+    "Secure checkout on Prospect Ecommerce. Select your address, review your order, and pay via Razorpay.";
 
   // ✅ addresses DB se load karwa do + selectedAddress auto set
   useEffect(() => {
@@ -79,7 +87,7 @@ const Checkout = () => {
       country: newAddress.country,
     });
 
-    await fetchAddresses?.(); // ✅ ensure updated list arrives
+    await fetchAddresses?.();
 
     setShowForm(false);
 
@@ -109,7 +117,24 @@ const Checkout = () => {
   const shipping = totalPrice < 1000 ? 99 : 0;
   const grandTotal = totalPrice + shipping;
 
-  // ✅ PAY NOW: Razorpay flow (create-order -> open checkout -> verify -> confirm)
+  const jsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "CheckoutPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: Number(grandTotal || 0),
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl,
+      },
+    };
+  }, [pageTitle, pageDescription, canonicalUrl, grandTotal]);
+
+  // ✅ PAY NOW: Razorpay flow
   const handlePayNow = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -130,14 +155,12 @@ const Checkout = () => {
         return;
       }
 
-      // 1) Load Razorpay SDK
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         alert("Razorpay SDK failed to load. Please disable adblock and try again.");
         return;
       }
 
-      // 2) Create Razorpay order from backend
       const amountInPaise = Math.round(Number(grandTotal) * 100);
 
       const payload = {
@@ -158,7 +181,6 @@ const Checkout = () => {
         amountInPaise,
       };
 
-      // ✅ backend route: /api/v1/payments/razorpay/create-order
       const createRes = await api.post("/payments/razorpay/create-order", payload);
 
       if (!createRes?.data?.success) {
@@ -174,10 +196,9 @@ const Checkout = () => {
         return;
       }
 
-      // 3) Open Razorpay Checkout
       const options = {
         key: keyId,
-        amount, // paise
+        amount,
         currency: currency || "INR",
         name: "Prospect Education",
         description: "Order Payment",
@@ -187,15 +208,10 @@ const Checkout = () => {
           email: selected.email,
           contact: selected.phone,
         },
-        notes: {
-          localOrderId,
-        },
-        theme: {
-          color: "#124734",
-        },
+        notes: { localOrderId },
+        theme: { color: "#124734" },
         handler: async function (response) {
           try {
-            // 4) Verify payment on backend
             const verifyRes = await api.post("/payments/razorpay/verify", {
               localOrderId,
               razorpay_order_id: response?.razorpay_order_id,
@@ -208,7 +224,6 @@ const Checkout = () => {
               return;
             }
 
-            // 5) Redirect to confirmation
             navigate(`/order-confirmation/${localOrderId}`, {
               state: { forcedStatus: "CONFIRMED" },
             });
@@ -216,11 +231,6 @@ const Checkout = () => {
             console.error("Verify error:", e);
             alert(e?.response?.data?.message || "Payment verification failed");
           }
-        },
-        modal: {
-          ondismiss: function () {
-            // user closed popup (order remains PENDING on server)
-          },
         },
       };
 
@@ -236,29 +246,46 @@ const Checkout = () => {
       console.error("PayNow Razorpay error:", err);
       alert(err?.response?.data?.message || "Failed to start payment");
     }
-  }; // ✅ VERY IMPORTANT semicolon
+  };
 
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Private page */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       {/* MAIN GRID */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 px-4 md:px-10 py-10 pb-20 text-left">
         {/* LEFT SIDE */}
         <div className="md:col-span-2 bg-white shadow rounded-xl p-5 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-[#124734] mb-6">
+          <h1 className="text-xl md:text-2xl font-bold text-[#124734] mb-6">
             Shipping Address
-          </h2>
+          </h1>
 
           <p className="font-semibold mb-4">Select Shipping Address</p>
 
           {addresses.map((addr) => {
-            const aid = addr._id || addr.id; // ✅ fix
+            const aid = addr._id || addr.id;
             return (
-              <label
-                key={aid}
-                className="flex gap-3 mb-4 items-start cursor-pointer"
-              >
+              <label key={aid} className="flex gap-3 mb-4 items-start cursor-pointer">
                 <input
                   type="radio"
                   checked={selectedAddress === aid}
@@ -276,6 +303,7 @@ const Checkout = () => {
           <button
             onClick={() => setShowForm(!showForm)}
             className="text-blue-600 hover:underline mt-4 cursor-pointer"
+            type="button"
           >
             + Add New Address
           </button>
@@ -295,9 +323,7 @@ const Checkout = () => {
                   </label>
                   <input
                     value={newAddress.name}
-                    onChange={(e) =>
-                      setNewAddress({ ...newAddress, name: e.target.value })
-                    }
+                    onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
                     className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                   />
                 </div>
@@ -308,9 +334,7 @@ const Checkout = () => {
                   </label>
                   <input
                     value={newAddress.phone}
-                    onChange={(e) =>
-                      setNewAddress({ ...newAddress, phone: e.target.value })
-                    }
+                    onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
                     className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                   />
                 </div>
@@ -323,9 +347,7 @@ const Checkout = () => {
                 </label>
                 <input
                   value={newAddress.email}
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, email: e.target.value })
-                  }
+                  onChange={(e) => setNewAddress({ ...newAddress, email: e.target.value })}
                   className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                 />
               </div>
@@ -338,9 +360,7 @@ const Checkout = () => {
                 <textarea
                   rows="3"
                   value={newAddress.address}
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, address: e.target.value })
-                  }
+                  onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
                   className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                 ></textarea>
               </div>
@@ -353,9 +373,7 @@ const Checkout = () => {
                   </label>
                   <input
                     value={newAddress.city}
-                    onChange={(e) =>
-                      setNewAddress({ ...newAddress, city: e.target.value })
-                    }
+                    onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
                     className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                   />
                 </div>
@@ -366,12 +384,7 @@ const Checkout = () => {
                   </label>
                   <input
                     value={newAddress.pincode}
-                    onChange={(e) =>
-                      setNewAddress({
-                        ...newAddress,
-                        pincode: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
                     className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                   />
                 </div>
@@ -384,9 +397,7 @@ const Checkout = () => {
                 </label>
                 <input
                   value={newAddress.state}
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, state: e.target.value })
-                  }
+                  onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
                   className="w-full border rounded-lg p-3 mt-2 outline-[#124734]"
                 />
               </div>
@@ -394,6 +405,7 @@ const Checkout = () => {
               <button
                 onClick={saveAddress}
                 className="bg-[#124734] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0d3a25]"
+                type="button"
               >
                 Save Address
               </button>
@@ -408,7 +420,13 @@ const Checkout = () => {
               key={item.id}
               className="flex flex-row items-start gap-4 mb-5 border-b pb-3"
             >
-              <img src={item.img} className="w-16 h-20 object-contain rounded" />
+              <img
+                src={item.img}
+                className="w-16 h-20 object-contain rounded"
+                loading="lazy"
+                decoding="async"
+                alt={item.title}
+              />
 
               <div className="flex-1">
                 <p className="font-semibold text-base md:text-lg">{item.title}</p>
@@ -442,11 +460,7 @@ const Checkout = () => {
 
             <p className="flex justify-between">
               <span>Shipping Charges</span>
-              {shipping === 0 ? (
-                <span className="text-green-600">Free</span>
-              ) : (
-                <span>₹{shipping}</span>
-              )}
+              {shipping === 0 ? <span className="text-green-600">Free</span> : <span>₹{shipping}</span>}
             </p>
 
             <hr />
@@ -460,6 +474,7 @@ const Checkout = () => {
           <button
             onClick={handlePayNow}
             className="w-full mt-6 bg-[#124734] text-white py-3 rounded-lg text-lg"
+            type="button"
           >
             Pay Now
           </button>

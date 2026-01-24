@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { quizzesApi } from "../../services/quizzes";
@@ -11,10 +12,55 @@ export default function TeacherQuizDetailsPage() {
 
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
 
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Quizzes",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Quiz Details",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
+  const seoTitle = quiz?.title
+    ? `${quiz.title} | Quiz Details | Teacher Dashboard | ProspectEdu`
+    : "Quiz Details | Teacher Dashboard | ProspectEdu";
 
   useEffect(() => {
     const load = async () => {
@@ -36,7 +82,21 @@ export default function TeacherQuizDetailsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <div className={`${isCollapsed ? "w-20" : "w-64"} fixed left-0 top-0 h-full transition-all`}>
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta
+          name="description"
+          content="View quiz details including questions, marks, timer and correct answers in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
+      <div
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed left-0 top-0 h-full transition-all`}
+      >
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
@@ -54,9 +114,11 @@ export default function TeacherQuizDetailsPage() {
               <p className="text-sm text-[#5B7065] mt-1">
                 Status: <span className="text-[#124734] font-medium">{quiz.status}</span>
                 {"  "}•{"  "}
-                Timer: <span className="text-[#124734] font-medium">{quiz.durationMinutes || 0} min</span>
+                Timer:{" "}
+                <span className="text-[#124734] font-medium">{quiz.durationMinutes || 0} min</span>
                 {"  "}•{"  "}
-                Questions: <span className="text-[#124734] font-medium">{quiz.questions?.length || 0}</span>
+                Questions:{" "}
+                <span className="text-[#124734] font-medium">{quiz.questions?.length || 0}</span>
               </p>
 
               {quiz.instructions ? (
@@ -87,7 +149,9 @@ export default function TeacherQuizDetailsPage() {
                               {String.fromCharCode(65 + oIdx)}. {opt.text}
                             </span>
                             {q.correctIndex === oIdx ? (
-                              <span className="ml-2 text-xs text-[#009846] font-semibold">(Correct)</span>
+                              <span className="ml-2 text-xs text-[#009846] font-semibold">
+                                (Correct)
+                              </span>
                             ) : null}
                           </div>
                         ))}

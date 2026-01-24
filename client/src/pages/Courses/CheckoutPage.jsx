@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import { publicCoursesApi } from "../../services/publicCourses";
 import { purchasesApi } from "../../services/purchases";
@@ -35,6 +36,9 @@ export default function CheckoutPage() {
   const token = sessionStorage.getItem("accessToken");
   const isStudentLoggedIn = Boolean(token);
 
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/checkout/${courseId}`;
+
   useEffect(() => {
     const fetchCourse = async () => {
       try {
@@ -61,6 +65,32 @@ export default function CheckoutPage() {
     return { price, taxPercent, taxAmount, discount, total };
   }, [course]);
 
+  const pageTitle = course?.title
+    ? `Checkout - ${course.title} | ProspectEdu`
+    : "Checkout | ProspectEdu";
+
+  const pageDescription = course?.title
+    ? `Complete checkout for ${course.title} on ProspectEdu. Secure payments via Razorpay.`
+    : "Complete your checkout on ProspectEdu.";
+
+  const jsonLd = useMemo(() => {
+    if (!course) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "CheckoutPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: Number(priceDetails.total || 0),
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl,
+      },
+    };
+  }, [course, pageTitle, pageDescription, canonicalUrl, priceDetails.total]);
+
   const handlePayNow = async () => {
     if (!isStudentLoggedIn) {
       navigate("/login", { state: { from: `/checkout/${courseId}` } });
@@ -70,38 +100,27 @@ export default function CheckoutPage() {
     try {
       setPaying(true);
 
-      // 1) ensure Razorpay script is loaded
       const ok = await loadRazorpayScript();
       if (!ok) {
         alert("Failed to load Razorpay. Please check your internet and try again.");
         return;
       }
 
-      // 2) create pending purchase in DB
       const checkoutRes = await purchasesApi.checkout(courseId);
       const purchaseId = checkoutRes.data.purchaseId;
 
-      // 3) create Razorpay order from backend
       const orderRes = await purchasesApi.createRazorpayOrder(purchaseId);
       const { keyId, razorpayOrderId, amount, currency, courseTitle } = orderRes.data.data;
 
-      // 4) open Razorpay popup
       const options = {
         key: keyId,
-        amount: amount, // in paise
+        amount,
         currency,
         name: "ProspectEdu",
         description: courseTitle || course?.title || "Course Purchase",
         order_id: razorpayOrderId,
-        prefill: {
-          // If you have user profile data, fill here
-          // name: "",
-          // email: "",
-          // contact: "",
-        },
         theme: { color: "#124734" },
         handler: async function (response) {
-          // 5) verify payment on backend
           try {
             await purchasesApi.verifyRazorpayPayment(purchaseId, {
               razorpay_order_id: response.razorpay_order_id,
@@ -114,11 +133,7 @@ export default function CheckoutPage() {
             alert(err?.response?.data?.message || "Payment verification failed");
           }
         },
-        modal: {
-          ondismiss: () => {
-            // user closed popup
-          },
-        },
+        modal: { ondismiss: () => {} },
       };
 
       const rz = new window.Razorpay(options);
@@ -133,20 +148,35 @@ export default function CheckoutPage() {
   if (loading) return <p className="text-center py-20">Loading checkout...</p>;
   if (error || !course)
     return (
-      <p className="text-center py-20 text-red-500">
-        {error || "Course not found"}
-      </p>
+      <p className="text-center py-20 text-red-500">{error || "Course not found"}</p>
     );
 
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Checkout should not be indexed */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        {jsonLd ? <script type="application/ld+json">{JSON.stringify(jsonLd)}</script> : null}
+      </Helmet>
+
       {/* BREADCRUMB */}
       <div className="w-full">
         <div className="max-w-7xl mx-auto px-6 pt-6 text-sm text-gray-500">
-          <span
-            className="cursor-pointer hover:text-[#124734]"
-            onClick={() => navigate("/")}
-          >
+          <span className="cursor-pointer hover:text-[#124734]" onClick={() => navigate("/")}>
             Home
           </span>
           {" / "}
@@ -178,12 +208,12 @@ export default function CheckoutPage() {
                   src={course.img || "/placeholder-course.png"}
                   alt={course.title}
                   className="w-full sm:w-44 h-40 sm:h-36 object-contain bg-[#F7FBF8] rounded-xl border border-[#A7E1B2] p-3"
+                  loading="lazy"
+                  decoding="async"
                 />
 
                 <div>
-                  <h3 className="text-lg font-semibold text-[#124734]">
-                    {course.title}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-[#124734]">{course.title}</h3>
 
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <span className="px-3 py-1 text-xs border border-[#A7E1B2] rounded-full text-[#124734]">
@@ -203,9 +233,7 @@ export default function CheckoutPage() {
 
               {/* PAYMENT OPTION */}
               <div className="mt-10">
-                <h4 className="font-semibold mb-4 text-[#124734]">
-                  Choose Your Payment Option
-                </h4>
+                <h4 className="font-semibold mb-4 text-[#124734]">Choose Your Payment Option</h4>
 
                 {!isStudentLoggedIn ? (
                   <div className="border border-[#A7E1B2] rounded-lg p-4 bg-[#FFF7ED]">
@@ -219,6 +247,7 @@ export default function CheckoutPage() {
                         navigate("/login", { state: { from: `/checkout/${courseId}` } })
                       }
                       className="mt-4 bg-[#124734] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#0f3b2b] transition"
+                      type="button"
                     >
                       Login to Continue
                     </button>
@@ -228,9 +257,7 @@ export default function CheckoutPage() {
                     <input type="radio" checked readOnly />
                     <div>
                       <p className="font-medium text-[#124734]">Razorpay</p>
-                      <p className="text-sm text-[#5B7065]">
-                        UPI, Credit Card, Debit Card, Net Banking
-                      </p>
+                      <p className="text-sm text-[#5B7065]">UPI, Credit Card, Debit Card, Net Banking</p>
                     </div>
                   </div>
                 )}
@@ -241,9 +268,7 @@ export default function CheckoutPage() {
           {/* RIGHT */}
           <div className="bg-white rounded-xl shadow border border-[#A7E1B2] p-5 sm:p-6 flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-[#124734] mb-4">
-                Price Details
-              </h3>
+              <h3 className="text-lg font-semibold text-[#124734] mb-4">Price Details</h3>
 
               <div className="space-y-3 text-sm text-[#5B7065]">
                 <div className="flex justify-between">
@@ -284,18 +309,15 @@ export default function CheckoutPage() {
                     onClick={handlePayNow}
                     disabled={paying}
                     className="mt-6 w-full bg-[#124734] text-white py-3 sm:py-3.5 rounded-lg font-semibold hover:bg-[#0f3b2b] transition disabled:opacity-60"
+                    type="button"
                   >
                     {paying ? "Processing..." : "Pay Now"}
                   </button>
 
-                  <p className="text-xs text-center text-[#5B7065] mt-3">
-                    🔒 Safe and secure payments
-                  </p>
+                  <p className="text-xs text-center text-[#5B7065] mt-3">🔒 Safe and secure payments</p>
                 </>
               ) : (
-                <p className="text-sm text-center text-[#5B7065] mt-6">
-                  Login to continue payment.
-                </p>
+                <p className="text-sm text-center text-[#5B7065] mt-6">Login to continue payment.</p>
               )}
             </div>
           </div>

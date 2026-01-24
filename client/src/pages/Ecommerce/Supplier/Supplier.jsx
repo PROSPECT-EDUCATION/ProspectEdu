@@ -1,11 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
 import SupplierSidebar from "../../../components/SupplierEcommerce/Sidebar";
 import SupplierTopbar from "../../../components/SupplierEcommerce/Topbar";
 import { api } from "../../../lib/api";
-import { useNavigate } from "react-router-dom";
 
 export default function Supplier() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ SEO: canonical URL
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  // ✅ SEO: breadcrumb schema
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Supplier Dashboard",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [supplierProducts, setSupplierProducts] = useState([]);
@@ -104,6 +130,7 @@ export default function Supplier() {
     fetchSupplierProducts();
     fetchSupplierOrderStats();
     fetchBestSellingProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refresh stats on events
@@ -116,6 +143,7 @@ export default function Supplier() {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -125,19 +153,24 @@ export default function Supplier() {
     };
     window.addEventListener("supplierStatsRefresh", onCustom);
     return () => window.removeEventListener("supplierStatsRefresh", onCustom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const onProductsRefresh = () => fetchSupplierProducts();
     window.addEventListener("supplierProductsRefresh", onProductsRefresh);
     return () => window.removeEventListener("supplierProductsRefresh", onProductsRefresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const mappedProducts = supplierProducts.map((p) => ({
     id: p._id,
     title: p.name,
     category: p.categoryGroup || p.category || "Other",
-    img: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : "https://via.placeholder.com/120x120?text=No+Image",
+    img:
+      Array.isArray(p.images) && p.images.length > 0
+        ? p.images[0]
+        : "https://via.placeholder.com/120x120?text=No+Image",
     stock: p.outOfStock ? 0 : Number(p.quantity ?? 0),
   }));
 
@@ -150,6 +183,19 @@ export default function Supplier() {
 
   return (
     <div className="flex bg-[#F9FAFB] min-h-screen text-left">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Supplier Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Supplier dashboard analytics, best selling products, and stock overview on ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* Dashboard/private page should not be indexed */}
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <SupplierSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <div
@@ -199,7 +245,9 @@ export default function Supplier() {
                 <img
                   src={bestSelling.img}
                   className="w-24 h-24 md:w-28 md:h-28 object-contain bg-[#A7E1B2]/20 p-2 rounded-xl"
-                  alt=""
+                  alt={bestSelling.title ? `${bestSelling.title} image` : "Best selling product image"}
+                  loading="lazy"
+                  decoding="async"
                 />
 
                 <div>
@@ -240,7 +288,13 @@ export default function Supplier() {
                   className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 border-b last:border-none hover:bg-[#A7E1B2]/10 transition"
                 >
                   <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                    <img src={p.img} className="w-14 h-14 rounded-lg bg-[#A7E1B2]/20 p-2 object-contain" alt="" />
+                    <img
+                      src={p.img}
+                      className="w-14 h-14 rounded-lg bg-[#A7E1B2]/20 p-2 object-contain"
+                      alt={p.title ? `${p.title} image` : "Product image"}
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <div>
                       <p className="font-semibold text-[#124734]">{p.title}</p>
                       <p className="text-gray-600 text-sm">{p.category}</p>

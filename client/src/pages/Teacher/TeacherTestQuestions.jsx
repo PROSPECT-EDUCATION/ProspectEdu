@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
@@ -19,9 +20,16 @@ const makeEmptyMCQ = () => ({
 export default function TeacherTestQuestions() {
   const { id, testId } = useParams(); // seriesId, testId
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,6 +39,46 @@ export default function TeacherTestQuestions() {
 
   const [questions, setQuestions] = useState([]);
   const [toast, setToast] = useState(null); // {type:'ok'|'err', msg:''}
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Test & Learning",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Add Questions",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
+  const seoTitle = useMemo(() => {
+    const s = series?.title || "Test Series";
+    const t = test?.name || "Test";
+    return `${s} • ${t} | Add Questions | Teacher Dashboard | ProspectEdu`;
+  }, [series?.title, test?.name]);
 
   const load = async () => {
     setLoading(true);
@@ -63,7 +111,9 @@ export default function TeacherTestQuestions() {
       // normalize existing
       let merged = existingArr.map((q) => ({
         q: q?.q || "",
-        options: Array.isArray(q?.options) ? [...q.options, "", "", "", ""].slice(0, 4) : ["", "", "", ""],
+        options: Array.isArray(q?.options)
+          ? [...q.options, "", "", "", ""].slice(0, 4)
+          : ["", "", "", ""],
         correctIndex: Number.isFinite(Number(q?.correctIndex)) ? Number(q.correctIndex) : 0,
         marks: Number.isFinite(Number(q?.marks)) ? Number(q.marks) : 1,
         explanation: q?.explanation || "",
@@ -111,11 +161,14 @@ export default function TeacherTestQuestions() {
   const validate = () => {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      if (!String(q.q || "").trim()) return { ok: false, msg: `Question ${i + 1}: Question text is required` };
+      if (!String(q.q || "").trim())
+        return { ok: false, msg: `Question ${i + 1}: Question text is required` };
       const opts = q.options || [];
-      if (opts.some((o) => !String(o || "").trim())) return { ok: false, msg: `Question ${i + 1}: All 4 options are required` };
+      if (opts.some((o) => !String(o || "").trim()))
+        return { ok: false, msg: `Question ${i + 1}: All 4 options are required` };
       const ci = Number(q.correctIndex);
-      if (!(ci >= 0 && ci <= 3)) return { ok: false, msg: `Question ${i + 1}: Correct answer invalid` };
+      if (!(ci >= 0 && ci <= 3))
+        return { ok: false, msg: `Question ${i + 1}: Correct answer invalid` };
     }
     return { ok: true };
   };
@@ -142,12 +195,34 @@ export default function TeacherTestQuestions() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta
+          name="description"
+          content="Add and manage MCQ questions for a test series in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
+      <aside
+        className={`${
+          isCollapsed ? "w-20" : "w-64"
+        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+      >
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
-      <div className="flex flex-col flex-1 h-screen transition-all duration-300 text-left" style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}>
-        <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
+      <div
+        className="flex flex-col flex-1 h-screen transition-all duration-300 text-left"
+        style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+      >
+        <header
+          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
+          style={{ left: sidebarWidthPx, right: 0 }}
+        >
           <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Add Questions" />
         </header>
 
@@ -204,7 +279,9 @@ export default function TeacherTestQuestions() {
             )}
 
             {loading ? (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E6F4EC]">Loading...</div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E6F4EC]">
+                Loading...
+              </div>
             ) : !series || !test ? (
               <RefreshComponent message="Series/Test not found." />
             ) : questions.length === 0 ? (
@@ -215,10 +292,15 @@ export default function TeacherTestQuestions() {
             ) : (
               <div className="space-y-5">
                 {questions.map((q, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl shadow-sm border border-[#E6F4EC] overflow-hidden">
+                  <div
+                    key={idx}
+                    className="bg-white rounded-2xl shadow-sm border border-[#E6F4EC] overflow-hidden"
+                  >
                     <div className="p-5 border-b border-[#E6F4EC] bg-gradient-to-r from-[#E6F4EC] to-white">
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-extrabold text-[#124734]">Question {idx + 1}</h3>
+                        <h3 className="text-lg font-extrabold text-[#124734]">
+                          Question {idx + 1}
+                        </h3>
 
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold px-3 py-1 rounded-full border bg-white text-[#124734] border-[#CDE8D5]">
@@ -250,7 +332,10 @@ export default function TeacherTestQuestions() {
 
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {["A", "B", "C", "D"].map((label, optIdx) => (
-                          <div key={optIdx} className="bg-[#F9FAFB] border border-[#E6F4EC] rounded-2xl p-4">
+                          <div
+                            key={optIdx}
+                            className="bg-[#F9FAFB] border border-[#E6F4EC] rounded-2xl p-4"
+                          >
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-bold text-[#124734]">Option {label}</p>
                               <label className="text-xs text-[#5B7065] font-semibold flex items-center gap-2">
@@ -274,7 +359,9 @@ export default function TeacherTestQuestions() {
                       </div>
 
                       <div className="mt-4">
-                        <label className="text-sm font-semibold text-[#124734]">Explanation (optional)</label>
+                        <label className="text-sm font-semibold text-[#124734]">
+                          Explanation (optional)
+                        </label>
                         <textarea
                           value={q.explanation ?? ""}
                           onChange={(e) => updateQ(idx, "explanation", e.target.value)}

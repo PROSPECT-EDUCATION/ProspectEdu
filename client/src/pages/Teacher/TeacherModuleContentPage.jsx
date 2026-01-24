@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
@@ -10,12 +11,55 @@ import { courseContentApi } from "../../services/courseContent";
 export default function TeacherModuleContentPage() {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Course",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher/course/${courseId}`
+              : `/teacher/course/${courseId}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Module Content",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl, courseId]
+  );
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  // (kept as-is to avoid layout/logic changes)
   const [viewerOpen, setViewerOpen] = useState(false);
-const [viewerSrc, setViewerSrc] = useState("");
-const [viewerTitle, setViewerTitle] = useState("");
+  const [viewerSrc, setViewerSrc] = useState("");
+  const [viewerTitle, setViewerTitle] = useState("");
 
   const [module, setModule] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,39 +72,35 @@ const [viewerTitle, setViewerTitle] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editFileName, setEditFileName] = useState("");
-const openLesson = (lesson) => {
-  // ✅ use your service helper (this points to /api/v1/content/lessons/:id/file)
-  const fileUrl = courseContentApi.lessonFileUrl(lesson._id);
 
-  // PDF -> open directly in new tab
-  if (lesson.type === "pdf" || (lesson.mimeType || "").includes("pdf")) {
-    window.open(fileUrl, "_blank", "noreferrer");
-    return;
-  }
+  const openLesson = (lesson) => {
+    // ✅ use your service helper (this points to /api/v1/content/lessons/:id/file)
+    const fileUrl = courseContentApi.lessonFileUrl(lesson._id);
 
-  // DOC/DOCX -> Office viewer (needs a public URL)
-  if (lesson.type === "doc" || (lesson.mimeType || "").includes("word")) {
-    const officeUrl =
-      "https://view.officeapps.live.com/op/embed.aspx?src=" +
-      encodeURIComponent(fileUrl);
+    // PDF -> open directly in new tab
+    if (lesson.type === "pdf" || (lesson.mimeType || "").includes("pdf")) {
+      window.open(fileUrl, "_blank", "noreferrer");
+      return;
+    }
 
-    window.open(officeUrl, "_blank", "noreferrer");
-    return;
-  }
+    // DOC/DOCX -> Office viewer (needs a public URL)
+    if (lesson.type === "doc" || (lesson.mimeType || "").includes("word")) {
+      const officeUrl =
+        "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(fileUrl);
 
-  // video or other -> fallback
-  window.open(lesson.contentUrl, "_blank", "noreferrer");
-};
+      window.open(officeUrl, "_blank", "noreferrer");
+      return;
+    }
 
-
+    // video or other -> fallback
+    window.open(lesson.contentUrl, "_blank", "noreferrer");
+  };
 
   const load = async () => {
     try {
       setLoading(true);
       const res = await courseContentApi.teacherModulesWithLessons(courseId);
-      const found = (res.data.modules || []).find(
-        (m) => String(m._id) === String(moduleId)
-      );
+      const found = (res.data.modules || []).find((m) => String(m._id) === String(moduleId));
       setModule(found || null);
     } catch (e) {
       console.log(e);
@@ -144,25 +184,34 @@ const openLesson = (lesson) => {
     }
   };
 
+  // ✅ SEO title without layout changes
+  const seoTitle = module?.title
+    ? `${module.title} | Module Content | Teacher Dashboard | ProspectEdu`
+    : "Module Content | Teacher Dashboard | ProspectEdu";
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta
+          name="description"
+          content="Upload and manage module lessons (videos, PDFs, DOC files) in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div
-        className={`${
-          isCollapsed ? "w-20" : "w-64"
-        } fixed top-0 left-0 h-full z-40 transition-all`}
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all`}
       >
-        <TeacherSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* RIGHT AREA */}
-      <div
-        className="flex flex-col flex-1 transition-all"
-        style={{ marginLeft: sidebarWidthPx }}
-      >
+      <div className="flex flex-col flex-1 transition-all" style={{ marginLeft: sidebarWidthPx }}>
         {/* TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]"
@@ -258,9 +307,7 @@ const openLesson = (lesson) => {
 
               {/* Lessons list */}
               <div className="bg-white border border-[#E6F4EC] rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-[#124734] mb-4">
-                  Lessons
-                </h3>
+                <h3 className="text-lg font-semibold text-[#124734] mb-4">Lessons</h3>
 
                 {module.lessons?.length ? (
                   <ul className="space-y-3">
@@ -282,9 +329,7 @@ const openLesson = (lesson) => {
                               <input
                                 className="border border-[#A7E1B2] p-2 rounded w-full"
                                 value={editFileName}
-                                onChange={(e) =>
-                                  setEditFileName(e.target.value)
-                                }
+                                onChange={(e) => setEditFileName(e.target.value)}
                                 placeholder="Display file name"
                               />
                               <div className="flex gap-2">
@@ -308,24 +353,20 @@ const openLesson = (lesson) => {
                             </div>
                           ) : (
                             <>
-                              <div className="font-medium text-[#124734]">
-                                {l.title}
-                              </div>
-                              <div className="text-xs text-[#5B7065] mt-1">
-                                {l.fileName || ""}
-                              </div>
+                              <div className="font-medium text-[#124734]">{l.title}</div>
+                              <div className="text-xs text-[#5B7065] mt-1">{l.fileName || ""}</div>
                             </>
                           )}
                         </div>
 
                         {/* Right actions */}
                         <div className="flex items-center gap-3">
-                         <button
-  className="text-sm underline text-[#124734]"
-  onClick={() => openLesson(l)}
->
-  {l.type === "video" ? "Play" : "Open"}
-</button>
+                          <button
+                            className="text-sm underline text-[#124734]"
+                            onClick={() => openLesson(l)}
+                          >
+                            {l.type === "video" ? "Play" : "Open"}
+                          </button>
 
                           <button
                             className="text-sm text-blue-600"
@@ -349,26 +390,20 @@ const openLesson = (lesson) => {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-sm text-[#5B7065]">
-                    No lessons yet.
-                  </div>
+                  <div className="text-sm text-[#5B7065]">No lessons yet.</div>
                 )}
               </div>
 
               {/* Back button */}
               <div>
-                <button
-                  className="text-sm text-[#124734] underline"
-                  onClick={() => navigate(-1)}
-                >
+                <button className="text-sm text-[#124734] underline" onClick={() => navigate(-1)}>
                   ← Back to Modules
                 </button>
               </div>
             </div>
           )}
         </div>
-         </div>
+      </div>
     </div>
   );
-
 }

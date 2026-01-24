@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import CourseCard from "../../components/Teacher/CourseCard";
@@ -12,6 +13,13 @@ export default function TeacherCoursesPage() {
 
   const navigate = useNavigate();
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/teacher/courses`;
+
+  const pageTitle = "Teacher Courses | ProspectEdu";
+  const pageDescription =
+    "View and manage courses assigned to you as a teacher in ProspectEdu.";
 
   useEffect(() => {
     const load = async () => {
@@ -31,6 +39,26 @@ export default function TeacherCoursesPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Private dashboard page */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Teacher Courses</h1>
+
       {/* SIDEBAR */}
       <div className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all`}>
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -44,7 +72,7 @@ export default function TeacherCoursesPage() {
         </div>
 
         {/* CONTENT */}
-        <div className="px-6 pt-[80px] pb-10 overflow-y-auto">
+        <main className="px-6 pt-[80px] pb-10 overflow-y-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -60,8 +88,6 @@ export default function TeacherCoursesPage() {
 
               <h2 className="text-2xl font-semibold text-[#124734]">My Courses</h2>
             </div>
-
-            
           </div>
 
           {/* Loading / Empty / Grid */}
@@ -76,7 +102,7 @@ export default function TeacherCoursesPage() {
               ))}
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

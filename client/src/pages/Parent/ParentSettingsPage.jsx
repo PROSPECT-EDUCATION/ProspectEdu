@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { useToast } from "../../context/ToastContext";
@@ -10,6 +12,40 @@ import ChildRow from "../../components/Parent/Settings/ChildRow";
 import { parentsApi } from "../../services/parents";
 
 export default function ParentSettingsPage() {
+  const location = useLocation();
+
+  // ✅ SEO: canonical URL
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  // ✅ SEO: breadcrumb schema
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/parent`
+              : "/parent",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Settings",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
   const { showToast } = useToast();
@@ -131,6 +167,18 @@ export default function ParentSettingsPage() {
 
   return (
     <div className="flex h-screen bg-[#F7FBF8] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Parent Settings | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Manage parent profile details and linked children in ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <div
         className="fixed top-0 left-0 h-full transition-all duration-300 z-40"
         style={{ width: sidebarWidth }}

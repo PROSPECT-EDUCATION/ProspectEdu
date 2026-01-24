@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { teacherDoubtsApi } from "../../lib/parentDoubtsApi";
-import {
-  Search,
-  Inbox,
-  Clock,
-  Send,
-  UserRound,
-  BadgeCheck,
-} from "lucide-react";
+import { Search, Inbox, Clock, Send, UserRound, BadgeCheck } from "lucide-react";
 
 function Badge({ status }) {
   const isOpen = status === "OPEN";
@@ -36,6 +31,38 @@ function formatDate(d) {
 
 export default function TeacherParentDoubtsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Parent Doubts",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -104,8 +131,20 @@ export default function TeacherParentDoubtsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Parent Doubts | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View parent doubts and reply from the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-     <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         <TeacherTopbar title="Parent Doubts" />
 
         <div className="p-5">
@@ -119,7 +158,10 @@ export default function TeacherParentDoubtsPage() {
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -182,9 +224,7 @@ export default function TeacherParentDoubtsPage() {
             {/* Detail + Answer */}
             <div className="lg:col-span-2 bg-white rounded-2xl border shadow-sm overflow-hidden">
               {!selected ? (
-                <div className="p-8 text-center text-gray-500">
-                  Select a doubt to answer.
-                </div>
+                <div className="p-8 text-center text-gray-500">Select a doubt to answer.</div>
               ) : (
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -243,7 +283,6 @@ export default function TeacherParentDoubtsPage() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

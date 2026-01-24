@@ -1,10 +1,34 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link, useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { parentsApi } from "../../services/parents";
 
 export default function ParentDashboard() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
@@ -26,15 +50,24 @@ export default function ParentDashboard() {
 
   return (
     <div className="flex h-screen bg-[#F7FBF8] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Parent Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Parent dashboard to view linked students overview, attendance, progress and access student profiles in ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div
         className="fixed left-0 top-0 h-full transition-all duration-300"
         style={{ width: sidebarWidth }}
       >
-        <ParentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* MAIN */}
@@ -45,9 +78,9 @@ export default function ParentDashboard() {
         <ParentTopbar pageTitle="Dashboard" showStudentSwitcher={false} />
 
         <div className="p-6 overflow-y-auto">
-          <h2 className="text-xl font-semibold text-[#124734] mb-4">
+          <h1 className="text-xl font-semibold text-[#124734] mb-4">
             Linked Students Overview
-          </h2>
+          </h1>
 
           <div className="bg-white border border-[#E6F4EC] rounded-2xl shadow-sm overflow-hidden">
             <table className="w-full text-left">
@@ -84,27 +117,17 @@ export default function ParentDashboard() {
                       key={s._id}
                       className="border-t border-[#E6F4EC] hover:bg-[#F9FFFB]"
                     >
-                      <td className="px-4 py-3 font-medium text-[#124734]">
-                        {s.fullName}
-                      </td>
+                      <td className="px-4 py-3 font-medium text-[#124734]">{s.fullName}</td>
 
-                      <td className="px-4 py-3">
-                        {s.attendance}%
-                      </td>
+                      <td className="px-4 py-3">{s.attendance}%</td>
 
-                      <td className="px-4 py-3">
-                        {s.progress}%
-                      </td>
+                      <td className="px-4 py-3">{s.progress}%</td>
 
                       <td className="px-4 py-3">
                         {s.isActive ? (
-                          <span className="text-green-600 text-sm font-medium">
-                            Active
-                          </span>
+                          <span className="text-green-600 text-sm font-medium">Active</span>
                         ) : (
-                          <span className="text-red-500 text-sm font-medium">
-                            Blocked
-                          </span>
+                          <span className="text-red-500 text-sm font-medium">Blocked</span>
                         )}
                       </td>
 
@@ -117,9 +140,7 @@ export default function ParentDashboard() {
                             View Profile
                           </Link>
                         ) : (
-                          <span className="text-xs text-[#98A6A2]">
-                            Not available
-                          </span>
+                          <span className="text-xs text-[#98A6A2]">Not available</span>
                         )}
                       </td>
                     </tr>

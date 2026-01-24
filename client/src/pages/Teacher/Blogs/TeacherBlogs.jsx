@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../../components/Teacher/TeacherTopbar";
 import { Plus, Pencil, Trash2, Image as ImageIcon, X } from "lucide-react";
@@ -32,6 +34,39 @@ const prettyDate = (iso) => {
 export default function TeacherBlogs() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  const location = useLocation();
+
+  // ✅ SEO
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Blogs",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
@@ -127,15 +162,24 @@ export default function TeacherBlogs() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO (NO layout impact) */}
+      <Helmet>
+        <title>Blogs | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Create, edit and manage blog posts from the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <aside
         className={`${
           isCollapsed ? "w-20" : "w-64"
         } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
       >
-        <TeacherSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
       <div
@@ -152,10 +196,7 @@ export default function TeacherBlogs() {
           <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Blogs" />
         </header>
 
-        <main
-          className="flex-1 overflow-y-auto px-6 py-8"
-          style={{ marginTop: "64px" }}
-        >
+        <main className="flex-1 overflow-y-auto px-6 py-8" style={{ marginTop: "64px" }}>
           <div className="max-w-6xl mx-auto text-left">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div>
@@ -179,9 +220,7 @@ export default function TeacherBlogs() {
               </div>
             ) : items.length === 0 ? (
               <div className="bg-white rounded-2xl p-10 shadow-sm border border-[#E6F4EC] text-center">
-                <p className="text-[#124734] font-semibold text-lg">
-                  No blogs yet
-                </p>
+                <p className="text-[#124734] font-semibold text-lg">No blogs yet</p>
                 <p className="text-[#5B7065] mt-1">
                   Click “Create Blog” to publish your first one.
                 </p>
@@ -198,22 +237,18 @@ export default function TeacherBlogs() {
                         src={b.coverUrl || "/src/assets/blog.webp"}
                         alt={b.title}
                         className="w-full h-44 object-contain bg-[#F9FAFB]"
+                        loading="lazy"
                       />
-                      {/* ✅ Removed Published/Hidden badge */}
                     </div>
 
                     <div className="p-5">
-                      <h3 className="text-lg font-bold text-[#124734] line-clamp-2">
-                        {b.title}
-                      </h3>
+                      <h3 className="text-lg font-bold text-[#124734] line-clamp-2">{b.title}</h3>
                       <p className="text-sm text-[#5B7065] mt-1 line-clamp-2">
                         {b.subtitle || "—"}
                       </p>
 
                       <div className="flex items-center justify-between mt-4">
-                        <p className="text-xs text-[#5B7065]">
-                          Created: {prettyDate(b.createdAt)}
-                        </p>
+                        <p className="text-xs text-[#5B7065]">Created: {prettyDate(b.createdAt)}</p>
 
                         <div className="flex items-center gap-2">
                           <button
@@ -240,7 +275,7 @@ export default function TeacherBlogs() {
         </main>
       </div>
 
-      {/* ✅ Modal (scrollable + more attractive UI) */}
+      {/* Modal (unchanged) */}
       {open && (
         <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
           <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
@@ -264,73 +299,50 @@ export default function TeacherBlogs() {
 
             <form onSubmit={submit} className="p-6 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Title */}
                 <div className="md:col-span-2">
-                  <label className="text-sm font-semibold text-[#124734]">
-                    Title *
-                  </label>
+                  <label className="text-sm font-semibold text-[#124734]">Title *</label>
                   <input
                     value={form.title}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, title: e.target.value }))
-                    }
+                    onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                     className="mt-1 w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[#009846]/20"
                     placeholder="eg. How to prepare for exams"
                     required
                   />
                 </div>
 
-                {/* Subtitle */}
                 <div className="md:col-span-2">
-                  <label className="text-sm font-semibold text-[#124734]">
-                    Subtitle
-                  </label>
+                  <label className="text-sm font-semibold text-[#124734]">Subtitle</label>
                   <input
                     value={form.subtitle}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, subtitle: e.target.value }))
-                    }
+                    onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
                     className="mt-1 w-full border rounded-xl px-4 py-2"
                     placeholder="Short intro line..."
                   />
                 </div>
 
-                {/* Slug */}
                 <div className="md:col-span-2">
-                  <label className="text-sm font-semibold text-[#124734]">
-                    Slug (optional)
-                  </label>
+                  <label className="text-sm font-semibold text-[#124734]">Slug (optional)</label>
                   <input
                     value={form.slug}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, slug: e.target.value }))
-                    }
+                    onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
                     className="mt-1 w-full border rounded-xl px-4 py-2"
                     placeholder="Auto from title if empty"
                   />
                 </div>
 
-                {/* Content */}
                 <div className="md:col-span-2">
-                  <label className="text-sm font-semibold text-[#124734]">
-                    Content *
-                  </label>
+                  <label className="text-sm font-semibold text-[#124734]">Content *</label>
                   <textarea
                     value={form.content}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, content: e.target.value }))
-                    }
+                    onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
                     className="mt-1 w-full border rounded-xl px-4 py-3 min-h-[180px] leading-6"
                     placeholder="Write your blog content..."
                     required
                   />
                 </div>
 
-                {/* Cover */}
                 <div className="md:col-span-2">
-                  <label className="text-sm font-semibold text-[#124734]">
-                    Cover Image
-                  </label>
+                  <label className="text-sm font-semibold text-[#124734]">Cover Image</label>
 
                   <div className="mt-2 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                     <div className="md:col-span-5">
@@ -340,6 +352,7 @@ export default function TeacherBlogs() {
                             src={imgPreview}
                             alt="preview"
                             className="w-full h-full object-contain bg-white"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="text-[#5B7065] flex items-center gap-2">
@@ -354,19 +367,16 @@ export default function TeacherBlogs() {
                         <input
                           type="file"
                           accept="image/png,image/jpeg,image/webp"
-                          onChange={(e) =>
-                            onPickCover(e.target.files?.[0] || null)
-                          }
+                          onChange={(e) => onPickCover(e.target.files?.[0] || null)}
                           className="block w-full text-sm"
                         />
                         <p className="text-xs text-[#5B7065] mt-2">
-                          JPG / PNG / WEBP (max 5MB). Image will be uploaded to
-                          Cloudinary & URL saved in DB.
+                          JPG / PNG / WEBP (max 5MB). Image will be uploaded to Cloudinary & URL
+                          saved in DB.
                         </p>
 
                         <div className="mt-3 text-xs text-[#5B7065]">
-                          ✅ After creating, blog will be immediately displayed
-                          publicly.
+                          ✅ After creating, blog will be immediately displayed publicly.
                         </div>
                       </div>
                     </div>
@@ -374,7 +384,6 @@ export default function TeacherBlogs() {
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="mt-6 flex items-center justify-end gap-3">
                 <button
                   type="button"

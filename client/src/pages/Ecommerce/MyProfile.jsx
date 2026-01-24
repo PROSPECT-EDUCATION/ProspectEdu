@@ -1,21 +1,48 @@
-/* --- RESPONSIVE MyProfile.jsx (same layout, only logic updated for AddressContext sync) --- */
+/* --- RESPONSIVE MyProfile.jsx (same layout, only SEO + perf updated) --- */
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
 import locationIcon from "../../assets/location.webp";
 import Footer from "../../components/Footer";
-import { useAddress } from "../../context/AddressContext"; // ✅ ADD
+import { useAddress } from "../../context/AddressContext";
 
 const MyProfile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: typeof window !== "undefined" ? `${window.location.origin}/` : "/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Profile",
+          item: canonicalUrl,
+        },
+      ],
+    };
+  }, [canonicalUrl]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ context addresses
   const { addresses, addAddress, removeAddress, fetchAddresses } = useAddress();
 
   const [newAddress, setNewAddress] = useState({
@@ -40,7 +67,6 @@ const MyProfile = () => {
     }
   }, []);
 
-  // ✅ keep name/phone/email prefilled when user loads
   useEffect(() => {
     if (!user) return;
     setNewAddress((prev) => ({
@@ -53,7 +79,6 @@ const MyProfile = () => {
 
   const saveAddress = async () => {
     try {
-      // ✅ same payload
       const payload = {
         name: newAddress.name,
         phone: newAddress.phone,
@@ -66,9 +91,6 @@ const MyProfile = () => {
       };
 
       if (editingId) {
-        // ❗ If you have updateAddress in context, use that.
-        // Since your context currently has only add/remove, we do safe approach:
-        // delete old + add new (NO layout change). Better is update endpoint, but keeping minimal.
         await removeAddress(editingId);
         await addAddress(payload);
         setEditingId(null);
@@ -76,14 +98,14 @@ const MyProfile = () => {
         await addAddress(payload);
       }
 
-      await fetchAddresses(); // ✅ ensures latest list in both pages
+      await fetchAddresses();
 
       setShowForm(false);
 
       setNewAddress({
-        name: user?.fullName || user?.name || "Akshat Agrawal",
-        phone: user?.phone || "9407307073",
-        email: user?.email || "akshat.shubhit15@gmail.com",
+        name: user?.fullName || user?.name || "User",
+        phone: user?.phone || "",
+        email: user?.email || "",
         address: "",
         city: "",
         pincode: "",
@@ -106,6 +128,18 @@ const MyProfile = () => {
 
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>My Profile | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Manage your ProspectEdu profile details and saved addresses securely."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* private page - prevent indexing */}
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 font-[Open_Sans] pb-20 text-left">
@@ -148,7 +182,13 @@ const MyProfile = () => {
             >
               {/* LEFT */}
               <div className="flex gap-3">
-                <img src={locationIcon} className="w-10 h-10" />
+                <img
+                  src={locationIcon}
+                  className="w-10 h-10"
+                  alt="Location icon"
+                  loading="lazy"
+                  decoding="async"
+                />
 
                 <div>
                   <h3 className="text-lg font-semibold text-[#124734]">
@@ -185,6 +225,7 @@ const MyProfile = () => {
                     });
                   }}
                   className="text-[#124734] hover:text-black"
+                  aria-label="Edit address"
                 >
                   <FiEdit2 size={20} />
                 </button>
@@ -192,6 +233,7 @@ const MyProfile = () => {
                 <button
                   onClick={() => deleteAddress(addr._id || addr.id)}
                   className="text-red-600 hover:text-red-800"
+                  aria-label="Delete address"
                 >
                   <FiTrash2 size={20} />
                 </button>
@@ -327,6 +369,7 @@ const MyProfile = () => {
           )}
         </div>
       </div>
+
       <div className="pt-10">
         <Footer />
       </div>

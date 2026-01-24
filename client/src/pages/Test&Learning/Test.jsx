@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import testImg from "../../assets/test1.webp";
 import whyTestImg from "../../assets/WhyTest.webp";
 import HeaderSection from "../../components/HeaderSection";
@@ -7,19 +7,37 @@ import Footer from "../../components/Footer";
 import { fetchPublicTestSeries } from "../../lib/testSeriesApi";
 import WhyTestSeries from "../../components/WhyTestSeries";
 import { useNavigate } from "react-router-dom";
-
-// ❌ remove static data import
-// import { tests } from "../../data/TestData";
+import { Helmet } from "react-helmet-async";
 
 const TestPage = () => {
   const [selectedType, setSelectedType] = useState("All");
   const [selectedLanguage, setSelectedLanguage] = useState("");
-  const [tests, setTests] = useState([]); // ✅ DB tests
+  const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  // ✅ fetch from DB
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/test-learning`;
+
+  const pageTitle = useMemo(() => {
+    const t = selectedType !== "All" ? `${selectedType} ` : "";
+    const l = selectedLanguage ? `${selectedLanguage} ` : "";
+    const suffix = t || l ? `(${t}${l}Test Series)` : "";
+    return `Test & Learning ${suffix} | ProspectEdu`.replace(/\s+/g, " ").trim();
+  }, [selectedType, selectedLanguage]);
+
+  const pageDescription = useMemo(() => {
+    if (selectedType !== "All" || selectedLanguage) {
+      return `Explore ${selectedType !== "All" ? selectedType : "all"} test series ${
+        selectedLanguage ? `in ${selectedLanguage}` : ""
+      } on ProspectEdu. Practice with curated tests, model answers, and evaluation.`
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    return "Explore ProspectEdu Test & Learning resources. Practice with expert-curated test series for Engineering, Law, and Management.";
+  }, [selectedType, selectedLanguage]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -45,11 +63,50 @@ const TestPage = () => {
     return matchesType && matchesLanguage;
   });
 
+  // ✅ JSON-LD: CollectionPage + ItemList
+  const jsonLd = useMemo(() => {
+    const itemList = (filteredTests || []).slice(0, 50).map((t, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      url: `${SITE_URL}/test-learning/${t._id}`,
+      name: t.title,
+    }));
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: itemList,
+      },
+    };
+  }, [filteredTests, SITE_URL, pageTitle, pageDescription, canonicalUrl]);
+
   return (
     <section className="bg-[#F9FAFB] text-[#124734]  font-[Open_Sans,sans-serif]">
-      <Navbar />
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
 
-      {/* ---------------- Header Section ---------------- */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${SITE_URL}${testImg}`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={`${SITE_URL}${testImg}`} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
+      <Navbar />
 
       <HeaderSection
         page="Test & Learning"
@@ -71,6 +128,8 @@ const TestPage = () => {
                   ? "bg-[#1E5631] text-white border-[#1E5631]"
                   : "border-[#1E5631] text-[#1E5631] hover:bg-[#A7E1B2] hover:text-white"
               }`}
+              type="button"
+              aria-pressed={selectedType === type}
             >
               {type === "All" ? "All" : `${type} Test Series`}
             </button>
@@ -90,22 +149,23 @@ const TestPage = () => {
         </div>
       </div>
 
-      {/* Test Cards */}
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* ✅ main semantic wrapper only */}
+      <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (
           <p className="text-center text-gray-600 col-span-full">Loading tests...</p>
         ) : filteredTests.length > 0 ? (
           filteredTests.map((test) => (
-            <div
+            <article
               key={test._id}
               className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition flex flex-col overflow-hidden"
             >
-              {/* Image */}
               <div className="relative">
                 <img
                   src={test.imageUrl || testImg}
                   alt={test.title}
                   className="w-full h-44 object-contain bg-[#F9FAFB]"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <span
                   className={`absolute top-2 right-2 text-xs font-semibold px-3 py-1 rounded-md text-white ${
@@ -116,7 +176,6 @@ const TestPage = () => {
                 </span>
               </div>
 
-              {/* Content */}
               <div className="p-5 flex flex-col flex-grow">
                 <h3 className="font-semibold text-lg mb-3 text-center">{test.title}</h3>
 
@@ -132,8 +191,6 @@ const TestPage = () => {
                   <p>
                     <strong>Total Question:</strong> {test.totalQuestion}
                   </p>
-
-                  {/* ✅ keep same layout/label, but show DB price */}
                   <p>
                     <strong>Total Amount:</strong>{" "}
                     <b className="text-red-600">
@@ -150,45 +207,40 @@ const TestPage = () => {
                   <button
                     onClick={() => navigate(`/test-learning/${test._id}`)}
                     className="border border-[#1E5631] text-[#1E5631] font-medium px-6 py-2 rounded-full hover:bg-[#1E5631] hover:text-white transition"
+                    type="button"
                   >
                     View Test Series
                   </button>
                 </div>
               </div>
-            </div>
+            </article>
           ))
         ) : (
           <p className="text-center text-gray-600 col-span-full">
             No tests found for the selected filters.
           </p>
         )}
-      </div>
+      </main>
 
-      {/* Why Test Series */}
       <WhyTestSeries image={whyTestImg} />
 
       {/* FAQ Section */}
       <div className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center text-[#1E5631] mb-10">
-          FAQ's
-        </h2>
+        <h2 className="text-3xl font-bold text-center text-[#1E5631] mb-10">FAQ's</h2>
 
         <div className="space-y-4 text-left">
           {[
             {
               question: "How many mock tests are included?",
-              answer:
-                "Each test series includes multiple topic-wise and full-length tests.",
+              answer: "Each test series includes multiple topic-wise and full-length tests.",
             },
             {
               question: "Is the series available in Hindi or English?",
-              answer:
-                "Yes! Most test series are available in both Hindi and English.",
+              answer: "Yes! Most test series are available in both Hindi and English.",
             },
             {
               question: "Can I access the series on mobile?",
-              answer:
-                "Yes! Access tests and reports on mobile, tablet, or laptop anytime.",
+              answer: "Yes! Access tests and reports on mobile, tablet, or laptop anytime.",
             },
           ].map((faq, i) => (
             <details
@@ -206,6 +258,7 @@ const TestPage = () => {
           ))}
         </div>
       </div>
+
       <div className="pt-10">
         <Footer />
       </div>

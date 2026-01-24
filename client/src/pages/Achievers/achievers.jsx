@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import achieversImg from "../../assets/acheivers.avif";
 import HeaderSection from "../../components/HeaderSection";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer";
 import { api } from "../../lib/api";
-import { useEffect } from "react";
-
 
 const Achievers = () => {
   const [search, setSearch] = useState("");
@@ -14,6 +13,30 @@ const Achievers = () => {
   const [openFaq, setOpenFaq] = useState(null);
   const [achieversData, setAchieversData] = useState([]);
 
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/achievers`;
+
+  const pageTitle =
+    course !== "All" || year !== "All"
+      ? `Achievers ${course !== "All" ? `- ${course}` : ""}${
+          year !== "All" ? ` (${year})` : ""
+        } | ProspectEdu`
+      : "Achievers | ProspectEdu";
+
+  const pageDescription =
+    "Meet ProspectEdu achievers—students who completed courses successfully with verified certificates, mentorship, and career-ready outcomes.";
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/achievers");
+        setAchieversData(res.data?.data || []);
+      } catch {
+        setAchieversData([]);
+      }
+    })();
+  }, []);
+
   // ✅ FILTER LOGIC
   const filteredAchievers = achieversData.filter((a) => {
     const matchName = a.name.toLowerCase().includes(search.toLowerCase());
@@ -21,16 +44,28 @@ const Achievers = () => {
     const matchYear = year === "All" || a.year === year;
     return matchName && matchCourse && matchYear;
   });
-  useEffect(() => {
-  (async () => {
-    try {
-      const res = await api.get("/achievers");
-      setAchieversData(res.data?.data || []);
-    } catch {
-      setAchieversData([]);
-    }
-  })();
-}, []);
+
+  // ✅ JSON-LD (CollectionPage + ItemList)
+  const jsonLd = useMemo(() => {
+    const itemList = (filteredAchievers || []).slice(0, 50).map((a, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: a.name,
+      url: canonicalUrl, // achievers are on same page; keep URL stable
+    }));
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: itemList,
+      },
+    };
+  }, [filteredAchievers, pageTitle, pageDescription, canonicalUrl]);
 
   const faqs = [
     {
@@ -49,6 +84,28 @@ const Achievers = () => {
 
   return (
     <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${SITE_URL}${achieversImg}`} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={`${SITE_URL}${achieversImg}`} />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <Navbar />
 
       {/* ===== HEADER ===== */}
@@ -76,7 +133,7 @@ const Achievers = () => {
         >
           <option value="All">All Courses</option>
           <option value="Engineering">Engineering</option>
-            <option value="Medical">Medical</option>
+          <option value="Medical">Medical</option>
           <option value="Law">Law</option>
           <option value="Management">Management</option>
         </select>
@@ -93,91 +150,97 @@ const Achievers = () => {
         </select>
       </div>
 
-      {/* ===== ACHIEVERS GRID (3 PER ROW) ===== */}
-      <div className="max-w-7xl mx-auto px-6 mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredAchievers.map((a, i) => (
-          <article
-            key={i}
-            className="bg-white rounded-2xl shadow-md p-6 text-center hover:shadow-xl transition"
-          >
-            <img
-              src={a.imgUrl}
-              alt={a.name}
-              className="w-24 h-24 rounded-full mx-auto border-4 border-[#A7E1B2]"
-            />
+      {/* ✅ main wrapper for semantics only */}
+      <main>
+        {/* ===== ACHIEVERS GRID (3 PER ROW) ===== */}
+        <div className="max-w-7xl mx-auto px-6 mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredAchievers.map((a, i) => (
+            <article
+              key={i}
+              className="bg-white rounded-2xl shadow-md p-6 text-center hover:shadow-xl transition"
+            >
+              <img
+                src={a.imgUrl}
+                alt={a.name}
+                className="w-24 h-24 rounded-full mx-auto border-4 border-[#A7E1B2]"
+                loading="lazy"
+                decoding="async"
+              />
 
-            <h3 className="text-xl font-semibold mt-4">{a.name}</h3>
+              <h3 className="text-xl font-semibold mt-4">{a.name}</h3>
 
-            <p className="text-gray-600 text-sm mt-1">{a.course}</p>
-            <p className="text-gray-500 text-sm">Year: {a.year}</p>
+              <p className="text-gray-600 text-sm mt-1">{a.course}</p>
+              <p className="text-gray-500 text-sm">Year: {a.year}</p>
 
-            <span className="inline-block bg-[#DFF5E1] text-[#124734] text-sm px-3 py-1 rounded-full mt-3">
-              ✅ Course Completed
-            </span>
+              <span className="inline-block bg-[#DFF5E1] text-[#124734] text-sm px-3 py-1 rounded-full mt-3">
+                ✅ Course Completed
+              </span>
 
-            <p className="mt-4 text-sm text-gray-700">{a.achievement}</p>
+              <p className="mt-4 text-sm text-gray-700">{a.achievement}</p>
 
-            <p className="text-sm font-medium text-[#124734]">{a.extra}</p>
+              <p className="text-sm font-medium text-[#124734]">{a.extra}</p>
 
-            <blockquote className="text-gray-500 text-sm italic mt-3">
-              “{a.quote}”
-            </blockquote>
-          </article>
-        ))}
+              <blockquote className="text-gray-500 text-sm italic mt-3">
+                “{a.quote}”
+              </blockquote>
+            </article>
+          ))}
 
-        {filteredAchievers.length === 0 && (
-          <p className="text-center col-span-full text-gray-500">
-            No achievers found
-          </p>
-        )}
-      </div>
+          {filteredAchievers.length === 0 && (
+            <p className="text-center col-span-full text-gray-500">
+              No achievers found
+            </p>
+          )}
+        </div>
 
-      {/* ===== WHY ACHIEVERS MATTER ===== */}
-      <div className="max-w-6xl mx-auto px-6 mt-20 text-center">
-        <h2 className="text-3xl font-bold mb-10">
-          Why Our Achievers Matter ⭐
-        </h2>
+        {/* ===== WHY ACHIEVERS MATTER ===== */}
+        <div className="max-w-6xl mx-auto px-6 mt-20 text-center">
+          <h2 className="text-3xl font-bold mb-10">
+            Why Our Achievers Matter ⭐
+          </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            "🎯 Goal Oriented",
-            "📜 Certified Students",
-            "💼 Career Ready",
-            "🤝 Mentor Guided",
-          ].map((item, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {["🎯 Goal Oriented", "📜 Certified Students", "💼 Career Ready", "🤝 Mentor Guided"].map(
+              (item, i) => (
+                <div
+                  key={i}
+                  className="bg-white shadow-md rounded-xl py-6 font-medium"
+                >
+                  {item}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* ===== FAQ WITH ANSWERS ===== */}
+        <div className="max-w-5xl mx-auto px-6 mt-20 mb-20">
+          <h2 className="text-3xl font-bold text-center mb-8">
+            Frequently Asked Questions
+          </h2>
+
+          {faqs.map((f, i) => (
             <div
               key={i}
-              className="bg-white shadow-md rounded-xl py-6 font-medium"
+              className="bg-white shadow rounded-xl px-6 py-4 mb-4 cursor-pointer"
+              onClick={() => setOpenFaq(openFaq === i ? null : i)}
             >
-              {item}
+              <div className="font-semibold flex justify-between">
+                {f.q}
+                <span className="transition-transform group-open:rotate-180 text-[#1E5631]">
+                  ▼
+                </span>
+              </div>
+
+              {openFaq === i && (
+                <p className="text-gray-600 mt-3 text-sm text-left font-semibold">
+                  {f.a}
+                </p>
+              )}
             </div>
           ))}
         </div>
-      </div>
-
-      {/* ===== FAQ WITH ANSWERS ===== */}
-      <div className="max-w-5xl mx-auto px-6 mt-20 mb-20">
-        <h2 className="text-3xl font-bold text-center mb-8">
-          Frequently Asked Questions
-        </h2>
-
-        {faqs.map((f, i) => (
-          <div
-            key={i}
-            className="bg-white shadow rounded-xl px-6 py-4 mb-4 cursor-pointer"
-            onClick={() => setOpenFaq(openFaq === i ? null : i)}
-          >
-            <div className="font-semibold flex justify-between">
-              {f.q}
-             <span className="transition-transform group-open:rotate-180 text-[#1E5631]">▼</span>
-            </div>
-
-            {openFaq === i && (
-              <p className="text-gray-600 mt-3 text-sm text-left font-semibold">{f.a}</p>
-            )}
-          </div>
-        ))}
-      </div>
+      </main>
 
       <Footer />
     </section>

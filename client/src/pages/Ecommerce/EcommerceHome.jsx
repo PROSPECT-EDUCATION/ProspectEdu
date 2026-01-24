@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiShoppingBag, FiHeart } from "react-icons/fi";
 import EcomHeader from "../../components/EcomHeader";
 import img1 from "../../assets/EcommerceHome-carousel/c1.webp";
 import img2 from "../../assets/EcommerceHome-carousel/c1.webp";
@@ -8,13 +7,20 @@ import img3 from "../../assets/EcommerceHome-carousel/c1.webp";
 import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
 import Footer from "../../components/Footer";
-
 import { api } from "../../lib/api";
+import { Helmet } from "react-helmet-async";
 
 const Ecommerce = () => {
   const navigate = useNavigate();
   const images = [img1, img2, img3];
   const [current, setCurrent] = useState(0);
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/ecommerce-home`;
+
+  const pageTitle = "Prospect Ecommerce | Home";
+  const pageDescription =
+    "Shop trending products by category on Prospect Ecommerce. Browse categories, discover latest products, and order online.";
 
   // ✅ Admin categories
   const [categories, setCategories] = useState([]);
@@ -24,7 +30,7 @@ const Ecommerce = () => {
   const visible = 5;
 
   const nextSlide = () => {
-    if (!categories.length) return
+    if (!categories.length) return;
     setStart((prev) => (prev + 1) % categories.length);
   };
 
@@ -128,31 +134,31 @@ const Ecommerce = () => {
       const oldPrice = price;
       const finalPrice = offer > 0 ? offer : price;
 
-     return {
-  id: p._id,
-  title: p.name,
-  description: p.description || "",
-  img: (Array.isArray(p.images) && p.images[0]) || "https://via.placeholder.com/300x300?text=Product",
-  images: Array.isArray(p.images) ? p.images : [],
-  oldPrice,
-  price: finalPrice,
-  save: Math.max(0, oldPrice - finalPrice),
-  outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
-  category: (p.category || "").trim(),
-  createdAt: p.createdAt,
-  isTrending: !!p.isTrending, // ✅ ADD
-};
-
+      return {
+        id: p._id,
+        title: p.name,
+        description: p.description || "",
+        img:
+          (Array.isArray(p.images) && p.images[0]) ||
+          "https://via.placeholder.com/300x300?text=Product",
+        images: Array.isArray(p.images) ? p.images : [],
+        oldPrice,
+        price: finalPrice,
+        save: Math.max(0, oldPrice - finalPrice),
+        outOfStock: Boolean(p.outOfStock) || Number(p.quantity || 0) <= 0,
+        category: (p.category || "").trim(),
+        createdAt: p.createdAt,
+        isTrending: !!p.isTrending,
+      };
     });
   }, [allProducts]);
 
-  // ✅ Trending = latest products
+  // ✅ Trending
   const trendingProducts = useMemo(() => {
-  return mappedProducts.filter((p) => p.isTrending === true);
-}, [mappedProducts]);
+    return mappedProducts.filter((p) => p.isTrending === true);
+  }, [mappedProducts]);
 
-
-  // ✅ Exact category matching (admin category name)
+  // ✅ Exact category matching
   const normalize = (s) => String(s || "").trim().toLowerCase();
 
   const productsByCategory = useMemo(() => {
@@ -169,8 +175,57 @@ const Ecommerce = () => {
     return productsByCategory.get(normalize(categoryName)) || [];
   };
 
+  // ✅ JSON-LD
+  const jsonLd = useMemo(() => {
+    const itemList = (trendingProducts || []).slice(0, 20).map((p, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: p.title,
+      url: `${SITE_URL}/product/${p.id}`,
+    }));
+
+    return [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: pageTitle,
+        description: pageDescription,
+        url: canonicalUrl,
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: "Trending Products",
+        itemListElement: itemList,
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "Prospect Ecommerce",
+        url: SITE_URL,
+      },
+    ];
+  }, [SITE_URL, canonicalUrl, pageTitle, pageDescription, trendingProducts]);
+
   return (
     <section className=" pt-36">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <section className="max-w-7xl mx-auto px-4 mt-5 pb-20 text-left">
@@ -186,6 +241,8 @@ const Ecommerce = () => {
                 src={img}
                 alt="banner"
                 className="w-full h-[200px] sm:h-[300px] md:h-[350px] object-cover flex-shrink-0"
+                loading="lazy"
+                decoding="async"
               />
             ))}
           </div>
@@ -214,6 +271,8 @@ const Ecommerce = () => {
               <button
                 onClick={prevSlide}
                 className="w-10 h-10 flex items-center justify-center border rounded-full text-[#124734] text-2xl hover:bg-[#A7E1B2]"
+                type="button"
+                aria-label="Previous categories"
               >
                 ←
               </button>
@@ -221,6 +280,8 @@ const Ecommerce = () => {
               <button
                 onClick={nextSlide}
                 className="w-10 h-10 flex items-center justify-center border rounded-full text-[#124734] text-2xl hover:bg-[#A7E1B2]"
+                type="button"
+                aria-label="Next categories"
               >
                 →
               </button>
@@ -244,6 +305,8 @@ const Ecommerce = () => {
                     src={cat.img}
                     alt={cat.name}
                     className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
 
@@ -257,6 +320,7 @@ const Ecommerce = () => {
             <button
               onClick={() => navigate("/categories")}
               className="text-[#124734] text-xl font-bold hover:underline"
+              type="button"
             >
               View All
             </button>
@@ -264,14 +328,12 @@ const Ecommerce = () => {
         </div>
 
         {/* ---------- PRODUCT SLIDERS ---------- */}
-        {/* ✅ Trending first */}
         <ProductSlider
           title="Trending Products"
           products={trendingProducts}
           navigate={navigate}
         />
 
-        {/* ✅ After trending: show slider for EACH admin category */}
         {categories.map((cat) => (
           <ProductSlider
             key={cat.name}
@@ -284,7 +346,6 @@ const Ecommerce = () => {
         {/* ---------- ASK QUESTIONS SECTION ---------- */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="bg-[#A7E1B2]/30 shadow-md rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between border">
-            {/* Left */}
             <div className="w-full md:w-1/2">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#124734] leading-snug">
                 Ask Questions,{" "}
@@ -304,12 +365,13 @@ const Ecommerce = () => {
               </div>
             </div>
 
-            {/* Right Image */}
             <div className="w-full md:w-1/2 flex justify-center mt-8 md:mt-0">
               <img
                 src={contact}
                 alt="Ask Questions"
                 className="w-48 sm:w-60 md:w-80"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>
@@ -340,6 +402,7 @@ const Ecommerce = () => {
               return navigate("/supplier/apply");
             }}
             className="px-7 py-3 bg-[#124734] text-white font-semibold rounded-xl shadow hover:bg-[#0f3928] transition"
+            type="button"
           >
             Become a Supplier
           </button>

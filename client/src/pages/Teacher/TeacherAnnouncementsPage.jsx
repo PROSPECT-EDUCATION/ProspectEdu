@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 
@@ -14,6 +15,13 @@ export default function TeacherAnnouncementsPage() {
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/teacher/announcements`;
+
+  const pageTitle = "Teacher Announcements | ProspectEdu";
+  const pageDescription =
+    "View important announcements for teachers in ProspectEdu. Stay updated with latest notices and updates.";
 
   const load = async () => {
     try {
@@ -35,16 +43,37 @@ export default function TeacherAnnouncementsPage() {
       try {
         await api.post("/announcements/me/mark-all-read");
         window.dispatchEvent(new Event("announcements:refresh"));
-
       } catch (e) {
         // ignore
       }
       load();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Private dashboard page */}
+        <meta name="robots" content="noindex, nofollow" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* ✅ semantic H1 (hidden, no layout impact) */}
+      <h1 className="sr-only">Teacher Announcements</h1>
+
       {/* SIDEBAR */}
       <div
         className="fixed top-0 left-0 h-full transition-all duration-300"
@@ -57,7 +86,7 @@ export default function TeacherAnnouncementsPage() {
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
 
-        <div className="p-6 space-y-4 overflow-y-auto text-left">
+        <main className="p-6 space-y-4 overflow-y-auto text-left">
           {loading ? (
             <p className="text-gray-500">Loading...</p>
           ) : items.length === 0 ? (
@@ -70,7 +99,7 @@ export default function TeacherAnnouncementsPage() {
               />
             ))
           )}
-        </div>
+        </main>
       </div>
 
       {/* MODAL */}

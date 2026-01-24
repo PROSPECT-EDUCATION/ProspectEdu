@@ -1,27 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import Footer from "../../components/Footer";
 import { api } from "../../lib/api";
 
 const uiStatus = (s) => String(s || "").replaceAll("_", " ").toUpperCase();
-
 const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const prettyDate = (iso) => {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   } catch {
     return iso;
   }
 };
 
-// ✅ overall status: full rejected तभी जब सारे items rejected/canceled हों
 const overallStatus = (items = []) => {
   const st = (items || []).map((it) => uiStatus(it.status));
   if (st.length === 0) return "ORDER RECEIVED";
@@ -52,7 +47,37 @@ const OrderConfirmation = () => {
   const { orderId } = useParams();
   const location = useLocation();
 
-  const forcedStatus = location?.state?.forcedStatus; // "CONFIRMED" | "REJECTED"
+  const canonicalUrl =
+    typeof window !== "undefined" ? `${window.location.origin}${location.pathname}` : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: typeof window !== "undefined" ? `${window.location.origin}/` : "/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "My Orders",
+          item: typeof window !== "undefined" ? `${window.location.origin}/my-order` : "/my-order",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Order Confirmation",
+          item: canonicalUrl,
+        },
+      ],
+    };
+  }, [canonicalUrl]);
+
+  const forcedStatus = location?.state?.forcedStatus;
   const forcedReason = location?.state?.reason;
 
   const [loading, setLoading] = useState(true);
@@ -71,35 +96,28 @@ const OrderConfirmation = () => {
 
         let foundOrder = null;
 
-        // ✅ 1) Try direct fetch by param (some backends return {order} or {data})
         try {
           const res = await api.get(`/orders/${orderId}`);
-          foundOrder =
-            res?.data?.order ||
-            res?.data?.data?.order ||
-            res?.data?.data ||
-            null;
-        } catch (e) {
+          foundOrder = res?.data?.order || res?.data?.data?.order || res?.data?.data || null;
+        } catch {
           foundOrder = null;
         }
 
-        // ✅ 2) Fallback: if backend doesn't support /orders/:id, use /orders/mine and find it
         if (!foundOrder) {
           try {
             const mine = await api.get("/orders/mine");
-            const list =
-              mine?.data?.orders || mine?.data?.data?.orders || mine?.data?.data || [];
+            const list = mine?.data?.orders || mine?.data?.data?.orders || mine?.data?.data || [];
             foundOrder =
               (list || []).find((o) => String(o?._id) === String(orderId)) ||
               (list || []).find((o) => String(o?.orderId) === String(orderId)) ||
               null;
-          } catch (e) {
+          } catch {
             foundOrder = null;
           }
         }
 
         setOrder(foundOrder);
-      } catch (e) {
+      } catch {
         setOrder(null);
       } finally {
         setLoading(false);
@@ -147,6 +165,18 @@ const OrderConfirmation = () => {
 
   return (
     <section className="pt-36">
+      <Helmet>
+        <title>Order Confirmation | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View your order confirmation, delivery address, item-wise status, and payment summary on ProspectEdu."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* private page - prevent indexing */}
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-10 pb-20 font-[Open_Sans] text-left">
@@ -171,29 +201,22 @@ const OrderConfirmation = () => {
 
         {!loading && view && (
           <div className="border rounded-2xl bg-white shadow overflow-hidden">
-            {/* TOP BAR */}
             <div className="bg-[#124734] text-white px-5 md:px-8 py-6">
               <p className="text-xs md:text-sm opacity-90">Order Status</p>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-extrabold truncate">
-                    {view.orderId}
-                  </h1>
+                  <h1 className="text-xl md:text-2xl font-extrabold truncate">{view.orderId}</h1>
                   <p className="text-xs md:text-sm opacity-90 mt-1">
                     Date: <b>{view.date}</b> • Items: <b>{view.items.length}</b>
                   </p>
                 </div>
 
-                <span
-                  className="px-4 py-1 rounded-full text-sm font-semibold w-fit"
-                  style={pillStyle(view.status)}
-                >
+                <span className="px-4 py-1 rounded-full text-sm font-semibold w-fit" style={pillStyle(view.status)}>
                   {view.status}
                 </span>
               </div>
             </div>
 
-            {/* MESSAGE BLOCK (CONFIRMED/REJECTED) */}
             <div className="px-5 md:px-8 py-6">
               {view.status === "REJECTED" ? (
                 <div className="border border-red-200 bg-red-50 rounded-2xl p-5">
@@ -216,7 +239,6 @@ const OrderConfirmation = () => {
                 </div>
               )}
 
-              {/* ADDRESS */}
               <div className="mt-6 border rounded-2xl p-4 bg-[#A7E1B2]/10">
                 <p className="text-[#124734] font-bold mb-2">Delivery Address</p>
                 <p className="text-sm md:text-[15px] text-gray-700 leading-relaxed">
@@ -234,14 +256,15 @@ const OrderConfirmation = () => {
                 </p>
               </div>
 
-              {/* ITEMS */}
               <div className="mt-6 space-y-3">
                 {view.items.map((it) => (
                   <div key={it.id} className="flex gap-4 items-center border rounded-2xl p-4">
                     <img
                       src={it.img}
-                      alt=""
+                      alt={it.title ? `${it.title} image` : "Ordered item image"}
                       className="w-16 h-16 object-contain bg-[#A7E1B2]/20 p-2 rounded-xl"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[#124734] truncate">{it.title}</p>
@@ -263,7 +286,6 @@ const OrderConfirmation = () => {
                 ))}
               </div>
 
-              {/* TOTALS */}
               <div className="mt-7 border-t pt-6">
                 <p className="text-[#124734] font-extrabold text-lg mb-3">Payment Summary</p>
 
@@ -288,9 +310,7 @@ const OrderConfirmation = () => {
 
                 <div className="mt-4 p-4 rounded-2xl bg-[#A7E1B2]/25 flex justify-between items-center">
                   <span className="text-[#124734] font-extrabold text-lg">Grand Total</span>
-                  <span className="text-[#124734] font-extrabold text-xl">
-                    {money(view.totals.grandTotal)}
-                  </span>
+                  <span className="text-[#124734] font-extrabold text-xl">{money(view.totals.grandTotal)}</span>
                 </div>
 
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">

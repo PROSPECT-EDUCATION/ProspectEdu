@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
 import ProductNoSlider from "../../components/EcommerceHomeSlider/ProductNoSlider";
 import Footer from "../../components/Footer";
@@ -8,6 +9,12 @@ import { api } from "../../lib/api";
 const ProductListPage = () => {
   const { type } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
 
   // ✅ backend products mapped to same UI shape
   const [allProducts, setAllProducts] = useState([]);
@@ -106,8 +113,88 @@ const ProductListPage = () => {
     return type.replace(/-/g, " ").toUpperCase();
   }, [type]);
 
+  // ✅ SEO helpers
+  const humanTitle = useMemo(() => {
+    const t = pageTitle.replace(/\s+/g, " ").trim();
+    return t ? `${t} | ProspectEdu Store` : "Products | ProspectEdu Store";
+  }, [pageTitle]);
+
+  const metaDesc = useMemo(() => {
+    const base =
+      type === "trending-products"
+        ? "Explore trending products on ProspectEdu Store with best offers and fast delivery."
+        : `Browse ${pageTitle
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .trim()} products on ProspectEdu Store.`;
+    return base.slice(0, 160);
+  }, [type, pageTitle]);
+
+  const breadcrumbJsonLd = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/ecommerce-home`
+              : "/ecommerce-home",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: pageTitle,
+          item: canonicalUrl,
+        },
+      ],
+    };
+  }, [canonicalUrl, pageTitle]);
+
+  const itemListJsonLd = useMemo(() => {
+    // Limit JSON-LD size (SEO best practice)
+    const top = (products || []).slice(0, 20);
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: pageTitle,
+      itemListElement: top.map((p, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: p.title,
+        url:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/product/${p.id}`
+            : `/product/${p.id}`,
+      })),
+    };
+  }, [products, pageTitle]);
+
   return (
     <section className="pt-36">
+      <Helmet>
+        <title>{humanTitle}</title>
+        <meta name="description" content={metaDesc} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* OG */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={humanTitle} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={humanTitle} />
+        <meta name="twitter:description" content={metaDesc} />
+
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(itemListJsonLd)}</script>
+      </Helmet>
+
       <EcomHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-[Open_Sans] pb-20 text-left">

@@ -46,13 +46,10 @@ const ContactUs = () => {
 
   return (
     <section className="max-w-7xl mx-auto px-8 py-20 font-[Open_Sans,sans-serif] text-[#124734]">
-      {/* Heading */}
       <h2 className="text-3xl font-bold mb-2">Contact Us</h2>
       <div className="h-[4px] w-44 bg-[#A7E1B2] mb-12"></div>
 
-      {/* Main Container */}
       <div className="grid grid-cols-1 md:grid-cols-2 bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Left Box */}
         <div className="bg-[#A7E1B2] p-10 text-[#124734]">
           <h3 className="text-2xl font-bold mb-2">Let's Talk with Us</h3>
           <p className="text-gray-700 mb-8">Get free academic counseling & course details.</p>
@@ -83,7 +80,6 @@ const ContactUs = () => {
           </div>
         </div>
 
-        {/* Right Form */}
         <div className="bg-[#F9FAFB] p-10">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <input
@@ -92,6 +88,8 @@ const ContactUs = () => {
               value={form.name}
               onChange={onChange}
               placeholder="Name"
+              autoComplete="name"
+              aria-label="Your full name"
               className="w-full p-3 border rounded-lg bg-white outline-[#1E5631]"
             />
 
@@ -101,6 +99,8 @@ const ContactUs = () => {
               value={form.email}
               onChange={onChange}
               placeholder="Email Address"
+              autoComplete="email"
+              aria-label="Your email address"
               className="w-full p-3 border rounded-lg bg-white outline-[#1E5631]"
             />
 
@@ -112,14 +112,16 @@ const ContactUs = () => {
               placeholder="Phone Number"
               maxLength={10}
               inputMode="numeric"
+              autoComplete="tel"
+              aria-label="Your phone number"
               className="w-full p-3 border rounded-lg bg-white outline-[#1E5631]"
             />
 
-            {/* Select Issue */}
             <select
               name="issue"
               value={form.issue}
               onChange={onChange}
+              aria-label="Select issue type"
               className="w-full p-3 border rounded-lg bg-white outline-[#1E5631]"
             >
               <option>Payment Related Issue</option>
@@ -136,6 +138,7 @@ const ContactUs = () => {
               value={form.message}
               onChange={onChange}
               placeholder="Write Your Message"
+              aria-label="Your message"
               className="w-full p-3 border rounded-lg bg-white outline-[#1E5631]"
             ></textarea>
 

@@ -1,5 +1,5 @@
 // src/pages/Test/TestDetails.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import testImg from "../../assets/test1.webp";
 import whyTestImg from "../../assets/WhyTest.webp";
@@ -9,6 +9,7 @@ import Footer from "../../components/Footer";
 import WhyTestSeries from "../../components/WhyTestSeries";
 import { fetchPublicTestSeriesById } from "../../lib/testSeriesApi";
 import { hasPurchasedSeries } from "../../lib/testPurchaseApi";
+import { Helmet } from "react-helmet-async";
 
 const TestDetails = () => {
   const { id } = useParams();
@@ -22,6 +23,9 @@ const TestDetails = () => {
 
   const token = sessionStorage.getItem("accessToken");
   const isLoggedIn = !!token;
+
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/test-learning/${id}`;
 
   useEffect(() => {
     (async () => {
@@ -38,7 +42,6 @@ const TestDetails = () => {
     })();
   }, [id]);
 
-  // ✅ check purchase only when logged in
   useEffect(() => {
     (async () => {
       if (!isLoggedIn || !id) {
@@ -58,27 +61,65 @@ const TestDetails = () => {
     })();
   }, [id, isLoggedIn]);
 
-  const getStatusColor = (status) => {
-    if (status === "Free Quiz") return "bg-blue-100 text-blue-700 border border-blue-300";
-    if (status === "Upcoming") return "bg-yellow-100 text-yellow-700 border border-yellow-300";
-    if (status === "Live Now") return "bg-green-100 text-green-700 border border-green-300 animate-pulse";
-    if (status === "Test Ended") return "bg-red-100 text-red-700 border border-red-300";
-    return "text-gray-600 border-gray-400";
-  };
-
   const onBuyNow = () => {
     const target = `/checkout-test-learning/${id}`;
-
-    // ✅ not logged in -> go login + store redirect
     if (!isLoggedIn) {
       sessionStorage.setItem("postLoginRedirect", target);
       navigate("/login");
       return;
     }
-
-    // ✅ logged in -> go checkout
     navigate(target);
   };
+
+  const testsList = Array.isArray(test?.tests)
+    ? test.tests
+    : Array.isArray(test?.schedule)
+    ? test.schedule.map((x) => ({ name: x.name }))
+    : [];
+
+  const pageTitle = useMemo(() => {
+    if (!test?.title) return "Test Series | ProspectEdu";
+    return `${test.title} | Test Series | ProspectEdu`;
+  }, [test]);
+
+  const pageDescription = useMemo(() => {
+    if (!test) return "View test series details on ProspectEdu.";
+    const parts = [
+      test.title,
+      test.language ? `Language: ${test.language}` : "",
+      test.totalTest ? `Total Tests: ${test.totalTest}` : "",
+      test.totalQuestion ? `Total Questions: ${test.totalQuestion}` : "",
+    ].filter(Boolean);
+    return parts.join(" • ");
+  }, [test]);
+
+  const ogImage = useMemo(() => {
+    const img = test?.imageUrl || testImg;
+    if (typeof img === "string" && /^https?:\/\//i.test(img)) return img;
+    return `${SITE_URL}${img}`;
+  }, [test, SITE_URL]);
+
+  // ✅ JSON-LD (Product + Offer) works for free/paid series
+  const jsonLd = useMemo(() => {
+    if (!test) return null;
+    const price = Number(test.price || 0);
+    return {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: test.title,
+      description: pageDescription,
+      image: [ogImage],
+      url: canonicalUrl,
+      brand: { "@type": "Brand", name: "ProspectEdu" },
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: price,
+        availability: "https://schema.org/InStock",
+        url: `${SITE_URL}/checkout-test-learning/${id}`,
+      },
+    };
+  }, [test, pageDescription, ogImage, canonicalUrl, SITE_URL, id]);
 
   if (loading) {
     return (
@@ -103,16 +144,27 @@ const TestDetails = () => {
     { icon: "🧾", label: "Evaluation" },
   ];
 
-  // ✅ tests list prefer: test.tests, fallback: test.schedule
-const testsList = Array.isArray(test.tests)
-  ? test.tests
-  : Array.isArray(test.schedule)
-  ? test.schedule.map((x) => ({ name: x.name }))
-  : [];
-
-
   return (
     <section className="bg-[#F9FAFB] text-[#124734] font-[Open_Sans,sans-serif]">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={ogImage} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={ogImage} />
+
+        {jsonLd ? <script type="application/ld+json">{JSON.stringify(jsonLd)}</script> : null}
+      </Helmet>
+
       <Navbar />
 
       <HeaderSection
@@ -134,30 +186,29 @@ const testsList = Array.isArray(test.tests)
         image={test.imageUrl || testImg}
       />
 
-      <div className="max-w-7xl mx-auto mt-12 px-6 md:px-8 flex flex-col md:flex-row gap-8 text-left">
-        {/* Schedule */}
-        {/* Tests Included (names only) */}
-<div className="bg-white rounded-xl shadow-md p-6 w-full md:w-2/3">
-  <h2 className="text-2xl font-semibold mb-6">Tests Included</h2>
+      <main className="max-w-7xl mx-auto mt-12 px-6 md:px-8 flex flex-col md:flex-row gap-8 text-left">
+        <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-2/3">
+          <h2 className="text-2xl font-semibold mb-6">Tests Included</h2>
 
-  {testsList.length === 0 ? (
-    <p className="text-gray-600">No tests available.</p>
-  ) : (
-    <div className="divide-y divide-gray-200">
-      {testsList.map((t, idx) => (
-        <div key={idx} className="py-4 px-2 hover:bg-[#F9FAFB] flex items-center gap-3">
-          <span className="text-purple-700 text-xl">🧾</span>
-          <p className="font-semibold text-[#124734]">{t.name || `Test ${idx + 1}`}</p>
+          {testsList.length === 0 ? (
+            <p className="text-gray-600">No tests available.</p>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {testsList.map((t, idx) => (
+                <div
+                  key={idx}
+                  className="py-4 px-2 hover:bg-[#F9FAFB] flex items-center gap-3"
+                >
+                  <span className="text-purple-700 text-xl">🧾</span>
+                  <p className="font-semibold text-[#124734]">{t.name || `Test ${idx + 1}`}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ))}
-    </div>
-  )}
-</div>
 
-
-        {/* Right Card */}
         <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-1/3 h-fit text-left">
-          <h3 className="text-2xl md:text-3xl font-semibold mb-4">{test.title}</h3>
+          <h1 className="text-2xl md:text-3xl font-semibold mb-4">{test.title}</h1>
 
           <p className="text-gray-700 text-base mb-2">
             <strong>Registration fee - </strong>
@@ -175,7 +226,6 @@ const testsList = Array.isArray(test.tests)
             <li>🧠 Question Type - {test.questionType}</li>
           </ul>
 
-          {/* ✅ Hide Buy Now if purchased */}
           {isLoggedIn && checkingPurchase ? (
             <button className="bg-gray-200 text-gray-600 w-full py-2 mt-6 rounded-md font-medium cursor-wait">
               Checking...
@@ -184,12 +234,13 @@ const testsList = Array.isArray(test.tests)
             <button
               onClick={onBuyNow}
               className="bg-[#1E5631] text-white w-full py-2 mt-6 rounded-md font-medium hover:bg-[#A7E1B2] transition"
+              type="button"
             >
               Buy Now
             </button>
           )}
         </div>
-      </div>
+      </main>
 
       <WhyTestSeries image={whyTestImg} />
       <div className="pt-10">

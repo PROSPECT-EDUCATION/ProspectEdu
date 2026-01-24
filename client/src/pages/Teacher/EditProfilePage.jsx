@@ -1,7 +1,6 @@
-// src/pages/Teacher/EditProfilePage.jsx
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
@@ -10,11 +9,53 @@ import TeacherEditProfileForm from "../../components/Teacher/EditProfile/Teacher
 export default function EditProfilePage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Teacher Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/teacher-dashboard`
+              : "/teacher-dashboard",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Edit Profile",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* ✅ SEO */}
+      <Helmet>
+        <title>Edit Profile | Teacher Dashboard | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Update your teacher profile information securely in the ProspectEdu teacher dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
 
       {/* Sidebar */}
       <div
@@ -22,27 +63,17 @@ export default function EditProfilePage() {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <TeacherSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* Main Content Area */}
-      <div
-        className="flex flex-col flex-1"
-        style={{ marginLeft: sidebarWidth }}
-      >
-
+      <div className="flex flex-col flex-1" style={{ marginLeft: sidebarWidth }}>
         {/* Topbar */}
         <div
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
           style={{ left: sidebarWidth, right: 0 }}
         >
-          <TeacherTopbar
-            isCollapsed={isCollapsed}
-            pageTitle="Edit Profile"
-          />
+          <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Edit Profile" />
         </div>
 
         {/* Breadcrumb */}

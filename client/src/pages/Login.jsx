@@ -2,25 +2,37 @@ import logo from "../assets/logo.png.webp";
 import loginIllustration from "../assets/login-illustration.webp";
 import AuthIllustration from "../components/Auth/AuthIllustration";
 import LoginForm from "../components/Auth/LoginForm";
-import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 
 export default function Login() {
-  useEffect(() => {
-  const meta = document.createElement("meta");
-  meta.name = "robots";
-  meta.content = "noindex, follow";
-  document.head.appendChild(meta);
+  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const canonicalUrl = `${SITE_URL}/login`;
 
-  return () => {
-    document.head.removeChild(meta);
-  };
-}, []);
+  const pageTitle = "Login | ProspectEdu";
+  const pageDescription =
+    "Login to ProspectEdu to access your courses, tests, study materials, and dashboard.";
 
   return (
-    <main
-      className="min-h-screen bg-[#F9FAFB]"
-      aria-labelledby="login-page-heading"
-    >
+    <main className="min-h-screen bg-[#F9FAFB]" aria-labelledby="login-page-heading">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* ✅ Auth pages should NOT be indexed */}
+        <meta name="robots" content="noindex, follow" />
+
+        {/* Social preview (safe even if noindex) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
       {/* ✅ SEO H1 (hidden, no UI impact) */}
       <h1 id="login-page-heading" className="sr-only">
         Login to ProspectEdu
@@ -44,6 +56,7 @@ export default function Login() {
                 alt="ProspectEdu – Online Learning Platform"
                 className="h-12 w-auto"
                 loading="lazy"
+                decoding="async"
               />
               <h2 className="text-2xl font-heading font-semibold text-[#124734]">
                 ProspectEdu

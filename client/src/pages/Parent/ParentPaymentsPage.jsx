@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { paymentsApi } from "../../services/payments";
@@ -15,6 +17,38 @@ function fmtDate(d) {
 }
 
 export default function ParentPaymentsPage() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/parent`
+              : "/parent",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Payments",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
@@ -44,6 +78,18 @@ export default function ParentPaymentsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB]">
+      {/* ✅ SEO */}
+      <Helmet>
+        <title>Parent Payments | ProspectEdu</title>
+        <meta
+          name="description"
+          content="View fee breakdown, payment status and upcoming dues in ProspectEdu parent dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       {/* SIDEBAR */}
       <div className="fixed top-0 left-0 h-full transition-all duration-300" style={{ width: sidebarWidth }}>
         <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -100,7 +146,7 @@ export default function ParentPaymentsPage() {
           {/* FEE TABLE */}
           <div className="bg-white border border-[#E6F4EC] rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[#124734]">Fee Breakdown</h3>
+              <h1 className="text-lg font-semibold text-[#124734]">Fee Breakdown</h1>
               <button
                 onClick={load}
                 className="text-sm px-3 py-2 rounded-lg border border-[#E6F4EC] bg-[#F8FFFA] text-[#124734]"
@@ -180,7 +226,7 @@ export default function ParentPaymentsPage() {
           <div className="bg-white border border-[#E6F4EC] rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-3">
               <CreditCard className="text-[#009846]" />
-              <h3 className="text-lg font-semibold text-[#124734]">Payment Status</h3>
+              <h2 className="text-lg font-semibold text-[#124734]">Payment Status</h2>
             </div>
 
             <div className="bg-[#F8FFFA] p-4 rounded-lg border border-[#E6F4EC]">

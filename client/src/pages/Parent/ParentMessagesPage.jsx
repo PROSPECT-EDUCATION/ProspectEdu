@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { parentDoubtsApi } from "../../lib/parentDoubtsApi";
@@ -176,6 +178,38 @@ function NewDoubtModal({ open, onClose, onCreated }) {
 }
 
 export default function ParentDoubt() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Parent Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/parent`
+              : "/parent",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Messages",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [items, setItems] = useState([]);
@@ -215,18 +249,29 @@ export default function ParentDoubt() {
     });
   }, [items, q]);
 
-  // ✅ now show answeredBy teacher name (not selected.teacher)
   const answeredByName =
     selected?.answeredBy?.name || selected?.answeredBy?.fullName || "Teacher";
 
   return (
     <div className="flex min-h-screen bg-gray-50 overflow-visible">
+      {/* ✅ SEO */}
+      <Helmet>
+        <title>Parent Messages | ProspectEdu</title>
+        <meta
+          name="description"
+          content="Ask teachers doubts, view replies and manage message threads in ProspectEdu parent dashboard."
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <div className="flex-1 flex flex-col">
         <ParentTopbar title="Messages" />
 
-        <div className="p-5 ">  
+        <div className="p-5 ">
           {/* Header */}
           <div className="rounded-3xl border bg-white shadow-sm p-5 mb-4 text-left">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -366,15 +411,11 @@ export default function ParentDoubt() {
                     <div className="text-xs text-gray-500">{formatDate(selected.createdAt)}</div>
                   </div>
 
-                  {/* Parent message */}
                   <div className="mt-5 p-5 rounded-3xl border bg-gray-50">
                     <div className="text-xs font-bold text-gray-700 mb-2">Your Doubt</div>
-                    <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                      {selected.message}
-                    </p>
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{selected.message}</p>
                   </div>
 
-                  {/* Teacher reply */}
                   <div className="mt-4 p-5 rounded-3xl border bg-emerald-50">
                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-900 mb-2">
                       <CheckCircle2 size={14} />
@@ -382,17 +423,12 @@ export default function ParentDoubt() {
                     </div>
 
                     {selected.status === "ANSWERED" && selected.answer ? (
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {selected.answer}
-                      </p>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{selected.answer}</p>
                     ) : (
-                      <p className="text-sm text-gray-600">
-                        No reply yet. Please check back later.
-                      </p>
+                      <p className="text-sm text-gray-600">No reply yet. Please check back later.</p>
                     )}
                   </div>
 
-                  {/* Answer time */}
                   {selected.status === "ANSWERED" && selected.answeredAt ? (
                     <p className="text-[11px] text-gray-500 mt-3">
                       Replied on {formatDate(selected.answeredAt)}

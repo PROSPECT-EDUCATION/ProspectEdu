@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import SupplierSidebar from "../../../components/SupplierEcommerce/Sidebar";
 import SupplierTopbar from "../../../components/SupplierEcommerce/Topbar";
 import { api } from "../../../lib/api"; // ✅ use your axios instance (same used elsewhere)
@@ -35,6 +37,38 @@ const prettyDate = (iso) => {
 };
 
 export default function Orders() {
+  const location = useLocation();
+
+  const canonicalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : location.pathname;
+
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Supplier Dashboard",
+          item:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/supplier`
+              : "/supplier",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Orders",
+          item: canonicalUrl,
+        },
+      ],
+    }),
+    [canonicalUrl]
+  );
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -65,10 +99,10 @@ export default function Orders() {
     for (const o of rawOrders || []) {
       for (const it of o.items || []) {
         list.push({
-          id: o.orderId,                 // show as #ORDxxxxx
-          itemId: it._id,                // needed for status update API
-          paid: true,                    // (optional) keep your Paid/Pending UI. If you add payment later, wire it here.
-          paymentType: "COD",            // placeholder (wire later)
+          id: o.orderId,
+          itemId: it._id,
+          paid: true,
+          paymentType: "COD",
           orderDate: o.createdAt ? prettyDate(o.createdAt) : "",
           qty: Number(it.quantity || 1),
           amount: Number(it.price || 0) * Number(it.quantity || 1),
@@ -96,12 +130,11 @@ export default function Orders() {
   const handleStatusChange = async (itemId, newStatus) => {
     try {
       setUpdatingItemId(itemId);
-      await api.patch(`/orders/items/${itemId}/status`, { status: newStatus }); // ✅ PATCH /api/v1/orders/items/:itemId/status
-      // ✅ ADD THESE 2 LINES HERE (exact place)
-localStorage.setItem("supplierStatsRefresh", String(Date.now()));
-window.dispatchEvent(new Event("supplierStatsRefresh"));
+      await api.patch(`/orders/items/${itemId}/status`, { status: newStatus });
 
-      // update locally without changing layout
+      localStorage.setItem("supplierStatsRefresh", String(Date.now()));
+      window.dispatchEvent(new Event("supplierStatsRefresh"));
+
       setRawOrders((prev) =>
         (prev || []).map((o) => ({
           ...o,
@@ -110,9 +143,6 @@ window.dispatchEvent(new Event("supplierStatsRefresh"));
           ),
         }))
       );
-
-      // optional: if you show stats somewhere else, it will update automatically on reload.
-      // If you want instant recalculation on this page too, you can fetchSupplierOrders();
     } catch (e) {
       console.error("updateItemStatus error:", e);
       alert(e?.response?.data?.message || "Failed to update status");
@@ -123,6 +153,15 @@ window.dispatchEvent(new Event("supplierStatsRefresh"));
 
   return (
     <div className="flex bg-[#F9FAFB] min-h-screen text-left">
+      <Helmet>
+        <title>Supplier Orders | ProspectEdu</title>
+        <meta name="description" content="Manage and update your supplier orders on ProspectEdu." />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* Dashboard/private page */}
+        <meta name="robots" content="noindex, nofollow" />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
+
       <SupplierSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <div
@@ -140,160 +179,160 @@ window.dispatchEvent(new Event("supplierStatsRefresh"));
           )}
 
           {/* ============ MOBILE VIEW (Attractive Cards) ============ */}
-          {!loading && <div className="md:hidden space-y-6">
-            {orders.map((order, i) => (
-              <div
-                key={order.itemId || i}
-                className="bg-white p-4 rounded-2xl shadow border border-[#A7E1B2]/40"
-              >
-                {/* TOP ROW */}
-                <div className="flex justify-between mb-3 items-center gap-3">
-                  <span className="font-semibold text-[#124734]">#{order.id}</span>
-
-                  <div className="flex items-center gap-2">
-                    {/* keep your Paid/Pending chip (layout same) */}
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.paid ? "bg-green-200 text-green-700" : "bg-red-200 text-red-700"
-                      }`}
-                    >
-                      {order.paid ? "Paid" : "Pending"}
-                    </span>
-
-                    {/* ✅ STATUS chip */}
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${pillByStatus(order.status)}`}>
-                      {uiStatus(order.status)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* PRODUCT ROW */}
-                <div className="flex gap-4">
-                  <img
-                    src={order.product.img}
-                    className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2"
-                    alt=""
-                  />
-
-                  <div className="flex-1">
-                    <p className="text-[#124734] font-semibold text-base leading-tight">
-                      {order.product.title}
-                    </p>
-
-                    <p className="text-gray-500 text-xs mt-1">{order.product.category}</p>
-
-                    <p className="text-[#124734] font-bold text-sm mt-2">
-                      ₹{order.amount} <span className="font-normal">• Qty {order.qty}</span>
-                    </p>
-
-                    <p className="text-gray-500 text-xs mt-1">Payment: {order.paymentType}</p>
-                    <p className="text-gray-400 text-xs mt-1">{order.orderDate}</p>
-
-                    {/* ADDRESS */}
-                    <p className="text-gray-600 mt-2 text-xs leading-4">
-                      {order.address.name} , {order.address.city} – {order.address.pincode} ,{order.address.country}
-                      <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
-                    </p>
-
-                    {/* ✅ STATUS CONTROL (small, no layout break) */}
-                    <div className="mt-3">
-                      <select
-                        value={order.status}
-                        disabled={updatingItemId === order.itemId}
-                        onChange={(e) => handleStatusChange(order.itemId, e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border border-[#A7E1B2]/60 bg-white text-[#124734] font-semibold"
-                      >
-                        {statusOptions.map((s) => (
-                          <option key={s} value={s}>
-                            {uiStatus(s)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>}
-
-          {/* ============ DESKTOP VIEW (ORIGINAL - UNTOUCHED) ============ */}
-          {!loading && <div className="hidden md:block">
-            <div className="space-y-6">
+          {!loading && (
+            <div className="md:hidden space-y-6">
               {orders.map((order, i) => (
                 <div
                   key={order.itemId || i}
-                  className="p-6 bg-white rounded-2xl shadow-md border border-[#A7E1B2]/40 hover:shadow-lg transition-all duration-200"
+                  className="bg-white p-4 rounded-2xl shadow border border-[#A7E1B2]/40"
                 >
-                  {/* ORIGINAL DESKTOP TOP ROW (UNCHANGED) */}
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold text-[#124734]">#{order.id}</h3>
+                  <div className="flex justify-between mb-3 items-center gap-3">
+                    <span className="font-semibold text-[#124734]">#{order.id}</span>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <span
-                        className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                          order.paid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          order.paid ? "bg-green-200 text-green-700" : "bg-red-200 text-red-700"
                         }`}
                       >
                         {order.paid ? "Paid" : "Pending"}
                       </span>
 
-                      {/* ✅ STATUS chip */}
-                      <span className={`px-4 py-1 rounded-full text-sm font-semibold ${pillByStatus(order.status)}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${pillByStatus(order.status)}`}>
                         {uiStatus(order.status)}
                       </span>
-
-                      {/* ✅ STATUS dropdown (small, keeps layout) */}
-                      <select
-                        value={order.status}
-                        disabled={updatingItemId === order.itemId}
-                        onChange={(e) => handleStatusChange(order.itemId, e.target.value)}
-                        className="px-3 py-2 rounded-xl border border-[#A7E1B2]/60 bg-white text-[#124734] font-semibold"
-                      >
-                        {statusOptions.map((s) => (
-                          <option key={s} value={s}>
-                            {uiStatus(s)}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                   </div>
 
-                  {/* ORIGINAL DESKTOP GRID (UNCHANGED) */}
-                  <div className="grid grid-cols-[1fr_2fr_0.7fr_1fr_1.3fr] gap-6 items-center">
+                  <div className="flex gap-4">
                     <img
                       src={order.product.img}
-                      alt="product"
-                      className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2 shadow-sm"
+                      className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2"
+                      alt={order.product.title ? `${order.product.title} image` : "Ordered product image"}
+                      loading="lazy"
+                      decoding="async"
                     />
 
-                    <div className="flex flex-col gap-1">
-                      <p className="text-lg font-semibold text-[#124734]">{order.product.title}</p>
-                      <p className="text-gray-600 text-sm">Category: {order.product.category}</p>
-                      <p className="text-gray-500 text-sm">Payment: {order.paymentType}</p>
-                    </div>
+                    <div className="flex-1">
+                      <p className="text-[#124734] font-semibold text-base leading-tight">
+                        {order.product.title}
+                      </p>
 
-                    <div className="flex justify-center">
-                      <span className="px-3 py-1 text-sm font-semibold rounded-full bg-[#A7E1B2]/60 text-[#124734] shadow-sm">
-                        Qty: {order.qty}
-                      </span>
-                    </div>
+                      <p className="text-gray-500 text-xs mt-1">{order.product.category}</p>
 
-                    <div className="text-lg font-extrabold text-[#124734] text-center">
-                      ₹{order.amount}
-                    </div>
+                      <p className="text-[#124734] font-bold text-sm mt-2">
+                        ₹{order.amount} <span className="font-normal">• Qty {order.qty}</span>
+                      </p>
 
-                    <div className="text-sm leading-5 text-gray-700">
-                      <p className="font-semibold">{order.address.name}</p>
-                      <p>{order.address.street}, {order.address.city}</p>
-                      <p>{order.address.state} – {order.address.pincode}</p>
-                      <p>{order.address.country}</p>
-                      <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
+                      <p className="text-gray-500 text-xs mt-1">Payment: {order.paymentType}</p>
+                      <p className="text-gray-400 text-xs mt-1">{order.orderDate}</p>
+
+                      <p className="text-gray-600 mt-2 text-xs leading-4">
+                        {order.address.name} , {order.address.city} – {order.address.pincode} ,{order.address.country}
+                        <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
+                      </p>
+
+                      <div className="mt-3">
+                        <select
+                          value={order.status}
+                          disabled={updatingItemId === order.itemId}
+                          onChange={(e) => handleStatusChange(order.itemId, e.target.value)}
+                          className="w-full px-4 py-2 rounded-xl border border-[#A7E1B2]/60 bg-white text-[#124734] font-semibold"
+                        >
+                          {statusOptions.map((s) => (
+                            <option key={s} value={s}>
+                              {uiStatus(s)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>}
+          )}
+
+          {/* ============ DESKTOP VIEW (ORIGINAL - UNTOUCHED) ============ */}
+          {!loading && (
+            <div className="hidden md:block">
+              <div className="space-y-6">
+                {orders.map((order, i) => (
+                  <div
+                    key={order.itemId || i}
+                    className="p-6 bg-white rounded-2xl shadow-md border border-[#A7E1B2]/40 hover:shadow-lg transition-all duration-200"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold text-[#124734]">#{order.id}</h3>
+
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                            order.paid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                          }`}
+                        >
+                          {order.paid ? "Paid" : "Pending"}
+                        </span>
+
+                        <span className={`px-4 py-1 rounded-full text-sm font-semibold ${pillByStatus(order.status)}`}>
+                          {uiStatus(order.status)}
+                        </span>
+
+                        <select
+                          value={order.status}
+                          disabled={updatingItemId === order.itemId}
+                          onChange={(e) => handleStatusChange(order.itemId, e.target.value)}
+                          className="px-3 py-2 rounded-xl border border-[#A7E1B2]/60 bg-white text-[#124734] font-semibold"
+                        >
+                          {statusOptions.map((s) => (
+                            <option key={s} value={s}>
+                              {uiStatus(s)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-[1fr_2fr_0.7fr_1fr_1.3fr] gap-6 items-center">
+                      <img
+                        src={order.product.img}
+                        alt={order.product.title ? `${order.product.title} image` : "Ordered product image"}
+                        className="w-20 h-20 rounded-lg object-contain bg-[#A7E1B2]/20 p-2 shadow-sm"
+                        loading="lazy"
+                        decoding="async"
+                      />
+
+                      <div className="flex flex-col gap-1">
+                        <p className="text-lg font-semibold text-[#124734]">{order.product.title}</p>
+                        <p className="text-gray-600 text-sm">Category: {order.product.category}</p>
+                        <p className="text-gray-500 text-sm">Payment: {order.paymentType}</p>
+                      </div>
+
+                      <div className="flex justify-center">
+                        <span className="px-3 py-1 text-sm font-semibold rounded-full bg-[#A7E1B2]/60 text-[#124734] shadow-sm">
+                          Qty: {order.qty}
+                        </span>
+                      </div>
+
+                      <div className="text-lg font-extrabold text-[#124734] text-center">₹{order.amount}</div>
+
+                      <div className="text-sm leading-5 text-gray-700">
+                        <p className="font-semibold">{order.address.name}</p>
+                        <p>
+                          {order.address.street}, {order.address.city}
+                        </p>
+                        <p>
+                          {order.address.state} – {order.address.pincode}
+                        </p>
+                        <p>{order.address.country}</p>
+                        <p className="text-gray-500 mt-1">Date: {order.orderDate}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {!loading && orders.length === 0 && (
             <div className="text-center mt-20 text-gray-500 text-xl">No Orders Found</div>
