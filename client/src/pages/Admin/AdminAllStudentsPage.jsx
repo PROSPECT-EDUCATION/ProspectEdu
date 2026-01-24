@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +32,16 @@ export default function AdminStudentsPage() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsUser, setDetailsUser] = useState(null);
   const [detailsProfile, setDetailsProfile] = useState(null);
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Students | ProspectEdu Admin";
+  const pageDescription =
+    "Manage student accounts, view student details, and block or unblock students in ProspectEdu Admin.";
 
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—";
@@ -89,6 +100,23 @@ export default function AdminStudentsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Students</h1>
+
       {/* SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-full z-40 ${
@@ -102,7 +130,11 @@ export default function AdminStudentsPage() {
       </div>
 
       {/* MAIN */}
-      <div className="flex flex-col flex-1" style={{ marginLeft: sidebarWidth }}>
+      <main
+        className="flex flex-col flex-1"
+        style={{ marginLeft: sidebarWidth }}
+        aria-label="Students admin page"
+      >
         {/* TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]"
@@ -118,7 +150,6 @@ export default function AdminStudentsPage() {
             <h2 className="text-2xl font-bold text-[#124734]">
               All Students List
             </h2>
-            
           </div>
 
           {/* CONTROLS */}
@@ -130,6 +161,7 @@ export default function AdminStudentsPage() {
                 setPage(1);
               }}
               className="border px-3 py-2 rounded-md"
+              aria-label="Filter students"
             >
               <option value="all">All</option>
               <option value="blocked">Blocked</option>
@@ -140,6 +172,7 @@ export default function AdminStudentsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border px-3 py-2 rounded-md w-64"
+              aria-label="Search students"
             />
           </div>
 
@@ -162,13 +195,13 @@ export default function AdminStudentsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center">
+                    <td colSpan={8} className="p-6 text-center" aria-live="polite">
                       Loading...
                     </td>
                   </tr>
                 ) : filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center">
+                    <td colSpan={8} className="p-6 text-center" aria-live="polite">
                       No students found
                     </td>
                   </tr>
@@ -227,7 +260,7 @@ export default function AdminStudentsPage() {
             </table>
           </div>
 
-          {/* ✅ PAGINATION – ALWAYS VISIBLE */}
+          {/* PAGINATION */}
           {!loading && (
             <div className="mt-6 flex justify-center">
               <Pagination
@@ -238,11 +271,11 @@ export default function AdminStudentsPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* STUDENT DETAILS MODAL */}
       {detailsOpen && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center px-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col">
             <div className="px-6 py-4 border-b font-semibold text-[#124734]">
               Student Details
@@ -255,45 +288,21 @@ export default function AdminStudentsPage() {
               <Info label="State" value={detailsUser?.state} />
               <Info label="City" value={detailsUser?.city} />
               <Info label="Join Date" value={formatDate(detailsUser?.createdAt)} />
-              <Info
-                label="Last Active"
-                value={formatDateTime(detailsUser?.lastLoginAt)}
-              />
-              <Info
-                label="Status"
-                value={detailsUser?.isActive ? "Active" : "Blocked"}
-              />
+              <Info label="Last Active" value={formatDateTime(detailsUser?.lastLoginAt)} />
+              <Info label="Status" value={detailsUser?.isActive ? "Active" : "Blocked"} />
 
               <Info label="Grade" value={detailsProfile?.grade} />
               <Info label="Stream" value={detailsProfile?.stream} />
-              <Info
-                label="Enrolled"
-                value={detailsProfile?.isEnrolled ? "Yes" : "No"}
-              />
+              <Info label="Enrolled" value={detailsProfile?.isEnrolled ? "Yes" : "No"} />
               <Info label="Gender" value={detailsProfile?.gender} />
               <Info label="Interested In" value={detailsProfile?.interested} />
-              <Info
-                label="Highest Education"
-                value={detailsProfile?.highestEducation}
-              />
-              <Info
-                label="Currently Pursuing"
-                value={detailsProfile?.currentlyPursuing}
-              />
-              <Info
-                label="Preparing For"
-                value={detailsProfile?.preparingFor}
-              />
+              <Info label="Highest Education" value={detailsProfile?.highestEducation} />
+              <Info label="Currently Pursuing" value={detailsProfile?.currentlyPursuing} />
+              <Info label="Preparing For" value={detailsProfile?.preparingFor} />
               <Info label="Occupation" value={detailsProfile?.occupation} />
               <Info label="Last Exam" value={detailsProfile?.lastExamName} />
-              <Info
-                label="Last Exam Year"
-                value={detailsProfile?.lastExamYear}
-              />
-              <Info
-                label="Preparing Since"
-                value={detailsProfile?.preparingSince}
-              />
+              <Info label="Last Exam Year" value={detailsProfile?.lastExamYear} />
+              <Info label="Preparing Since" value={detailsProfile?.preparingSince} />
             </div>
 
             <div className="border-t px-6 py-3 text-right">
@@ -309,22 +318,20 @@ export default function AdminStudentsPage() {
       )}
 
       {/* CONFIRM DIALOG */}
-    <ConfirmDialog
-  open={confirmOpen}
-  title={actionType === "block" ? "Block Student" : "Unblock Student"}
-  message={
-    actionType === "block"
-      ? "Are you sure you want to block this student?"
-      : "Are you sure you want to unblock this student?"
-  }
-  confirmText={actionType === "block" ? "Block" : "Unblock"}  // ✅ add this line
-  onCancel={() => {
-    setConfirmOpen(false);
-    setSelectedStudent(null);
-    setActionType(null);
-  }}
-
-
+      <ConfirmDialog
+        open={confirmOpen}
+        title={actionType === "block" ? "Block Student" : "Unblock Student"}
+        message={
+          actionType === "block"
+            ? "Are you sure you want to block this student?"
+            : "Are you sure you want to unblock this student?"
+        }
+        confirmText={actionType === "block" ? "Block" : "Unblock"}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setSelectedStudent(null);
+          setActionType(null);
+        }}
         onConfirm={async () => {
           if (!selectedStudent?._id) return;
 

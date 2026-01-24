@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
 
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
@@ -16,10 +17,41 @@ export default function CustomerDetailsPage() {
 
   const customer = customers.find((c) => c.id.toString() === id);
 
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = customer
+    ? `Customer #${customer.customerId} | ProspectEdu Admin`
+    : "Customer Details | ProspectEdu Admin";
+
+  const pageDescription = customer
+    ? `View customer profile, status, and recent orders for Customer #${customer.customerId} in ProspectEdu Admin.`
+    : "View customer profile, status, and orders in ProspectEdu Admin.";
+
   if (!customer) return <p className="text-red-500 p-6">Customer not found</p>;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO/accessibility (no layout change) */}
+      <h1 className="sr-only">{`Customer #${customer.customerId}`}</h1>
 
       {/* Sidebar */}
       <div
@@ -31,9 +63,10 @@ export default function CustomerDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: sidebarWidth }}
+        aria-label={`Customer details for customer ${customer.customerId}`}
       >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
@@ -43,18 +76,18 @@ export default function CustomerDetailsPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
-
           {/* Top Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6" aria-label="Customer overview">
             <CustomerInfoCard customer={customer} />
-
             <CustomerStatusUpdate customer={customer} />
-          </div>
+          </section>
 
           {/* Recent Orders */}
-          <CustomerOrdersTable customer={customer} />
+          <section aria-label="Customer orders">
+            <CustomerOrdersTable customer={customer} />
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

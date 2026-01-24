@@ -18,6 +18,31 @@ import {
   X,
 } from "lucide-react";
 
+/* =======================
+   ✅ SEO helper functions
+======================= */
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
 const fmtMMSS = (ms) => {
@@ -32,29 +57,51 @@ export default function LiveTest() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  /* =======================
+     ✅ SEO (NO layout change)
+  ======================= */
+  useEffect(() => {
+    document.title = "Live Test | ProspectEdu Student";
+
+    upsertMeta(
+      "description",
+      "Attempt your live test securely on ProspectEdu. This page is accessible only during the active test window."
+    );
+
+    // Student / exam page → MUST NOT be indexed
+    upsertMeta("robots", "noindex, follow");
+
+    upsertLink("canonical", window.location.href);
+  }, []);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
   const [loading, setLoading] = useState(true);
   const [seriesTitle, setSeriesTitle] = useState("");
-  const [testMeta, setTestMeta] = useState(null); // {name,durationMinutes,totalQuestions,totalMarks}
-  const [questions, setQuestions] = useState([]); // {q,options,marks}
-  const [attempt, setAttempt] = useState(null); // {attemptId, startedAt, expiresAt, answers:[{selectedIndex, review}]}
+  const [testMeta, setTestMeta] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [attempt, setAttempt] = useState(null);
 
   const [activeIdx, setActiveIdx] = useState(0);
-  const [toast, setToast] = useState(null); // {type,msg}
+  const [toast, setToast] = useState(null);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isFull, setIsFull] = useState(false);
 
-  const viewMode = searchParams.get("view"); // optional result later
+  const viewMode = searchParams.get("view");
 
   const autosaveRef = useRef(null);
   const tickRef = useRef(null);
   const submitOnceRef = useRef(false);
 
   const [nowTick, setNowTick] = useState(Date.now());
+
+  /* ---- REST OF YOUR FILE IS UNCHANGED ---- */
+  /* ---- NO JSX / layout touched ---- */
+
+
 
   const expiresAtMs = useMemo(() => {
     return attempt?.expiresAt ? new Date(attempt.expiresAt).getTime() : null;

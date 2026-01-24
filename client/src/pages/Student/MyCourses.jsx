@@ -6,6 +6,19 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
 import { api } from "../../lib/api";
 import CourseCard from "../Courses/CourseCard";
+
+function upsertHeadMeta({ name, content }) {
+  if (!content) return;
+  let el = document.head.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return el;
+}
+
 export default function MyCourses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -17,14 +30,22 @@ export default function MyCourses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ SEO: prevent indexing of private page
+  // ✅ SEO: prevent indexing of private page + set title/description
   useEffect(() => {
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
+    const prevTitle = document.title;
+    document.title = "My Courses | Student Dashboard";
 
-    return () => document.head.removeChild(meta);
+    const robots = upsertHeadMeta({ name: "robots", content: "noindex, follow" });
+    const desc = upsertHeadMeta({
+      name: "description",
+      content: "View and access all courses you are enrolled in.",
+    });
+
+    return () => {
+      document.title = prevTitle;
+      if (robots?.parentNode) robots.parentNode.removeChild(robots);
+      if (desc?.parentNode) desc.parentNode.removeChild(desc);
+    };
   }, []);
 
   // ✅ FETCH MY COURSES (enrollments)
@@ -79,14 +100,10 @@ export default function MyCourses() {
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`${
-          isCollapsed ? "w-20" : "w-64"
-        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        aria-label="Student sidebar"
       >
-        <StudentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
       {/* Main Section */}
@@ -199,23 +216,22 @@ export default function MyCourses() {
               <RefreshComponent message="You haven't purchased any courses!" />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-  {currentList.map((course) => (
-    <CourseCard
-      key={course._id}
-      course={{
-        _id: course._id,
-        slug: course.slug,
-        title: course.title,
-        image: course.img,       // ✅ important mapping
-        mode: course.short,
-        startDate: course.date,
-        price: course.price,
-        isPurchased: true,       // ✅ MyCourses always purchased
-      }}
-    />
-  ))}
-</div>
-
+                {currentList.map((course) => (
+                  <CourseCard
+                    key={course._id}
+                    course={{
+                      _id: course._id,
+                      slug: course.slug,
+                      title: course.title,
+                      image: course.img, // ✅ important mapping
+                      mode: course.short,
+                      startDate: course.date,
+                      price: course.price,
+                      isPurchased: true, // ✅ MyCourses always purchased
+                    }}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </main>

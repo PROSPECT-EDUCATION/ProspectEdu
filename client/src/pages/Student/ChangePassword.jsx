@@ -4,25 +4,49 @@ import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
 import ChangePasswordForm from "../../components/Profile/ChangePasswordForm";
 
+function upsertMeta(name, content) {
+  const key = `meta[name="${name}"]`;
+  let tag = document.head.querySelector(key);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute("name", name);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+}
+
+function upsertLink(rel, href) {
+  const key = `link[rel="${rel}"]`;
+  let tag = document.head.querySelector(key);
+  if (!tag) {
+    tag = document.createElement("link");
+    tag.setAttribute("rel", rel);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("href", href);
+}
+
 export default function ChangePassword() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
-  // ✅ Prevent indexing of private student pages
+  // ✅ SEO (private page => noindex)
   useEffect(() => {
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
+    document.title = "Change Password | Student Dashboard | ProspectEdu";
+    upsertMeta(
+      "description",
+      "Update your ProspectEdu student account password securely from your dashboard."
+    );
+    upsertMeta("robots", "noindex, follow");
 
-    return () => document.head.removeChild(meta);
+    const canonicalUrl = `${window.location.origin}${window.location.pathname}`;
+    upsertLink("canonical", canonicalUrl);
   }, []);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full transition-all duration-300 ${
@@ -36,20 +60,13 @@ export default function ChangePassword() {
       </aside>
 
       {/* Main Content */}
-      <div
-        className="flex flex-col flex-1"
-        style={{ marginLeft: sidebarWidth }}
-      >
-
+      <div className="flex flex-col flex-1" style={{ marginLeft: sidebarWidth }}>
         {/* Topbar */}
         <header
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
           style={{ left: sidebarWidth, right: 0 }}
         >
-          <StudentTopbar
-            isCollapsed={isCollapsed}
-            pageTitle="Change Password"
-          />
+          <StudentTopbar isCollapsed={isCollapsed} pageTitle="Change Password" />
         </header>
 
         {/* Sub-header / Breadcrumb */}

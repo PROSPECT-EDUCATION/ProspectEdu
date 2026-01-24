@@ -5,6 +5,18 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
 import { useNavigate } from "react-router-dom";
 
+function upsertHeadMeta({ name, content }) {
+  if (!content) return;
+  let el = document.head.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return el;
+}
+
 export default function LiveClasses() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("ongoing");
@@ -14,31 +26,37 @@ export default function LiveClasses() {
 
   const ongoingClasses = [];
   const upcomingClasses = [];
-  const currentList =
-    activeTab === "ongoing" ? ongoingClasses : upcomingClasses;
+  const currentList = activeTab === "ongoing" ? ongoingClasses : upcomingClasses;
 
-  // ✅ SEO: prevent indexing of private page
+  // ✅ SEO: prevent indexing of private page + set title/description
   useEffect(() => {
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
+    const prevTitle = document.title;
+    document.title =
+      activeTab === "ongoing"
+        ? "Live Classes (Ongoing) | Student Dashboard"
+        : "Live Classes (Upcoming) | Student Dashboard";
 
-    return () => document.head.removeChild(meta);
-  }, []);
+    const robots = upsertHeadMeta({ name: "robots", content: "noindex, follow" });
+    const desc = upsertHeadMeta({
+      name: "description",
+      content: "View ongoing and upcoming live classes in your student dashboard.",
+    });
+
+    return () => {
+      document.title = prevTitle;
+      if (robots?.parentNode) robots.parentNode.removeChild(robots);
+      if (desc?.parentNode) desc.parentNode.removeChild(desc);
+    };
+  }, [activeTab]);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`${
-          isCollapsed ? "w-20" : "w-64"
-        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        aria-label="Student sidebar"
       >
-        <StudentSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
       {/* Main Section */}
@@ -74,9 +92,7 @@ export default function LiveClasses() {
               </span>{" "}
               / Live Class /{" "}
               <span className="text-[#124734] font-medium">
-                {activeTab === "ongoing"
-                  ? "Ongoing Live Class"
-                  : "Upcoming Live Class"}
+                {activeTab === "ongoing" ? "Ongoing Live Class" : "Upcoming Live Class"}
               </span>
             </p>
 

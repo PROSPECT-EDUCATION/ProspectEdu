@@ -6,6 +6,30 @@ import AnnouncementCard from "../../components/Parent/Announcements/Announcement
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
 import { api } from "../../lib/api";
 
+function upsertMeta(name, content) {
+  if (!content) return () => {};
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return () => {};
+}
+
+function upsertLink(rel, href) {
+  if (!href) return () => {};
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+  return () => {};
+}
+
 export default function StudentAnnouncementsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
@@ -15,11 +39,17 @@ export default function StudentAnnouncementsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ SEO (no layout changes)
+  useEffect(() => {
+    document.title = "Announcements | ProspectEdu Student";
+    upsertMeta("description", "Read the latest announcements for students in ProspectEdu.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location?.href || "");
+  }, []);
+
   const load = async () => {
     try {
       setLoading(true);
-
-      // ✅ student will receive only those announcements where recipients includes "student"
       const res = await api.get("/announcements/me/for-me");
       setItems(res?.data?.data || []);
     } catch (e) {
@@ -31,11 +61,9 @@ export default function StudentAnnouncementsPage() {
 
   useEffect(() => {
     (async () => {
-      // ✅ when opening announcements page -> mark all as read -> bell count becomes 0
       try {
         await api.post("/announcements/me/mark-all-read");
         window.dispatchEvent(new Event("announcements:refresh"));
-
       } catch (e) {
         // ignore
       }
@@ -46,10 +74,7 @@ export default function StudentAnnouncementsPage() {
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
       {/* SIDEBAR */}
-      <div
-        className="fixed top-0 left-0 h-full transition-all duration-300"
-        style={{ width: sidebarWidth }}
-      >
+      <div className="fixed top-0 left-0 h-full transition-all duration-300" style={{ width: sidebarWidth }}>
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
@@ -57,21 +82,19 @@ export default function StudentAnnouncementsPage() {
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <StudentTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
 
-        <div className="p-6 space-y-4 overflow-y-auto text-left">
+        <main className="p-6 space-y-4 overflow-y-auto text-left">
           {loading ? (
             <p className="text-gray-500">Loading...</p>
           ) : items.length === 0 ? (
             <p className="text-gray-500">No announcements.</p>
           ) : (
             items.map((a) => (
-              <AnnouncementCard
-                key={a._id}
-                a={{ ...a, id: a._id }}
-
-              />
+              <div key={a._id} onClick={() => setSelectedAnnouncement({ ...a, id: a._id })} className="cursor-pointer">
+                <AnnouncementCard a={{ ...a, id: a._id }} />
+              </div>
             ))
           )}
-        </div>
+        </main>
       </div>
 
       {/* MODAL */}

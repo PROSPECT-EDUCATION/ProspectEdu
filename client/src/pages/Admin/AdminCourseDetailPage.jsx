@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
@@ -6,13 +7,39 @@ import CourseDetail from "../../components/Admin/Courses/CourseDetail";
 
 export default function AdminCourseDetailPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
- const { courseId } = useParams();
+  const { courseId } = useParams();
   const navigate = useNavigate();
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Course Details | ProspectEdu Admin";
+  const pageDescription =
+    "View and manage course details, content, pricing, and settings in ProspectEdu Admin.";
+
   return (
     <div className="flex bg-[#F9FAFB] h-screen overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Course Details</h1>
 
       {/* SIDEBAR */}
       <div
@@ -20,19 +47,14 @@ export default function AdminCourseDetailPage() {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* MAIN */}
-      <div
+      <main
         className="flex-1 flex flex-col transition-all"
-        style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth}px)`
-        }}
+        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        aria-label="Course details admin page"
       >
         {/* TOPBAR */}
         <div
@@ -44,31 +66,23 @@ export default function AdminCourseDetailPage() {
 
         {/* CONTENT */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
-          {/* Breadcrumb */}
           <div className="w-full flex flex-col items-start ">
-          <div className="text-gray-600 text-sm mb-4">
-            <span
-              className="cursor-pointer hover:text-[#124734]"
-              onClick={() => navigate("/admin-dashboard")}
-            >
-              Dashboard
-            </span>
-            {" / "}
-            <span
-              className="cursor-pointer hover:text-[#124734]"
-              onClick={() => navigate("/admin/courses")}
-            >
-              Courses
-            </span>
-            {" / "}
-            <span className="text-[#124734] font-semibold">Course Details</span>
-          
+            <div className="text-gray-600 text-sm mb-4">
+              <span className="cursor-pointer hover:text-[#124734]" onClick={() => navigate("/admin-dashboard")}>
+                Dashboard
+              </span>
+              {" / "}
+              <span className="cursor-pointer hover:text-[#124734]" onClick={() => navigate("/admin/courses")}>
+                Courses
+              </span>
+              {" / "}
+              <span className="text-[#124734] font-semibold">Course Details</span>
+            </div>
           </div>
-</div>
-          {/* MAIN CONTENT COMPONENT */}
-         <CourseDetail courseId={courseId} />
+
+          <CourseDetail courseId={courseId} />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,4 +1,27 @@
+import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+
+// ✅ SEO helpers
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
 
 export default function StudentQuizResultPage() {
   const { quizId } = useParams();
@@ -7,6 +30,15 @@ export default function StudentQuizResultPage() {
 
   const attempt = state?.attempt;
   const quizTitle = state?.quizTitle;
+
+  // ✅ SEO
+  useEffect(() => {
+    const t = quizTitle ? `Quiz Result - ${quizTitle}` : "Quiz Result";
+    document.title = `${t} | ProspectEdu Student`;
+    upsertMeta("description", "View your quiz score and time taken in ProspectEdu student dashboard.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, [quizTitle]);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">

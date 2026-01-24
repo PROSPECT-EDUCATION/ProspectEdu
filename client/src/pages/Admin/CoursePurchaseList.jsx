@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Search, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
@@ -54,6 +55,17 @@ export default function PurchaseList() {
   const limit = 15;
 
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Course Purchases | ProspectEdu Admin";
+  const pageDescription =
+    "View and manage course purchases, revenue, payment statuses, and provider details in ProspectEdu Admin.";
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(Number(total || 0) / limit));
@@ -124,17 +136,42 @@ export default function PurchaseList() {
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO (no layout change) */}
+      <h1 className="sr-only">Course Purchases</h1>
+
       {/* SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-screen bg-[#124734] transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <AdminSidebar
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+        />
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
+      <main
+        className="flex-1 flex flex-col"
+        style={{ marginLeft: sidebarWidth }}
+        aria-label="Course purchases admin page"
+      >
         {/* TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
@@ -198,6 +235,7 @@ export default function PurchaseList() {
                       onChange={(e) => setQ(e.target.value)}
                       placeholder="Student name/email/phone, course, purchaseId, orderId..."
                       className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                      aria-label="Search purchases"
                     />
                   </div>
                   <button
@@ -219,6 +257,7 @@ export default function PurchaseList() {
                     setStatus(e.target.value);
                   }}
                   className="mt-1 w-full py-2 px-3 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                  aria-label="Filter by status"
                 >
                   <option value="all">All</option>
                   <option value="paid">Paid</option>
@@ -238,6 +277,7 @@ export default function PurchaseList() {
                     setProvider(e.target.value);
                   }}
                   className="mt-1 w-full py-2 px-3 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                  aria-label="Filter by payment provider"
                 >
                   <option value="all">All</option>
                   <option value="razorpay">Razorpay</option>
@@ -256,6 +296,7 @@ export default function PurchaseList() {
                     setSort(e.target.value);
                   }}
                   className="mt-1 w-full py-2 px-3 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                  aria-label="Sort purchases"
                 >
                   <option value="createdAt_desc">Newest first</option>
                   <option value="createdAt_asc">Oldest first</option>
@@ -273,12 +314,14 @@ export default function PurchaseList() {
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
                     className="w-full py-2 px-3 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                    aria-label="From date"
                   />
                   <input
                     type="date"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
                     className="w-full py-2 px-3 rounded-lg border border-[#A7E1B2]/70 focus:outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                    aria-label="To date"
                   />
                   <button
                     type="button"
@@ -302,9 +345,7 @@ export default function PurchaseList() {
               </button>
             </div>
 
-            {error ? (
-              <div className="mt-3 text-sm text-red-600">{error}</div>
-            ) : null}
+            {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
           </div>
 
           {/* TABLE */}
@@ -329,13 +370,21 @@ export default function PurchaseList() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={10} className="px-4 py-8 text-center text-sm text-[#5B7065]">
+                      <td
+                        colSpan={10}
+                        className="px-4 py-8 text-center text-sm text-[#5B7065]"
+                        aria-live="polite"
+                      >
                         Loading purchases...
                       </td>
                     </tr>
                   ) : rows.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-4 py-10 text-center text-sm text-[#5B7065]">
+                      <td
+                        colSpan={10}
+                        className="px-4 py-10 text-center text-sm text-[#5B7065]"
+                        aria-live="polite"
+                      >
                         No purchases found
                       </td>
                     </tr>
@@ -360,12 +409,16 @@ export default function PurchaseList() {
                               {safe(student.email)} · {safe(student.phone)}
                             </div>
                             {student.isActive === false ? (
-                              <div className="text-xs text-red-600 mt-0.5">Blocked/Inactive</div>
+                              <div className="text-xs text-red-600 mt-0.5">
+                                Blocked/Inactive
+                              </div>
                             ) : null}
                           </td>
 
                           <td className="px-4 py-3 text-sm">
-                            <div className="font-medium text-gray-900">{safe(course.title)}</div>
+                            <div className="font-medium text-gray-900">
+                              {safe(course.title)}
+                            </div>
                             <div className="text-xs text-gray-500">
                               {safe(course.category, "")}
                             </div>
@@ -450,10 +503,11 @@ export default function PurchaseList() {
           </div>
 
           <p className="text-xs text-[#5B7065] mt-3">
-            Tip: Search supports Student name/email/phone, Course title, PurchaseId, Razorpay Order/Payment Id.
+            Tip: Search supports Student name/email/phone, Course title, PurchaseId,
+            Razorpay Order/Payment Id.
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

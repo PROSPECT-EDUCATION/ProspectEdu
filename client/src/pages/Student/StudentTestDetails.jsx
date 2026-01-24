@@ -6,6 +6,28 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
 import { fetchMySeriesDetails } from "../../lib/testPurchaseApi";
 
+// ✅ SEO helpers (no layout impact)
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 const fmtDateTime = (iso) => {
   if (!iso) return "—";
   try {
@@ -92,6 +114,15 @@ export default function StudentTestDetails() {
       setLoading(false);
     }
   }, [id]);
+
+  // ✅ SEO (private student page => noindex)
+  useEffect(() => {
+    const title = series?.title ? `${series.title} | Test Series Details` : "Test Series Details";
+    document.title = `${title} | ProspectEdu Student`;
+    upsertMeta("description", "View your test series details, live tests, attempts and reports in ProspectEdu.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, [series?.title]);
 
   // ✅ initial load
   useEffect(() => {
@@ -217,6 +248,8 @@ export default function StudentTestDetails() {
                             src={series?.imageUrl || "/src/assets/test1.webp"}
                             alt={seriesTitle}
                             className="w-full h-36 object-contain"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       </div>
@@ -260,7 +293,6 @@ export default function StudentTestDetails() {
                           </div>
                         </div>
 
-                        {/* ✅ Progress Bar (now updates correctly after submission due to re-fetch) */}
                         <div className="mt-5">
                           <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-semibold text-[#124734]">Your Progress</p>
@@ -364,8 +396,7 @@ export default function StudentTestDetails() {
                                   <div className="text-xs text-[#5B7065]">
                                     {isAttempted ? (
                                       <>
-                                        Score: <b>{test?.attempt?.score ?? "—"}</b> /{" "}
-                                        {test?.attempt?.totalMarks ?? "—"}
+                                        Score: <b>{test?.attempt?.score ?? "—"}</b> / {test?.attempt?.totalMarks ?? "—"}
                                       </>
                                     ) : status === "upcoming" ? (
                                       "You can attempt when it becomes live."

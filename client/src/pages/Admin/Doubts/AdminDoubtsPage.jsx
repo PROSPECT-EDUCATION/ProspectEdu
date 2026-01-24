@@ -1,11 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
 
 const fmt = (iso) => {
   try {
-    return new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return new Date(iso).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return iso;
   }
@@ -23,8 +30,23 @@ export default function AdminDoubtsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
-  const accessToken = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
-  const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${accessToken}` } }), [accessToken]);
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Doubts | ProspectEdu Admin";
+  const pageDescription =
+    "View Ask Doubt submissions, change doubt status, and send answers to users via email in ProspectEdu Admin.";
+
+  const accessToken =
+    sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+  const authHeaders = useMemo(
+    () => ({ headers: { Authorization: `Bearer ${accessToken}` } }),
+    [accessToken]
+  );
 
   const [loading, setLoading] = useState(true);
   const [doubts, setDoubts] = useState([]);
@@ -39,7 +61,10 @@ export default function AdminDoubtsPage() {
   const fetchDoubts = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/doubts/admin", { ...authHeaders, params: { status: filterStatus, q } });
+      const res = await api.get("/doubts/admin", {
+        ...authHeaders,
+        params: { status: filterStatus, q },
+      });
       setDoubts(res.data?.data || []);
     } catch (e) {
       alert(e?.response?.data?.message || "Failed to load doubts");
@@ -73,7 +98,11 @@ export default function AdminDoubtsPage() {
 
     setSending(true);
     try {
-      const res = await api.post(`/doubts/admin/${openId}/answer`, { answer: answerText }, authHeaders);
+      const res = await api.post(
+        `/doubts/admin/${openId}/answer`,
+        { answer: answerText },
+        authHeaders
+      );
       const updated = res.data?.data;
 
       setDoubts((prev) => prev.map((d) => (d._id === openId ? updated : d)));
@@ -89,11 +118,34 @@ export default function AdminDoubtsPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <div className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Doubts</h1>
+
+      <div
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+      >
         <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      <div className="flex flex-col flex-1 h-screen transition-all duration-300" style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}>
+      <main
+        className="flex flex-col flex-1 h-screen transition-all duration-300"
+        style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+        aria-label="Doubts admin page"
+      >
         <div className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]" style={{ left: sidebarWidthPx, right: 0 }}>
           <AdminTopbar pageTitle="Doubts" />
         </div>
@@ -108,7 +160,11 @@ export default function AdminDoubtsPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2">
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border rounded-xl px-4 py-2">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="border rounded-xl px-4 py-2"
+                >
                   <option value="ALL">All</option>
                   <option value="PENDING">Pending</option>
                   <option value="IN_PROGRESS">In Progress</option>
@@ -116,9 +172,17 @@ export default function AdminDoubtsPage() {
                   <option value="CLOSED">Closed</option>
                 </select>
 
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name/email/phone/type" className="border rounded-xl px-4 py-2 w-full sm:w-[280px]" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search name/email/phone/type"
+                  className="border rounded-xl px-4 py-2 w-full sm:w-[280px]"
+                />
 
-                <button onClick={fetchDoubts} className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:bg-[#0B2F23]">
+                <button
+                  onClick={fetchDoubts}
+                  className="px-5 py-2 rounded-xl bg-[#124734] text-white font-semibold hover:bg-[#0B2F23]"
+                >
                   Search
                 </button>
               </div>
@@ -129,15 +193,18 @@ export default function AdminDoubtsPage() {
           <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div className="p-5 border-b flex items-center justify-between">
               <h3 className="text-lg font-semibold text-[#124734]">All Doubts</h3>
-              <button onClick={fetchDoubts} className="px-4 py-2 rounded-xl border hover:bg-gray-50 font-semibold text-sm">
+              <button
+                onClick={fetchDoubts}
+                className="px-4 py-2 rounded-xl border hover:bg-gray-50 font-semibold text-sm"
+              >
                 Refresh
               </button>
             </div>
 
             {loading ? (
-              <div className="p-6 text-gray-600">Loading…</div>
+              <div className="p-6 text-gray-600" aria-live="polite">Loading…</div>
             ) : doubts.length === 0 ? (
-              <div className="p-6 text-gray-600">No doubts found.</div>
+              <div className="p-6 text-gray-600" aria-live="polite">No doubts found.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -161,11 +228,14 @@ export default function AdminDoubtsPage() {
                         </td>
                         <td className="px-4 py-3">{d.doubtType}</td>
                         <td className="px-4 py-3">
-                          <div className="text-gray-800 whitespace-pre-line max-w-[420px]">
-                            {d.doubt}
-                          </div>
+                          <div className="text-gray-800 whitespace-pre-line max-w-[420px]">{d.doubt}</div>
                           {d.imageUrl ? (
-                            <a className="text-xs text-[#124734] font-semibold underline" href={d.imageUrl} target="_blank" rel="noreferrer">
+                            <a
+                              className="text-xs text-[#124734] font-semibold underline"
+                              href={d.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
                               View Image
                             </a>
                           ) : null}
@@ -176,6 +246,7 @@ export default function AdminDoubtsPage() {
                             className="mt-2 border rounded-lg px-2 py-1 text-xs"
                             value={d.status}
                             onChange={(e) => updateStatus(d._id, e.target.value)}
+                            aria-label={`Update status for ${d.name}`}
                           >
                             <option value="PENDING">PENDING</option>
                             <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -185,7 +256,10 @@ export default function AdminDoubtsPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{fmt(d.createdAt)}</td>
                         <td className="px-4 py-3 text-right">
-                          <button onClick={() => openAnswer(d)} className="px-4 py-2 rounded-xl bg-[#009846] text-white font-semibold hover:bg-green-700">
+                          <button
+                            onClick={() => openAnswer(d)}
+                            className="px-4 py-2 rounded-xl bg-[#009846] text-white font-semibold hover:bg-green-700"
+                          >
                             Answer
                           </button>
                         </td>
@@ -199,7 +273,7 @@ export default function AdminDoubtsPage() {
 
           {/* ANSWER MODAL */}
           {openId && (
-            <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4" role="dialog" aria-modal="true">
               <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-[#124734]">Send Answer to Email</h3>
@@ -208,7 +282,9 @@ export default function AdminDoubtsPage() {
                   </button>
                 </div>
 
-                <p className="text-sm text-gray-600 mt-1">Write the response. Clicking Send will email the user and mark status as RESOLVED.</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Write the response. Clicking Send will email the user and mark status as RESOLVED.
+                </p>
 
                 <textarea
                   className="w-full border rounded-xl p-3 mt-4 min-h-[180px]"
@@ -232,9 +308,8 @@ export default function AdminDoubtsPage() {
               </div>
             </div>
           )}
-
         </div>
-      </div>
+      </main>
     </div>
   );
 }

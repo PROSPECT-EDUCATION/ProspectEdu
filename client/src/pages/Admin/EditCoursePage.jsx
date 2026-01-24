@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
-import { coursesApi } from "../../services/courses"; // ✅ adjust path if needed
+import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
 import { uploadsApi } from "../../services/uploads";
+
 export default function EditCoursePage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -13,6 +15,17 @@ export default function EditCoursePage() {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Edit Course | ProspectEdu Admin";
+  const pageDescription =
+    "Edit course details like title, category, professors, pricing, tags, and image in ProspectEdu Admin.";
 
   const [tagInput, setTagInput] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
@@ -36,18 +49,22 @@ export default function EditCoursePage() {
   const [date, setDate] = useState("");
   const [tags, setTags] = useState([]);
   const [img, setImg] = useState("");
-useEffect(() => {
-  (async () => {
-    try {
-      const res = await usersApi.listTeachers();
-      setTeacherOptions(res.data.teachers || []);
-    } catch (e) {
-      showToast(e?.response?.data?.message || "Failed to load teachers", "error");
-    }
-  })();
-}, []);
 
-  // ✅ Fetch course from backend
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await usersApi.listTeachers();
+        setTeacherOptions(res.data.teachers || []);
+      } catch (e) {
+        showToast(
+          e?.response?.data?.message || "Failed to load teachers",
+          "error"
+        );
+      }
+    })();
+  }, []);
+
+  // Fetch course
   useEffect(() => {
     const fetchCourse = async () => {
       try {
@@ -55,11 +72,14 @@ useEffect(() => {
         setError("");
         const res = await coursesApi.adminGet(courseId);
         const course = res.data.course;
+
         setSelectedTeacherIds(
-  course.assignedTeachers?.length
-    ? course.assignedTeachers.map((t) => (typeof t === "string" ? t : t._id))
-    : [""]
-);
+          course.assignedTeachers?.length
+            ? course.assignedTeachers.map((t) =>
+                typeof t === "string" ? t : t._id
+              )
+            : [""]
+        );
 
         setTitle(course.title || "");
         setCategory(course.category || "");
@@ -83,21 +103,22 @@ useEffect(() => {
     if (courseId) fetchCourse();
   }, [courseId]);
 
-const handlePickImage = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handlePickImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  try {
-    setUploadingImg(true);
-    const res = await uploadsApi.uploadCourseImage(file);
-    setImg(res.data.url); // ✅ this is what will be saved in DB
-    showToast("Image uploaded!", "success");
-  } catch (err) {
-    showToast(err?.response?.data?.message || "Image upload failed", "error");
-  } finally {
-    setUploadingImg(false);
-  }
-};
+    try {
+      setUploadingImg(true);
+      const res = await uploadsApi.uploadCourseImage(file);
+      setImg(res.data.url);
+      showToast("Image uploaded!", "success");
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Image upload failed", "error");
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
   // Tags
   const handleAddTag = () => setShowTagInput(true);
 
@@ -114,53 +135,39 @@ const handlePickImage = async (e) => {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  // Professors
-  const handleAddProfessor = () => setProfessors([...professors, ""]);
-
-  const handleProfessorChange = (index, value) => {
-    const updated = [...professors];
-    updated[index] = value;
-    setProfessors(updated);
-  };
-
-  // ✅ Submit -> PATCH backend
+  // Submit -> PATCH backend
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setSaving(true);
 
-     const teacherIds = selectedTeacherIds.filter(Boolean);
+      const teacherIds = selectedTeacherIds.filter(Boolean);
+      const professorNames = teacherIds
+        .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
+        .filter(Boolean);
 
-const professorNames = teacherIds
-  .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
-  .filter(Boolean);
-
-const payload = {
-  title,
-  category,
-  short,
-  info,
-  description,
-  professors: professorNames,        // optional display
-  assignedTeachers: teacherIds,      // ✅ real linkage
-  price: Number(price || 0),
-  discount: Number(discount || 0),
-  tax: Number(tax || 0),
-  date,
-  tags,
-  img,
-};
-
+      const payload = {
+        title,
+        category,
+        short,
+        info,
+        description,
+        professors: professorNames,
+        assignedTeachers: teacherIds,
+        price: Number(price || 0),
+        discount: Number(discount || 0),
+        tax: Number(tax || 0),
+        date,
+        tags,
+        img,
+      };
 
       await coursesApi.adminUpdate(courseId, payload);
 
-showToast("Course updated successfully!", "success");
-
-window.dispatchEvent(new Event("course_refresh")); // ✅ add this
-
-navigate(`/admin/courses/${courseId}`);
-// go back to detail page
+      showToast("Course updated successfully!", "success");
+      window.dispatchEvent(new Event("course_refresh"));
+      navigate(`/admin/courses/${courseId}`);
     } catch (e) {
       showToast(e?.response?.data?.message || "Failed to update course", "error");
     } finally {
@@ -173,22 +180,43 @@ navigate(`/admin/courses/${courseId}`);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Edit Course</h1>
+
       {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <AdminSidebar
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+        />
       </div>
 
       {/* Main Content Area */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
         style={{
           marginLeft: sidebarWidth,
           width: `calc(100vw - ${sidebarWidth}px)`,
         }}
+        aria-label="Edit course admin page"
       >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
@@ -205,8 +233,6 @@ navigate(`/admin/courses/${courseId}`);
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* (your UI inputs stay EXACTLY the same) */}
-
               {/* Title */}
               <div>
                 <label className="font-medium text-gray-700">Course Title</label>
@@ -231,7 +257,9 @@ navigate(`/admin/courses/${courseId}`);
 
               {/* Short */}
               <div>
-                <label className="font-medium text-gray-700">Short Description</label>
+                <label className="font-medium text-gray-700">
+                  Short Description
+                </label>
                 <input
                   type="text"
                   value={short}
@@ -242,7 +270,9 @@ navigate(`/admin/courses/${courseId}`);
 
               {/* Info */}
               <div>
-                <label className="font-medium text-gray-700">Course Information</label>
+                <label className="font-medium text-gray-700">
+                  Course Information
+                </label>
                 <textarea
                   value={info}
                   onChange={(e) => setInfo(e.target.value)}
@@ -253,7 +283,9 @@ navigate(`/admin/courses/${courseId}`);
 
               {/* Description */}
               <div>
-                <label className="font-medium text-gray-700">Course Description</label>
+                <label className="font-medium text-gray-700">
+                  Course Description
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -264,52 +296,52 @@ navigate(`/admin/courses/${courseId}`);
 
               {/* Professors */}
               <div>
-  <label className="font-medium text-gray-700">Professors</label>
+                <label className="font-medium text-gray-700">Professors</label>
 
-  {selectedTeacherIds.map((tid, index) => (
-    <div key={index} className="w-full mt-2 flex gap-2">
-      <select
-        value={tid}
-        onChange={(e) => {
-          const updated = [...selectedTeacherIds];
-          updated[index] = e.target.value;
-          setSelectedTeacherIds(updated);
-        }}
-        className="flex-1 p-2 border rounded"
-      >
-        <option value="">Select Teacher</option>
-        {teacherOptions.map((t) => (
-          <option key={t._id} value={t._id}>
-            {t.fullName}
-          </option>
-        ))}
-      </select>
+                {selectedTeacherIds.map((tid, index) => (
+                  <div key={index} className="w-full mt-2 flex gap-2">
+                    <select
+                      value={tid}
+                      onChange={(e) => {
+                        const updated = [...selectedTeacherIds];
+                        updated[index] = e.target.value;
+                        setSelectedTeacherIds(updated);
+                      }}
+                      className="flex-1 p-2 border rounded"
+                    >
+                      <option value="">Select Teacher</option>
+                      {teacherOptions.map((t) => (
+                        <option key={t._id} value={t._id}>
+                          {t.fullName}
+                        </option>
+                      ))}
+                    </select>
 
-      {/* Remove button (only show if more than 1 row) */}
-      {selectedTeacherIds.length > 1 && (
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedTeacherIds(selectedTeacherIds.filter((_, i) => i !== index));
-          }}
-          className="px-3 border rounded hover:bg-gray-100"
-          title="Remove"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  ))}
+                    {selectedTeacherIds.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTeacherIds(
+                            selectedTeacherIds.filter((_, i) => i !== index)
+                          );
+                        }}
+                        className="px-3 border rounded hover:bg-gray-100"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
 
-  <button
-    type="button"
-    onClick={() => setSelectedTeacherIds([...selectedTeacherIds, ""])}
-    className="mt-2 text-sm text-[#124734] underline"
-  >
-    + Add another professor
-  </button>
-</div>
-
+                <button
+                  type="button"
+                  onClick={() => setSelectedTeacherIds([...selectedTeacherIds, ""])}
+                  className="mt-2 text-sm text-[#124734] underline"
+                >
+                  + Add another professor
+                </button>
+              </div>
 
               {/* Price */}
               <div>
@@ -346,7 +378,9 @@ navigate(`/admin/courses/${courseId}`);
 
               {/* Date */}
               <div>
-                <label className="font-medium text-gray-700">Course Start Date</label>
+                <label className="font-medium text-gray-700">
+                  Course Start Date
+                </label>
                 <input
                   type="text"
                   value={date}
@@ -392,35 +426,37 @@ navigate(`/admin/courses/${courseId}`);
                 )}
               </div>
 
-              {/* Image URL */}
-           {/* Image Upload */}
-<div>
-  <label className="font-medium text-gray-700">Course Image</label>
+              {/* Image Upload */}
+              <div>
+                <label className="font-medium text-gray-700">Course Image</label>
 
-  <div className="mt-2 flex items-center gap-3">
-    <input type="file" accept="image/*" onChange={handlePickImage} />
-    {uploadingImg && <span className="text-sm text-gray-500">Uploading...</span>}
-  </div>
+                <div className="mt-2 flex items-center gap-3">
+                  <input type="file" accept="image/*" onChange={handlePickImage} />
+                  {uploadingImg && (
+                    <span className="text-sm text-gray-500">Uploading...</span>
+                  )}
+                </div>
 
-  {/* Preview */}
-  <div className="mt-3">
-    <img
-      src={img || "/placeholder-course.png"}
-      alt="course"
-      className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
-    />
-  </div>
+                {/* Preview */}
+                <div className="mt-3">
+                  <img
+                    src={img || "/placeholder-course.png"}
+                    alt={title ? `${title} course image` : "Course image preview"}
+                    className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
 
-  {/* Optional: keep URL visible (debug) */}
-  <input
-    type="text"
-    value={img}
-    onChange={(e) => setImg(e.target.value)}
-    className="w-full mt-3 p-2 border rounded"
-    placeholder="Image URL will appear here after upload"
-  />
-</div>
-
+                {/* Optional URL visible */}
+                <input
+                  type="text"
+                  value={img}
+                  onChange={(e) => setImg(e.target.value)}
+                  className="w-full mt-3 p-2 border rounded"
+                  placeholder="Image URL will appear here after upload"
+                />
+              </div>
 
               {/* Buttons */}
               <div className="flex gap-4 mt-6">
@@ -441,10 +477,9 @@ navigate(`/admin/courses/${courseId}`);
                 </button>
               </div>
             </form>
-
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -4,6 +4,20 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import AskDoubtModal from "../../components/Student/AskDoubtModal";
 import { api } from "../../lib/api";
 
+function upsertHeadMeta({ name, property, content }) {
+  if (!content) return;
+  const selector = name ? `meta[name="${name}"]` : `meta[property="${property}"]`;
+  let el = document.head.querySelector(selector);
+  if (!el) {
+    el = document.createElement("meta");
+    if (name) el.setAttribute("name", name);
+    if (property) el.setAttribute("property", property);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return el;
+}
+
 export default function Doubts() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
@@ -18,7 +32,6 @@ export default function Doubts() {
   const [sending, setSending] = useState(false);
   const didFirstLoadRef = useRef(false);
 
-
   // ✅ unread tracking (student sees unread TEACHER messages)
   const [lastSeenMap, setLastSeenMap] = useState(() => {
     try {
@@ -27,14 +40,14 @@ export default function Doubts() {
       return {};
     }
   });
+
   // ✅ prevent UI "refresh" (re-render) unless data changed
-const lastListStampRef = useRef("");
-const lastThreadStampRef = useRef("");
+  const lastListStampRef = useRef("");
+  const lastThreadStampRef = useRef("");
 
-// ✅ smart scroll (don’t jump if user scrolls up)
-const threadBoxRef = useRef(null);
-const stickToBottomRef = useRef(true);
-
+  // ✅ smart scroll (don’t jump if user scrolls up)
+  const threadBoxRef = useRef(null);
+  const stickToBottomRef = useRef(true);
 
   const markSeen = (ticketId) => {
     const updated = { ...lastSeenMap, [ticketId]: new Date().toISOString() };
@@ -58,68 +71,77 @@ const stickToBottomRef = useRef(true);
   };
 
   const load = async (silent = false) => {
-  // ✅ only show loading on first load (not on polling)
-  if (!silent && !didFirstLoadRef.current) setLoading(true);
+    // ✅ only show loading on first load (not on polling)
+    if (!silent && !didFirstLoadRef.current) setLoading(true);
 
-  try {
-    const res = await api.get("/support-tickets/me");
-    const next = res?.data?.data || [];
+    try {
+      const res = await api.get("/support-tickets/me");
+      const next = res?.data?.data || [];
 
-    const stamp = next
-      .map((t) => `${t._id}:${t.lastMessageAt || t.updatedAt || t.createdAt || ""}`)
-      .join("|");
+      const stamp = next
+        .map((t) => `${t._id}:${t.lastMessageAt || t.updatedAt || t.createdAt || ""}`)
+        .join("|");
 
-    if (stamp !== lastListStampRef.current) {
-      lastListStampRef.current = stamp;
-      setItems(next);
-    }
-
-    didFirstLoadRef.current = true;
-  } catch {
-    // ✅ don't setItems([]) here during polling (causes list blink)
-  } finally {
-    if (!silent) setLoading(false);
-  }
-};
-
-
-
- const loadThread = async (id) => {
-  try {
-    const res = await api.get(`/support-tickets/${id}`);
-    const next = res?.data?.data || null;
-
-    // ✅ stamp based on message count + last message time
-    const msgs = next?.messages || [];
-    const last = msgs.length ? msgs[msgs.length - 1] : null;
-    const stamp = `${next?._id || ""}:${msgs.length}:${last?.createdAt || ""}:${next?.assignedTeacher?._id || next?.assignedTeacher || ""}`;
-
-    if (stamp !== lastThreadStampRef.current) {
-      lastThreadStampRef.current = stamp;
-      setThread(next);
-
-      // ✅ auto-scroll ONLY if user is at bottom
-      if (stickToBottomRef.current) {
-        requestAnimationFrame(() => {
-          threadBoxRef.current?.scrollTo({
-            top: threadBoxRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        });
+      if (stamp !== lastListStampRef.current) {
+        lastListStampRef.current = stamp;
+        setItems(next);
       }
+
+      didFirstLoadRef.current = true;
+    } catch {
+      // ✅ don't setItems([]) here during polling (causes list blink)
+    } finally {
+      if (!silent) setLoading(false);
     }
-  } catch {
-    // don’t keep setting null repeatedly — flicker
-  }
-};
+  };
 
+  const loadThread = async (id) => {
+    try {
+      const res = await api.get(`/support-tickets/${id}`);
+      const next = res?.data?.data || null;
 
+      // ✅ stamp based on message count + last message time
+      const msgs = next?.messages || [];
+      const last = msgs.length ? msgs[msgs.length - 1] : null;
+      const stamp = `${next?._id || ""}:${msgs.length}:${last?.createdAt || ""}:${
+        next?.assignedTeacher?._id || next?.assignedTeacher || ""
+      }`;
+
+      if (stamp !== lastThreadStampRef.current) {
+        lastThreadStampRef.current = stamp;
+        setThread(next);
+
+        // ✅ auto-scroll ONLY if user is at bottom
+        if (stickToBottomRef.current) {
+          requestAnimationFrame(() => {
+            threadBoxRef.current?.scrollTo({
+              top: threadBoxRef.current.scrollHeight,
+              behavior: "smooth",
+            });
+          });
+        }
+      }
+    } catch {
+      // don’t keep setting null repeatedly — flicker
+    }
+  };
+
+  // ✅ SEO (private page): title + meta (noindex)
   useEffect(() => {
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
-    return () => document.head.removeChild(meta);
+    const prevTitle = document.title;
+    document.title = "Doubts | Student Dashboard";
+
+    const robots = upsertHeadMeta({ name: "robots", content: "noindex, follow" });
+    const desc = upsertHeadMeta({
+      name: "description",
+      content: "Ask doubts, view teacher replies, and manage your support tickets.",
+    });
+
+    return () => {
+      document.title = prevTitle;
+      if (robots?.parentNode) robots.parentNode.removeChild(robots);
+      if (desc?.parentNode) desc.parentNode.removeChild(desc);
+    };
   }, []);
 
   useEffect(() => {
@@ -128,11 +150,10 @@ const stickToBottomRef = useRef(true);
 
   // ✅ poll list so new messages reorder to top + badge updates
   useEffect(() => {
-  const t = setInterval(() => load(true), 5000); // ✅ silent polling
-  return () => clearInterval(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
+    const t = setInterval(() => load(true), 5000); // ✅ silent polling
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (selected?._id) loadThread(selected._id);
@@ -182,7 +203,10 @@ const stickToBottomRef = useRef(true);
 
   return (
     <div className="flex h-screen bg-[#F7FAFF] overflow-hidden">
-      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+      <aside
+        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+        aria-label="Student sidebar"
+      >
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -190,18 +214,34 @@ const stickToBottomRef = useRef(true);
         className="flex flex-col flex-1 h-screen transition-all duration-300"
         style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
       >
-        <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
+        <header
+          className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]"
+          style={{ left: sidebarWidthPx, right: 0 }}
+        >
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="Doubts" />
         </header>
 
-        <div className="flex-1 mt-[64px] flex overflow-hidden text-left">
+        {/* Main content */}
+        <main
+          className="flex-1 mt-[64px] flex overflow-hidden text-left"
+          aria-labelledby="doubts-page-heading"
+        >
+          {/* Hidden semantic H1 */}
+          <h1 id="doubts-page-heading" className="sr-only">
+            Student Doubts and Replies
+          </h1>
+
           {/* LEFT LIST */}
-          <div className="w-[360px] max-w-[90vw] border-r bg-white overflow-y-auto">
+          <section
+            className="w-[360px] max-w-[90vw] border-r bg-white overflow-y-auto"
+            aria-label="My doubts list"
+          >
             <div className="px-5 py-4 border-b flex items-center justify-between">
               <h2 className="text-lg font-semibold text-[#124734]">My Doubts</h2>
               <button
                 onClick={() => setShowModal(true)}
                 className="bg-[#009846] hover:bg-[#007d39] transition text-white px-4 py-2 rounded-lg text-sm shadow"
+                aria-label="Ask a new doubt"
               >
                 Ask Doubt
               </button>
@@ -225,12 +265,17 @@ const stickToBottomRef = useRef(true);
                         markSeen(d._id);
                       }}
                       className={`w-full text-left p-3 rounded-xl border transition ${
-                        selected?._id === d._id ? "bg-[#A7E1B2] border-[#A7E1B2]" : "bg-white hover:bg-[#F2FBF5]"
+                        selected?._id === d._id
+                          ? "bg-[#A7E1B2] border-[#A7E1B2]"
+                          : "bg-white hover:bg-[#F2FBF5]"
                       }`}
+                      aria-label={`Open doubt: ${d.doubtType || "Doubt"}`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#124734] truncate">{d.doubtType || "Doubt"}</p>
+                          <p className="font-semibold text-[#124734] truncate">
+                            {d.doubtType || "Doubt"}
+                          </p>
                           <p className="text-xs text-[#5B7065] truncate">{d.question}</p>
                         </div>
 
@@ -251,7 +296,8 @@ const stickToBottomRef = useRef(true);
                       <p className="text-[11px] text-[#5B7065] mt-1">
                         Teacher:{" "}
                         <span className="font-medium">
-                          {d.assignedTeacher?.name || (d.assignedTeacher ? "Assigned" : "Unassigned")}
+                          {d.assignedTeacher?.name ||
+                            (d.assignedTeacher ? "Assigned" : "Unassigned")}
                         </span>
                       </p>
                     </button>
@@ -259,10 +305,10 @@ const stickToBottomRef = useRef(true);
                 })}
               </div>
             )}
-          </div>
+          </section>
 
           {/* RIGHT THREAD */}
-          <div className="flex-1 bg-[#F9FAFB] flex flex-col">
+          <section className="flex-1 bg-[#F9FAFB] flex flex-col" aria-label="Doubt thread">
             {!selected ? (
               <div className="h-full flex items-center justify-center text-[#5B7065]">
                 Select a doubt to view replies
@@ -278,7 +324,7 @@ const stickToBottomRef = useRef(true);
                   <p className="text-[11px] text-[#98A6A2] mt-1">Last 10 days only</p>
                 </div>
 
-               <div
+                <div
                   ref={threadBoxRef}
                   onScroll={() => {
                     const el = threadBoxRef.current;
@@ -287,8 +333,9 @@ const stickToBottomRef = useRef(true);
                     stickToBottomRef.current = atBottom;
                   }}
                   className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8FFFA]"
+                  role="log"
+                  aria-label="Messages"
                 >
-
                   {(thread.messages || []).map((m) => {
                     const isMe = m.fromRole === "student";
                     return (
@@ -299,7 +346,9 @@ const stickToBottomRef = useRef(true);
                         }`}
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs font-semibold text-[#124734]">{isMe ? "You" : "Teacher"}</span>
+                          <span className="text-xs font-semibold text-[#124734]">
+                            {isMe ? "You" : "Teacher"}
+                          </span>
                           <span className="text-[10px] text-[#5B7065]">
                             {new Date(m.createdAt).toLocaleString()}
                           </span>
@@ -322,13 +371,14 @@ const stickToBottomRef = useRef(true);
                   })}
                 </div>
 
-                <div className="p-3 border-t bg-white flex gap-2">
+                <div className="p-3 border-t bg-white flex gap-2" aria-label="Send message">
                   <input
                     className="flex-1 p-2 border rounded-lg outline-[#124734]"
                     placeholder="Write a message..."
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     disabled={sending}
+                    aria-label="Message text"
                   />
                   <label className="px-3 py-2 border rounded-lg cursor-pointer text-sm">
                     File
@@ -341,6 +391,7 @@ const stickToBottomRef = useRef(true);
                         e.target.value = "";
                       }}
                       disabled={sending}
+                      aria-label="Upload attachment"
                     />
                   </label>
                   <button
@@ -353,8 +404,8 @@ const stickToBottomRef = useRef(true);
                 </div>
               </>
             )}
-          </div>
-        </div>
+          </section>
+        </main>
 
         <AskDoubtModal
           open={showModal}

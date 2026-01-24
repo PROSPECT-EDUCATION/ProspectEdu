@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { api } from "../../../lib/api";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
@@ -20,29 +21,21 @@ function Badge({ status }) {
 }
 
 function resumeHref(a) {
-  // ✅ If cloudinary url, it's already absolute
   const url = a?.resumeUrl || "";
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
-
-  // ✅ fallback if old local storage urls exist
-  // (your earlier code used http://localhost:5000 + /uploads...)
   return `http://localhost:5000${url}`;
 }
+
 async function forceDownloadPdf(url, filename = "resume.pdf") {
   try {
     const res = await fetch(url, { method: "GET" });
     if (!res.ok) throw new Error("Download failed");
 
     const blob = await res.blob();
-
-    // ✅ Force pdf extension
-    const safeName = filename.toLowerCase().endsWith(".pdf")
-      ? filename
-      : `${filename}.pdf`;
+    const safeName = filename.toLowerCase().endsWith(".pdf") ? filename : `${filename}.pdf`;
 
     const blobUrl = window.URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = blobUrl;
     a.download = safeName;
@@ -57,10 +50,19 @@ async function forceDownloadPdf(url, filename = "resume.pdf") {
   }
 }
 
-
 export default function AdminCareerApplications() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Career Applications | ProspectEdu Admin";
+  const pageDescription =
+    "Search and manage career job applications, download resumes, and update applicant statuses in ProspectEdu Admin.";
 
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,21 @@ export default function AdminCareerApplications() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
       {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 h-full transition-all duration-300 ${
@@ -124,12 +141,10 @@ export default function AdminCareerApplications() {
       </div>
 
       {/* Main */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
-        style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth}px)`,
-        }}
+        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        aria-label="Career applications admin page"
       >
         {/* Topbar */}
         <div
@@ -144,6 +159,7 @@ export default function AdminCareerApplications() {
           <div className="bg-white rounded-2xl shadow p-4 md:p-5 mb-5">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="text-left">
+                {/* Keep your visible H1 as-is (layout unchanged) */}
                 <h1 className="text-2xl font-bold text-[#124734]">Job Applications</h1>
                 <p className="text-sm text-gray-600">Search and manage applicant status.</p>
               </div>
@@ -155,6 +171,7 @@ export default function AdminCareerApplications() {
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search name / email / job title"
                     className="w-full sm:w-[340px] border rounded-xl px-4 py-2.5 bg-[#F9FAFB] outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                    aria-label="Search career applications"
                   />
                 </div>
 
@@ -164,6 +181,7 @@ export default function AdminCareerApplications() {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="border rounded-xl px-3 py-2.5 bg-[#F9FAFB] outline-none"
+                    aria-label="Filter by status"
                   >
                     <option value="ALL">All</option>
                     <option value="NEW">NEW</option>
@@ -196,9 +214,13 @@ export default function AdminCareerApplications() {
               </div>
 
               {loading ? (
-                <div className="p-6 text-gray-600">Loading applications...</div>
+                <div className="p-6 text-gray-600" aria-live="polite">
+                  Loading applications...
+                </div>
               ) : filtered.length === 0 ? (
-                <div className="p-6 text-gray-600">No applications found.</div>
+                <div className="p-6 text-gray-600" aria-live="polite">
+                  No applications found.
+                </div>
               ) : (
                 filtered.map((a) => (
                   <div key={a._id} className="grid grid-cols-12 border-t text-sm">
@@ -253,24 +275,24 @@ export default function AdminCareerApplications() {
                     {/* Resume */}
                     <div className="col-span-1 p-3">
                       {a.resumeUrl ? (
-  <button
-    type="button"
-    className="inline-flex items-center gap-2 text-blue-600 hover:underline"
-    onClick={() => forceDownloadPdf(resumeHref(a), a.resumeOriginalName || "resume.pdf")}
-  >
-    <FileText className="w-4 h-4" />
-    <span className="text-xs">
-      {a.resumeOriginalName
-        ? a.resumeOriginalName.toLowerCase().endsWith(".pdf")
-          ? a.resumeOriginalName
-          : `${a.resumeOriginalName}.pdf`
-        : "Resume.pdf"}
-    </span>
-  </button>
-) : (
-  <span className="text-gray-500 text-xs">No file</span>
-)}
-
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 text-blue-600 hover:underline"
+                          onClick={() => forceDownloadPdf(resumeHref(a), a.resumeOriginalName || "resume.pdf")}
+                          aria-label={`Download resume for ${a.name}`}
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span className="text-xs">
+                            {a.resumeOriginalName
+                              ? a.resumeOriginalName.toLowerCase().endsWith(".pdf")
+                                ? a.resumeOriginalName
+                                : `${a.resumeOriginalName}.pdf`
+                              : "Resume.pdf"}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-500 text-xs">No file</span>
+                      )}
                     </div>
 
                     {/* Status */}
@@ -281,6 +303,7 @@ export default function AdminCareerApplications() {
                           value={String(a.status || "NEW").toUpperCase()}
                           onChange={(e) => updateStatus(a._id, e.target.value)}
                           className="border rounded-xl px-2 py-2 bg-[#F9FAFB] outline-none text-xs"
+                          aria-label={`Update status for ${a.name}`}
                         >
                           <option value="NEW">NEW</option>
                           <option value="SHORTLISTED">SHORTLISTED</option>
@@ -299,7 +322,7 @@ export default function AdminCareerApplications() {
             Showing <b>{filtered.length}</b> of <b>{apps.length}</b> applications.
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

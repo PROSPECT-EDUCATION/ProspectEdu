@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -9,15 +10,23 @@ export default function AdminConfirmTeacherPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Confirm Teachers | ProspectEdu Admin";
+  const pageDescription =
+    "Review and approve or reject pending teacher requests in ProspectEdu Admin.";
+
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
   const [toast, setToast] = useState("");
 
-  // approve dialog
   const [approveOpen, setApproveOpen] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  // reject UI
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
 
@@ -48,14 +57,11 @@ export default function AdminConfirmTeacherPage() {
 
   const confirmApprove = async () => {
     if (!selected?._id && !selected?.id) return;
-
     const teacherId = selected._id || selected.id;
 
     try {
       await usersApi.approveTeacher(teacherId);
       setToast("Teacher approved ✅");
-
-      // remove from UI instantly (or just refetch)
       setTeachers((prev) => prev.filter((t) => (t._id || t.id) !== teacherId));
     } catch (err) {
       setToast(err.response?.data?.message || "Failed to approve teacher");
@@ -73,7 +79,6 @@ export default function AdminConfirmTeacherPage() {
 
   const confirmReject = async () => {
     if (!selected?._id && !selected?.id) return;
-
     const teacherId = selected._id || selected.id;
 
     try {
@@ -91,22 +96,36 @@ export default function AdminConfirmTeacherPage() {
 
   return (
     <div className="min-h-screen bg-[#F7FBF2] flex">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Confirm Teachers</h1>
+
       {toast && <ErrorToast message={toast} onClose={() => setToast("")} />}
 
-      {/* Sidebar */}
       <div style={{ width: sidebarWidth }} className="transition-all duration-300">
         <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      {/* Main */}
-      <div className="flex-1">
+      <main className="flex-1" aria-label="Confirm teachers admin page">
         <AdminTopbar />
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-2xl font-bold text-[#124734]">Confirm Teachers</h1>
-
+              <h2 className="text-2xl font-bold text-[#124734]">Confirm Teachers</h2>
             </div>
 
             <button
@@ -117,23 +136,18 @@ export default function AdminConfirmTeacherPage() {
             </button>
           </div>
 
-          {/* Table Card */}
           <div className="bg-white rounded-xl border border-[#E6F4EC] shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E6F4EC] flex items-center justify-between">
-              <h2 className="font-semibold text-[#124734]">
+              <h3 className="font-semibold text-[#124734]">
                 Pending Requests ({pendingTeachers.length})
-              </h2>
-
-              {loading && (
-                <span className="text-xs text-[#5B7065]">Loading...</span>
-              )}
+              </h3>
+              {loading && <span className="text-xs text-[#5B7065]">Loading...</span>}
             </div>
 
-            {/* Content */}
             {loading ? (
-              <div className="p-6 text-sm text-[#5B7065]">Loading requests...</div>
+              <div className="p-6 text-sm text-[#5B7065]" aria-live="polite">Loading requests...</div>
             ) : pendingTeachers.length === 0 ? (
-              <div className="p-6 text-sm text-[#5B7065]">
+              <div className="p-6 text-sm text-[#5B7065]" aria-live="polite">
                 No pending teacher requests.
               </div>
             ) : (
@@ -141,7 +155,7 @@ export default function AdminConfirmTeacherPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-[#F3FAF1] text-[#124734]">
                     <tr className="text-left">
-                      <th className="px-5 py-3 font-semibold text-center" >Name</th>
+                      <th className="px-5 py-3 font-semibold text-center">Name</th>
                       <th className="px-5 py-3 font-semibold text-center">Email</th>
                       <th className="px-5 py-3 font-semibold text-center">Phone</th>
                       <th className="px-5 py-3 font-semibold text-center">City</th>
@@ -192,9 +206,8 @@ export default function AdminConfirmTeacherPage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Approve Confirm Dialog */}
       <ConfirmDialog
         open={approveOpen}
         title="Approve Teacher?"
@@ -209,9 +222,8 @@ export default function AdminConfirmTeacherPage() {
         confirmText="Approve"
       />
 
-      {/* Reject Dialog (simple custom modal) */}
       {rejectOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[5000]">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[5000]" role="dialog" aria-modal="true">
           <div className="bg-white w-[520px] rounded-xl shadow-xl p-6 border border-[#E6F4EC]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold text-[#124734]">Reject Teacher?</h2>
@@ -228,8 +240,7 @@ export default function AdminConfirmTeacherPage() {
             </div>
 
             <p className="text-sm text-[#5B7065] mb-3">
-              Reject <span className="font-medium text-[#124734]">{selected?.fullName}</span>.
-              Optional: add a note.
+              Reject <span className="font-medium text-[#124734]">{selected?.fullName}</span>. Optional: add a note.
             </p>
 
             <textarea

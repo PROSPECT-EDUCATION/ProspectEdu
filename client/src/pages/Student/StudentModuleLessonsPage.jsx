@@ -14,6 +14,29 @@ function iconForType(type) {
   return <FileText size={16} />;
 }
 
+// ✅ SEO helpers
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 export default function StudentModuleLessonsPage() {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
@@ -25,11 +48,18 @@ export default function StudentModuleLessonsPage() {
   const [lessons, setLessons] = useState([]);
   const [q, setQ] = useState("");
 
-  // simple viewer
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerSrc, setViewerSrc] = useState("");
   const [viewerTitle, setViewerTitle] = useState("");
   const [viewerKind, setViewerKind] = useState("file"); // "video" | "file" | "link"
+
+  // ✅ SEO
+  useEffect(() => {
+    document.title = "Module Lessons | ProspectEdu Student";
+    upsertMeta("description", "Open module lessons, videos, and files in your ProspectEdu student dashboard.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -52,56 +82,61 @@ export default function StudentModuleLessonsPage() {
     if (!s) return lessons;
     return lessons.filter((l) => String(l.title || "").toLowerCase().includes(s));
   }, [lessons, q]);
-const openLesson = async (l) => {
-  try {
-    // ✅ VIDEO
-    if (String(l.type) === "video") {
-      // Option A: play Cloudinary URL directly
-      if (l.contentUrl) {
+
+  const openLesson = async (l) => {
+    try {
+      // ✅ VIDEO
+      if (String(l.type) === "video") {
+        if (l.contentUrl) {
+          setViewerKind("video");
+          setViewerSrc(l.contentUrl);
+          setViewerTitle(l.title);
+          setViewerOpen(true);
+          return;
+        }
+
+        const res = await courseContentApi.getLessonFileBlob(l._id);
+        const blobUrl = URL.createObjectURL(res.data);
+
         setViewerKind("video");
-        setViewerSrc(l.contentUrl);
+        setViewerSrc(blobUrl);
         setViewerTitle(l.title);
         setViewerOpen(true);
         return;
       }
 
-      // Option B: stream via backend as blob (works even if you want auth-protected streaming)
+      // ✅ LINK
+      if (String(l.type) === "link") {
+        window.open(l.contentUrl, "_blank");
+        return;
+      }
+
+      // ✅ FILES
       const res = await courseContentApi.getLessonFileBlob(l._id);
       const blobUrl = URL.createObjectURL(res.data);
 
-      setViewerKind("video");
+      setViewerKind("file");
       setViewerSrc(blobUrl);
       setViewerTitle(l.title);
       setViewerOpen(true);
-      return;
+    } catch (e) {
+      console.error(e);
     }
+  };
 
-    // ✅ LINK
-    if (String(l.type) === "link") {
-      window.open(l.contentUrl, "_blank");
-      return;
+  // ✅ cleanup blob URLs on close (no UI change)
+  const closeViewer = () => {
+    try {
+      if (viewerSrc && viewerSrc.startsWith("blob:")) URL.revokeObjectURL(viewerSrc);
+    } catch {
+      // ignore
     }
-
-    // ✅ PDF/DOC/FILES (blob + iframe)
-    const res = await courseContentApi.getLessonFileBlob(l._id);
-    const blobUrl = URL.createObjectURL(res.data);
-
-    setViewerKind("file");
-    setViewerSrc(blobUrl);
-    setViewerTitle(l.title);
-    setViewerOpen(true);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-
+    setViewerOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
-      >
+      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -113,7 +148,7 @@ const openLesson = async (l) => {
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="Module Content" />
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-6" style={{ marginTop: "70px" }}>
+        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-6 text-left" style={{ marginTop: "70px" }}>
           <div className="w-full max-w-6xl mx-auto">
             <button
               onClick={() => navigate(`/student/courses/${courseId}/modules`)}
@@ -126,9 +161,7 @@ const openLesson = async (l) => {
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 <div className="flex-1">
                   <h1 className="text-xl font-semibold text-[#124734]">Lessons</h1>
-                  <p className="text-sm text-[#5B7065] mt-1">
-                    Click a lesson to watch video or open files.
-                  </p>
+                  <p className="text-sm text-[#5B7065] mt-1">Click a lesson to watch video or open files.</p>
                 </div>
 
                 <div className="w-full md:w-[320px]">
@@ -152,7 +185,7 @@ const openLesson = async (l) => {
               <RefreshComponent message="No lessons found in this module." />
             ) : (
               <div className="bg-white rounded-2xl border border-[#E6F4EC] shadow-sm overflow-hidden">
-                {filtered.map((l, idx) => (
+                {filtered.map((l) => (
                   <button
                     key={l._id}
                     onClick={() => openLesson(l)}
@@ -182,14 +215,13 @@ const openLesson = async (l) => {
           </div>
         </main>
 
-        {/* Viewer Modal */}
         {viewerOpen && (
           <div className="fixed inset-0 z-[5000] bg-black/50 flex items-center justify-center p-3">
             <div className="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl border border-[#E6F4EC]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[#E6F4EC]">
                 <p className="text-sm font-semibold text-[#124734] line-clamp-1">{viewerTitle}</p>
                 <button
-                  onClick={() => setViewerOpen(false)}
+                  onClick={closeViewer}
                   className="text-sm px-3 py-1.5 rounded-lg border border-[#E6F4EC] hover:bg-[#F9FAFB]"
                 >
                   Close

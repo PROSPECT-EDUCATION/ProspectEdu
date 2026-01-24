@@ -1,5 +1,6 @@
 // src/pages/Admin/AdminAllTeachersPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,16 @@ export default function AdminAllTeachersPage() {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Teachers | ProspectEdu Admin";
+  const pageDescription =
+    "Manage teacher accounts, view details, update salaries, and block or unblock teachers in ProspectEdu Admin.";
 
   const [status, setStatus] = useState("all"); // all | blocked
   const [page, setPage] = useState(1);
@@ -55,11 +66,7 @@ export default function AdminAllTeachersPage() {
   const load = async () => {
     try {
       setLoading(true);
-
-      // IMPORTANT: usersApi.listTeachers must accept params (like listStudents)
-      // listTeachers: (params={}) => api.get("/users/teachers", { params })
       const res = await usersApi.listTeachers({ status, page, limit });
-
       setTeachers(res.data.teachers || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (e) {
@@ -136,12 +143,10 @@ export default function AdminAllTeachersPage() {
 
       await usersApi.setTeacherSalary(teacherId, val);
 
-      // update list instantly
       setTeachers((prev) =>
         prev.map((t) => (t._id === teacherId ? { ...t, salary: val } : t))
       );
 
-      // if details modal open for same teacher, update it too
       if (detailsUser?._id === teacherId) {
         setDetailsProfile((p) => ({ ...(p || {}), salary: val }));
       }
@@ -182,8 +187,6 @@ export default function AdminAllTeachersPage() {
       }
 
       closeConfirm();
-
-      // refresh list
       load();
     } catch (e) {
       showToast("Action failed", "error");
@@ -206,6 +209,23 @@ export default function AdminAllTeachersPage() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Teachers</h1>
+
       {/* SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-full z-40 ${
@@ -219,7 +239,11 @@ export default function AdminAllTeachersPage() {
       </div>
 
       {/* MAIN */}
-      <div className="flex flex-col flex-1" style={{ marginLeft: sidebarWidth }}>
+      <main
+        className="flex flex-col flex-1"
+        style={{ marginLeft: sidebarWidth }}
+        aria-label="Teachers admin page"
+      >
         {/* TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]"
@@ -236,7 +260,6 @@ export default function AdminAllTeachersPage() {
               <h2 className="text-2xl font-bold text-[#124734]">
                 All Teachers List
               </h2>
-            
             </div>
 
             <div className="flex items-center gap-2">
@@ -260,6 +283,7 @@ export default function AdminAllTeachersPage() {
                     setPage(1);
                   }}
                   className="border px-3 py-2 rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#124734]"
+                  aria-label="Filter teachers"
                 >
                   <option value="all">All</option>
                   <option value="blocked">Blocked</option>
@@ -278,6 +302,7 @@ export default function AdminAllTeachersPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="border px-3 py-2 rounded-md w-full md:w-[420px] bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#124734]"
+                aria-label="Search teachers"
               />
             </div>
           </div>
@@ -436,7 +461,7 @@ export default function AdminAllTeachersPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Details Modal */}
       {detailsOpen && (
@@ -459,7 +484,6 @@ export default function AdminAllTeachersPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {/* User fields */}
                   <Info label="Name" value={detailsUser?.fullName} />
                   <Info label="Email" value={detailsUser?.email} />
                   <Info label="Phone" value={detailsUser?.phone} />
@@ -467,12 +491,8 @@ export default function AdminAllTeachersPage() {
                   <Info label="City" value={detailsUser?.city} />
                   <Info label="Join Date" value={formatDate(detailsUser?.createdAt)} />
                   <Info label="Last Active" value={formatDateTime(detailsUser?.lastLoginAt)} />
-                  <Info
-                    label="Status"
-                    value={detailsUser?.isActive ? "Active" : "Blocked"}
-                  />
+                  <Info label="Status" value={detailsUser?.isActive ? "Active" : "Blocked"} />
 
-                  {/* Profile fields */}
                   <Info label="Teacher ID" value={detailsProfile?.teacherId} />
                   <Info label="Department" value={detailsProfile?.department} />
                   <Info label="Designation" value={detailsProfile?.designation} />

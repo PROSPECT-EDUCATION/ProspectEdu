@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 
@@ -32,6 +33,16 @@ export default function CategoriesPage() {
 
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const pageTitle = "E-Commerce Categories | ProspectEdu Admin";
+  const pageDescription =
+    "Manage e-commerce categories, supplier products, and category settings in ProspectEdu Admin.";
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
   const loadCats = async () => {
     setLoadingCats(true);
     try {
@@ -56,20 +67,36 @@ export default function CategoriesPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO/accessibility (no layout change) */}
+      <h1 className="sr-only">E-Commerce Categories</h1>
+
       <div
         className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: sidebarWidth }}
+        aria-label="E-commerce categories page"
       >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
@@ -80,22 +107,35 @@ export default function CategoriesPage() {
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto h-[calc(100vh-64px)]">
           {/* Header */}
-          <CategoryHeader
-            onAddCategory={() => setOpenAddModal(true)}
-            onEditCategory={() => setOpenEditModal(true)}
-          />
+          <section aria-label="Category actions and overview">
+            <CategoryHeader
+              onAddCategory={() => setOpenAddModal(true)}
+              onEditCategory={() => setOpenEditModal(true)}
+            />
+          </section>
 
-          <CategorySlider categories={categories} />
+          <section aria-label="Category slider">
+            <CategorySlider categories={categories} />
+          </section>
+
           <p className="text-2xl font-bold text-left">Supplier Products</p>
-          <CategoryTabs active={activeTab} setActive={setActiveTab} />
-          <ProductTable activeTab={activeTab} />
-          <Pagination page={page} setPage={setPage} totalPages={24} />
+
+          <section aria-label="Category tabs and product table">
+            <CategoryTabs active={activeTab} setActive={setActiveTab} />
+            <ProductTable activeTab={activeTab} />
+          </section>
+
+          <nav aria-label="Pagination">
+            <Pagination page={page} setPage={setPage} totalPages={24} />
+          </nav>
 
           {loadingCats ? (
-            <div className="text-sm text-gray-500 mt-4">Loading categories...</div>
+            <div className="text-sm text-gray-500 mt-4" aria-live="polite">
+              Loading categories...
+            </div>
           ) : null}
         </div>
-      </div>
+      </main>
 
       {/* Add Modal */}
       <AddCategoryModal

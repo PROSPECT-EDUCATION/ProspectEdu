@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -8,6 +9,16 @@ import { usersApi } from "../../services/users";
 export default function AdminConfirmAdminPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Confirm Admins | ProspectEdu Admin";
+  const pageDescription =
+    "Review and approve or reject pending admin requests in ProspectEdu Admin.";
 
   const [loading, setLoading] = useState(true);
   const [admins, setAdmins] = useState([]);
@@ -85,19 +96,37 @@ export default function AdminConfirmAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#F7FBF2] flex">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO (no layout change) */}
+      <h1 className="sr-only">Confirm Admins</h1>
+
       {toast && <ErrorToast message={toast} onClose={() => setToast("")} />}
 
       <div style={{ width: sidebarWidth }} className="transition-all duration-300">
         <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      <div className="flex-1">
+      <main className="flex-1" aria-label="Confirm admins page">
         <AdminTopbar />
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-2xl font-bold text-[#124734]">Confirm Admins</h1>
+              <h2 className="text-2xl font-bold text-[#124734]">Confirm Admins</h2>
             </div>
 
             <button
@@ -110,9 +139,9 @@ export default function AdminConfirmAdminPage() {
 
           <div className="bg-white rounded-xl border border-[#E6F4EC] shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E6F4EC] flex items-center justify-between">
-              <h2 className="font-semibold text-[#124734]">
+              <h3 className="font-semibold text-[#124734]">
                 Pending Requests ({pendingAdmins.length})
-              </h2>
+              </h3>
               {loading && <span className="text-xs text-[#5B7065]">Loading...</span>}
             </div>
 
@@ -173,7 +202,7 @@ export default function AdminConfirmAdminPage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       <ConfirmDialog
         open={approveOpen}

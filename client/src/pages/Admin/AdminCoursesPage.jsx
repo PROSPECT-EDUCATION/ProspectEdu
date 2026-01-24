@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import CoursesList from "../../components/Admin/Courses/CoursesList";
@@ -9,8 +10,34 @@ export default function AdminCoursesPage() {
   const navigate = useNavigate();
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "All Courses | ProspectEdu Admin";
+  const pageDescription =
+    "Browse and manage all courses, including categories and course details, in ProspectEdu Admin.";
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Courses</h1>
 
       {/* SIDEBAR */}
       <div
@@ -18,16 +45,14 @@ export default function AdminCoursesPage() {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <AdminSidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+        <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* MAIN AREA */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        aria-label="Courses admin page"
       >
         {/* TOPBAR */}
         <div
@@ -39,24 +64,19 @@ export default function AdminCoursesPage() {
 
         {/* CONTENT */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
-
-          {/* Breadcrumb */}
           <div className="w-full flex flex-col items-start ">
-          <div className="text-gray-600 text-sm mb-6">
-            <span
-              className="cursor-pointer hover:text-[#124734]"
-              onClick={() => navigate("/admin-dashboard")}
-            >
-              Dashboard
-            </span>
-            {" / "}
-            <span className="text-[#124734] font-semibold">Courses</span>
+            <div className="text-gray-600 text-sm mb-6">
+              <span className="cursor-pointer hover:text-[#124734]" onClick={() => navigate("/admin-dashboard")}>
+                Dashboard
+              </span>
+              {" / "}
+              <span className="text-[#124734] font-semibold">Courses</span>
+            </div>
           </div>
-</div>
-          {/* COURSES LIST COMPONENT */}
+
           <CoursesList />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

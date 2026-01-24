@@ -1,6 +1,5 @@
-
-
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
@@ -23,6 +22,17 @@ const badgeClass = (s) => {
 const AdminScholarshipPage = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Scholarship | ProspectEdu Admin";
+  const pageDescription =
+    "Manage scholarship applications, update applicant status, control result visibility, and upload official result PDF in ProspectEdu Admin.";
 
   const [loading, setLoading] = useState(true);
   const [regs, setRegs] = useState([]);
@@ -92,11 +102,7 @@ const AdminScholarshipPage = () => {
     setSaving(true);
     try {
       const next = !config.resultsLive;
-      const res = await api.patch(
-        "/scholarship/admin/config",
-        { resultsLive: next },
-        authHeaders
-      );
+      const res = await api.patch("/scholarship/admin/config", { resultsLive: next }, authHeaders);
       setConfig(res.data.data);
       showToast("success", `Result is now ${next ? "LIVE" : "NOT LIVE"}`);
     } catch {
@@ -135,15 +141,9 @@ const AdminScholarshipPage = () => {
 
     setRowSavingId(id);
     try {
-      setRegs((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, status: nextStatus } : r))
-      );
+      setRegs((prev) => prev.map((r) => (r._id === id ? { ...r, status: nextStatus } : r)));
 
-      await api.patch(
-        `/scholarship/admin/registrations/${id}`,
-        { status: nextStatus },
-        authHeaders
-      );
+      await api.patch(`/scholarship/admin/registrations/${id}`, { status: nextStatus }, authHeaders);
 
       showToast("success", "Status updated");
     } catch {
@@ -162,20 +162,35 @@ const AdminScholarshipPage = () => {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      <h1 className="sr-only">Scholarship</h1>
+
       <div
         className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
       >
         <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      <div
+      <main
         className="flex flex-col flex-1 h-screen transition-all duration-300 text-left"
         style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+        aria-label="Scholarship admin page"
       >
-        <div
-          className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]"
-          style={{ left: sidebarWidthPx, right: 0 }}
-        >
+        <div className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]" style={{ left: sidebarWidthPx, right: 0 }}>
           <AdminTopbar pageTitle="Scholarship" />
         </div>
 
@@ -222,9 +237,7 @@ const AdminScholarshipPage = () => {
                 disabled={saving}
                 onClick={toggleLive}
                 className={`px-5 py-2 rounded-full font-semibold ${
-                  config.resultsLive
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-800"
+                  config.resultsLive ? "bg-green-600 text-white" : "bg-gray-200 text-gray-800"
                 }`}
               >
                 {config.resultsLive ? "🔴 LIVE" : "⚪ NOT LIVE"}
@@ -260,11 +273,7 @@ const AdminScholarshipPage = () => {
                 />
               </div>
 
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="border rounded-xl px-4 py-2"
-              >
+              <select value={status} onChange={(e) => setStatus(e.target.value)} className="border rounded-xl px-4 py-2">
                 <option value="">All Status</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
@@ -296,9 +305,9 @@ const AdminScholarshipPage = () => {
             </div>
 
             {loading ? (
-              <div className="p-6 text-gray-600">Loading…</div>
+              <div className="p-6 text-gray-600" aria-live="polite">Loading…</div>
             ) : regs.length === 0 ? (
-              <div className="p-6 text-gray-600">No applications found.</div>
+              <div className="p-6 text-gray-600" aria-live="polite">No applications found.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -342,6 +351,7 @@ const AdminScholarshipPage = () => {
                                 setEditedStatus((prev) => ({ ...prev, [r._id]: e.target.value }))
                               }
                               className="border rounded-lg px-2 py-1 text-sm bg-white"
+                              aria-label={`Set status for ${r.name}`}
                             >
                               {STATUS_OPTIONS.map((s) => (
                                 <option key={s} value={s}>
@@ -371,12 +381,12 @@ const AdminScholarshipPage = () => {
                 </table>
               </div>
             )}
-            </div>
+          </div>
+
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
 export default AdminScholarshipPage;
-

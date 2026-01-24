@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
@@ -6,6 +7,16 @@ import { api } from "../../../lib/api";
 const AdminAchieversPage = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidthPx = isCollapsed ? 80 : 256;
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Achievers | ProspectEdu Admin";
+  const pageDescription =
+    "Add and manage achievers displayed on the public Achievers page in ProspectEdu.";
 
   const accessToken = sessionStorage.getItem("accessToken");
   const authHeaders = useMemo(
@@ -92,15 +103,36 @@ const AdminAchieversPage = () => {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        {/* Open Graph */}
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO/accessibility (no layout change) */}
+      <h1 className="sr-only">Achievers</h1>
+
       <div
         className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
       >
         <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
-      <div
+      <main
         className="flex flex-col flex-1 h-screen transition-all duration-300 text-left"
         style={{ marginLeft: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+        aria-label="Achievers admin page"
       >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]"
@@ -111,7 +143,7 @@ const AdminAchieversPage = () => {
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
           {/* ADD FORM */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6" aria-label="Add achiever">
             <h2 className="text-xl font-semibold text-[#124734] mb-1">Add Achiever</h2>
             <p className="text-sm text-gray-600 mb-5">Upload achiever details exactly as shown on Achievers page.</p>
 
@@ -173,7 +205,6 @@ const AdminAchieversPage = () => {
                 <textarea
                   name="achievement"
                   value={form.achievement}
-                  
                   onChange={onChange}
                   required
                   className="w-full mt-1 border rounded-xl px-4 py-2 min-h-[90px]"
@@ -212,10 +243,13 @@ const AdminAchieversPage = () => {
                 </button>
               </div>
             </form>
-          </div>
+          </section>
 
           {/* LIST */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <section
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+            aria-label="Uploaded achievers list"
+          >
             <div className="p-5 border-b flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-[#124734]">Uploaded Achievers</h3>
@@ -230,9 +264,13 @@ const AdminAchieversPage = () => {
             </div>
 
             {loading ? (
-              <div className="p-6 text-gray-600">Loading…</div>
+              <div className="p-6 text-gray-600" aria-live="polite">
+                Loading…
+              </div>
             ) : items.length === 0 ? (
-              <div className="p-6 text-gray-600">No achievers added yet.</div>
+              <div className="p-6 text-gray-600" aria-live="polite">
+                No achievers added yet.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -249,7 +287,15 @@ const AdminAchieversPage = () => {
                     {items.map((a) => (
                       <tr key={a._id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 flex items-center gap-3">
-                          <img src={a.imgUrl} alt={a.name} className="w-10 h-10 rounded-full border" />
+                          <img
+                            src={a.imgUrl}
+                            alt={a?.name ? `${a.name} achiever photo` : "Achiever photo"}
+                            className="w-10 h-10 rounded-full border"
+                            width={40}
+                            height={40}
+                            loading="lazy"
+                            decoding="async"
+                          />
                           <div>
                             <div className="font-semibold text-gray-900">{a.name}</div>
                             <div className="text-xs text-gray-500">{a.extra || "-"}</div>
@@ -262,6 +308,7 @@ const AdminAchieversPage = () => {
                           <button
                             onClick={() => remove(a._id)}
                             className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+                            aria-label={`Delete achiever ${a.name}`}
                           >
                             Delete
                           </button>
@@ -272,10 +319,9 @@ const AdminAchieversPage = () => {
                 </table>
               </div>
             )}
-          </div>
-
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

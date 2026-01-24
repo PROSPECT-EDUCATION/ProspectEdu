@@ -27,6 +27,32 @@ const pct = (a, b) => {
   return Math.max(0, Math.min(100, Math.round((A / B) * 100)));
 };
 
+/* =======================
+   ✅ SEO helper functions
+   (NO layout impact)
+======================= */
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 export default function TestReport() {
   const { seriesId, testId } = useParams();
   const navigate = useNavigate();
@@ -51,6 +77,23 @@ export default function TestReport() {
       }
     })();
   }, [seriesId, testId]);
+
+  // ✅ SEO: title + description + noindex (private) + canonical
+  useEffect(() => {
+    const seriesTitle = report?.series?.title || "Test Series";
+    const testName = report?.test?.name || "Test";
+    document.title = `Test Report - ${testName} | ${seriesTitle} | ProspectEdu Student`;
+
+    upsertMeta(
+      "description",
+      "View your test score, accuracy, and detailed question review in the ProspectEdu student dashboard."
+    );
+
+    // Student/private results should not appear in Google
+    upsertMeta("robots", "noindex, follow");
+
+    upsertLink("canonical", window.location.href);
+  }, [report?.series?.title, report?.test?.name]);
 
   const scorePct = useMemo(() => {
     return pct(report?.attempt?.score, report?.test?.totalMarks);
@@ -92,15 +135,12 @@ export default function TestReport() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
                     <p className="text-sm text-[#5B7065]">
-                      {series?.title} /{" "}
-                      <span className="text-[#124734] font-semibold">{test?.name}</span>
+                      {series?.title} / <span className="text-[#124734] font-semibold">{test?.name}</span>
                     </p>
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-[#124734] mt-1">
-                      Result Summary
-                    </h1>
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-[#124734] mt-1">Result Summary</h1>
                     <p className="text-xs text-[#5B7065] mt-2">
-                      Submitted: <b>{fmtDateTime(attempt?.submittedAt)}</b> • Questions:{" "}
-                      <b>{test?.totalQuestions}</b> • Total Marks: <b>{test?.totalMarks}</b>
+                      Submitted: <b>{fmtDateTime(attempt?.submittedAt)}</b> • Questions: <b>{test?.totalQuestions}</b> • Total Marks:{" "}
+                      <b>{test?.totalMarks}</b>
                     </p>
                   </div>
 
@@ -203,9 +243,7 @@ export default function TestReport() {
                         </div>
 
                         <div className="flex flex-col items-end gap-2">
-                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${statusPill}`}>
-                            {label}
-                          </span>
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${statusPill}`}>{label}</span>
                           {r.marked && (
                             <span className="text-xs font-bold px-3 py-1 rounded-full border bg-white border-[#CDE8D5] text-[#124734]">
                               Marked

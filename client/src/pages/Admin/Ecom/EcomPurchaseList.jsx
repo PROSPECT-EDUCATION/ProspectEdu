@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
@@ -10,6 +11,17 @@ export default function EcomProductList() {
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const pageTitle = "Admin Products | ProspectEdu Admin";
+  const pageDescription =
+    "Manage admin products, stock status, trending status, and remove products in ProspectEdu Admin.";
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
 
   const fetchAdminProducts = async () => {
     try {
@@ -102,6 +114,21 @@ export default function EcomProductList() {
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
       {/* FIXED SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-screen bg-[#124734] transition-all duration-300 z-40 ${
@@ -115,7 +142,14 @@ export default function EcomProductList() {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
+      <main
+        className="flex-1 flex flex-col"
+        style={{ marginLeft: sidebarWidth }}
+        aria-label="Admin products page"
+      >
+        {/* Hidden H1 for SEO (no layout change) */}
+        <h1 className="sr-only">Admin Products</h1>
+
         {/* FIXED TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm z-[999] h-[64px]"
@@ -126,6 +160,7 @@ export default function EcomProductList() {
 
         {/* PAGE CONTENT */}
         <div className="p-8 mt-[80px]">
+          {/* Keeping your visible H1 exactly as-is (layout unchanged) */}
           <h1 className="text-3xl font-bold text-[#124734] mb-6">
             Admin Products
           </h1>
@@ -150,6 +185,7 @@ export default function EcomProductList() {
                     <td
                       colSpan="6"
                       className="text-center py-10 text-gray-500 text-lg"
+                      aria-live="polite"
                     >
                       Loading...
                     </td>
@@ -161,6 +197,7 @@ export default function EcomProductList() {
                     <td
                       colSpan="6"
                       className="text-center py-10 text-gray-500 text-lg"
+                      aria-live="polite"
                     >
                       No products added yet.
                     </td>
@@ -177,7 +214,11 @@ export default function EcomProductList() {
                         <img
                           src={getFirstImage(p)}
                           className="w-16 h-16 object-contain border border-gray-300 rounded-lg p-1"
-                          alt={p.name || "product"}
+                          alt={p.name ? `${p.name} product image` : "Product image"}
+                          width={64}
+                          height={64}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <span className="font-medium text-[#124734]">
                           {p.name}
@@ -190,7 +231,7 @@ export default function EcomProductList() {
                         ₹{p.offerPrice ?? p.price}
                       </td>
 
-                      {/* ✅ In Stock Toggle (same as supplier style) */}
+                      {/* ✅ In Stock Toggle */}
                       <td className="px-6 py-4">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -198,6 +239,7 @@ export default function EcomProductList() {
                             checked={!p.outOfStock}
                             onChange={() => toggleStock(p)}
                             className="sr-only peer"
+                            aria-label={`Toggle stock for ${p.name}`}
                           />
                           <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 transition"></div>
                           <span className="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-6"></span>
@@ -215,6 +257,7 @@ export default function EcomProductList() {
                             checked={!!p.isTrending}
                             onChange={() => toggleTrending(p)}
                             className="sr-only peer"
+                            aria-label={`Toggle trending for ${p.name}`}
                           />
                           <div className="w-12 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#124734] transition"></div>
                           <span className="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-6"></span>
@@ -231,11 +274,16 @@ export default function EcomProductList() {
                             setShowDeletePopup(true);
                           }}
                           className="text-[#124734] p-2 rounded-full shadow hover:scale-110 transition"
+                          aria-label={`Remove ${p.name}`}
                         >
                           <img
                             src="https://cdn-icons-png.flaticon.com/512/6861/6861362.png"
-                            alt="delete"
+                            alt="Delete product"
                             className="w-7 h-7 opacity-90 hover:opacity-100"
+                            width={28}
+                            height={28}
+                            loading="lazy"
+                            decoding="async"
                           />
                         </button>
                       </td>
@@ -245,11 +293,16 @@ export default function EcomProductList() {
             </table>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* DELETE POPUP */}
       {showDeletePopup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Remove product confirmation"
+        >
           <div className="bg-white p-8 rounded-xl shadow-xl w-[350px] text-center">
             <div className="text-red-500 text-3xl mb-3">⚠</div>
 

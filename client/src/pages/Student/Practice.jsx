@@ -11,6 +11,30 @@ import { quizzesApi } from "../../services/quizzes";
 import { studentCoursesApi } from "../../services/studentCourses";
 import { useToast } from "../../context/ToastContext";
 
+function upsertMeta(name, content) {
+  if (!content) return () => {};
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return () => {};
+}
+
+function upsertLink(rel, href) {
+  if (!href) return () => {};
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+  return () => {};
+}
+
 function fmtDate(d) {
   if (!d) return "—";
   try {
@@ -21,28 +45,23 @@ function fmtDate(d) {
 }
 function getCourseIdFromEnrollment(en) {
   if (!en) return "";
-  // populated: en.course._id
   if (en.course && typeof en.course === "object" && en.course._id) return String(en.course._id);
-  // not populated: en.course = "id"
   if (typeof en.course === "string") return en.course;
 
-  // populated: en.courseId._id
   if (en.courseId && typeof en.courseId === "object" && en.courseId._id) return String(en.courseId._id);
-  // not populated: en.courseId = "id"
   if (typeof en.courseId === "string") return en.courseId;
 
   return "";
 }
 
 function getCourseObjFromEnrollment(en) {
-  // Return a course-like object if populated, else null
   if (en?.course && typeof en.course === "object") return en.course;
   if (en?.courseId && typeof en.courseId === "object") return en.courseId;
   return null;
 }
 
 export default function Practice() {
-  const { courseId } = useParams(); // optional now
+  const { courseId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -58,12 +77,15 @@ export default function Practice() {
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
 
+  // ✅ SEO (no layout changes)
   useEffect(() => {
-    const meta = document.createElement("meta");
-    meta.name = "robots";
-    meta.content = "noindex, follow";
-    document.head.appendChild(meta);
-    return () => document.head.removeChild(meta);
+    document.title = "Practice | ProspectEdu Student";
+
+    upsertMeta("description", "Practice assignments and quizzes for your enrolled courses in ProspectEdu.");
+    upsertMeta("robots", "noindex, follow");
+
+    const canonicalUrl = window.location?.href || "";
+    upsertLink("canonical", canonicalUrl);
   }, []);
 
   // 1) Load my enrollments once
@@ -73,23 +95,16 @@ export default function Practice() {
         setCoursesLoading(true);
 
         const res = await studentCoursesApi.myEnrollments();
-console.log("ENROLLMENTS DATA:", res.data);
-console.log("selectedCourseId:", selectedCourseId);
 
-        // ✅ robust parsing:
-    // ✅ YOUR API returns { success: true, courses: [...] }
-const list = res?.data?.courses || [];
-setEnrollments(Array.isArray(list) ? list : []);
+        const list = res?.data?.courses || [];
+        setEnrollments(Array.isArray(list) ? list : []);
 
-        // choose selected course
- if (courseId) {
-  setSelectedCourseId(courseId);
-} else {
-  const firstId = list?.[0]?.course?._id || "";
-  setSelectedCourseId(firstId);
-}
-
-
+        if (courseId) {
+          setSelectedCourseId(courseId);
+        } else {
+          const firstId = list?.[0]?.course?._id || "";
+          setSelectedCourseId(firstId);
+        }
       } catch (e) {
         setEnrollments([]);
         setSelectedCourseId("");
@@ -135,28 +150,18 @@ setEnrollments(Array.isArray(list) ? list : []);
     loadPractice();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId]);
-const courses = useMemo(() => {
-  return (enrollments || [])
-    .map(getCourseObjFromEnrollment)
-    .filter(Boolean);
-}, [enrollments]);
 
+  const courses = useMemo(() => {
+    return (enrollments || []).map(getCourseObjFromEnrollment).filter(Boolean);
+  }, [enrollments]);
 
-  const selectedCourse = useMemo(
-    () => courses.find((c) => c._id === selectedCourseId),
-    [courses, selectedCourseId]
-  );
+  const selectedCourse = useMemo(() => courses.find((c) => c._id === selectedCourseId), [courses, selectedCourseId]);
 
-  const hasAny = useMemo(
-    () => (assignments?.length || 0) + (quizzes?.length || 0) > 0,
-    [assignments, quizzes]
-  );
+  const hasAny = useMemo(() => (assignments?.length || 0) + (quizzes?.length || 0) > 0, [assignments, quizzes]);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
-      >
+      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -185,44 +190,36 @@ const courses = useMemo(() => {
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
-             disabled={coursesLoading || enrollments.length === 0}
-
+              disabled={coursesLoading || enrollments.length === 0}
               className="w-full md:w-[420px] bg-white border border-[#E6F4EC] rounded-xl px-3 py-2 text-sm text-[#124734] focus:outline-none"
             >
-         {coursesLoading ? (
-  <option value="">Loading courses...</option>
-) : enrollments.length === 0 ? (
-  <option value="">No enrolled courses</option>
-) : (
-  enrollments.map((en, idx) => {
-    const id = getCourseIdFromEnrollment(en);
-    const c = getCourseObjFromEnrollment(en);
-    return (
-      <option key={id || idx} value={id}>
-        {c?.title || `Course (${id?.slice?.(-6) || "unknown"})`}
-      </option>
-    );
-  })
-)}
-
+              {coursesLoading ? (
+                <option value="">Loading courses...</option>
+              ) : enrollments.length === 0 ? (
+                <option value="">No enrolled courses</option>
+              ) : (
+                enrollments.map((en, idx) => {
+                  const id = getCourseIdFromEnrollment(en);
+                  const c = getCourseObjFromEnrollment(en);
+                  return (
+                    <option key={id || idx} value={id}>
+                      {c?.title || `Course (${id?.slice?.(-6) || "unknown"})`}
+                    </option>
+                  );
+                })
+              )}
             </select>
 
-            <span className="text-xs text-[#5B7065]">
-              {selectedCourse ? selectedCourse.title : selectedCourseId || "—"}
-            </span>
+            <span className="text-xs text-[#5B7065]">{selectedCourse ? selectedCourse.title : selectedCourseId || "—"}</span>
           </div>
         </nav>
 
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-8" style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}>
           <div className="w-full max-w-6xl mx-auto">
             {coursesLoading ? (
-              <div className="bg-white border border-[#E6F4EC] rounded-2xl p-6 text-[#5B7065]">
-                Loading your courses...
-              </div>
+              <div className="bg-white border border-[#E6F4EC] rounded-2xl p-6 text-[#5B7065]">Loading your courses...</div>
             ) : loading ? (
-              <div className="bg-white border border-[#E6F4EC] rounded-2xl p-6 text-[#5B7065]">
-                Loading practice...
-              </div>
+              <div className="bg-white border border-[#E6F4EC] rounded-2xl p-6 text-[#5B7065]">Loading practice...</div>
             ) : !selectedCourseId ? (
               <RefreshComponent message="You have no enrolled courses to practice." />
             ) : !hasAny ? (
@@ -259,9 +256,7 @@ const courses = useMemo(() => {
                             </button>
                           </div>
 
-                          {a.instructions ? (
-                            <p className="text-sm text-[#5B7065] mt-3 line-clamp-2">{a.instructions}</p>
-                          ) : null}
+                          {a.instructions ? <p className="text-sm text-[#5B7065] mt-3 line-clamp-2">{a.instructions}</p> : null}
                         </div>
                       ))}
                     </div>
@@ -289,7 +284,7 @@ const courses = useMemo(() => {
                                   <Timer size={14} /> {q.durationMinutes || 0} min
                                 </span>
                                 <span>•</span>
-                                <span>{(q.questions?.length || 0)} questions</span>
+                                <span>{q.questions?.length || 0} questions</span>
                               </div>
                             </div>
 
@@ -309,9 +304,7 @@ const courses = useMemo(() => {
                             </div>
                           </div>
 
-                          {q.instructions ? (
-                            <p className="text-sm text-[#5B7065] mt-3 line-clamp-2">{q.instructions}</p>
-                          ) : null}
+                          {q.instructions ? <p className="text-sm text-[#5B7065] mt-3 line-clamp-2">{q.instructions}</p> : null}
                         </div>
                       ))}
                     </div>

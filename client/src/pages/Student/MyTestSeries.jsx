@@ -6,6 +6,36 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
 import { fetchMyPurchasedSeries } from "../../lib/testPurchaseApi";
 
+function upsertMeta(name, content) {
+  if (!content) return () => {};
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return () => {
+    // keep it (safe). If you prefer cleanup, uncomment:
+    // el?.remove();
+  };
+}
+
+function upsertLink(rel, href) {
+  if (!href) return () => {};
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+  return () => {
+    // keep it (safe). If you prefer cleanup, uncomment:
+    // el?.remove();
+  };
+}
+
 export default function MyTestSeries() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -17,38 +47,59 @@ export default function MyTestSeries() {
   const navigate = useNavigate();
   const sidebarWidthPx = isCollapsed ? 80 : 256;
 
- const load = useCallback(async () => {
-  setLoading(true);
-  try {
-    const data = await fetchMyPurchasedSeries();
-    setItems(Array.isArray(data) ? data : []);
-  } catch (e) {
-    console.error(e);
-    setItems([]);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  // ✅ SEO (no layout changes)
+  useEffect(() => {
+    const title = "My Test Series | ProspectEdu Student";
+    document.title = title;
 
-useEffect(() => {
-  load();
-}, [load]);
+    const descCleanup = upsertMeta(
+      "description",
+      "View and manage your purchased test series in ProspectEdu student dashboard."
+    );
+    const robotsCleanup = upsertMeta("robots", "noindex, follow");
 
-useEffect(() => {
-  const onFocus = () => load();
-  const onVis = () => {
-    if (document.visibilityState === "visible") load();
-  };
+    // canonical (works even for SPA; helpful for crawlers that still read it)
+    const canonicalUrl = window.location?.href || "";
+    const canonCleanup = upsertLink("canonical", canonicalUrl);
 
-  window.addEventListener("focus", onFocus);
-  document.addEventListener("visibilitychange", onVis);
+    return () => {
+      descCleanup?.();
+      robotsCleanup?.();
+      canonCleanup?.();
+    };
+  }, []);
 
-  return () => {
-    window.removeEventListener("focus", onFocus);
-    document.removeEventListener("visibilitychange", onVis);
-  };
-}, [load]);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchMyPurchasedSeries();
+      setItems(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    const onFocus = () => load();
+    const onVis = () => {
+      if (document.visibilityState === "visible") load();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [load]);
 
   const filteredList = useMemo(() => {
     let list = items;
@@ -56,15 +107,17 @@ useEffect(() => {
     if (mode === "online") list = list.filter((x) => x.type === "Online");
     if (mode === "offline") list = list.filter((x) => x.type === "Offline");
 
-    // you kept tab for future; keep as-is
     if (activeTab === "all") return list;
-
     return list;
   }, [items, mode, activeTab]);
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
-      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
+      <aside
+        className={`${
+          isCollapsed ? "w-20" : "w-64"
+        } fixed top-0 left-0 h-full z-40 transition-all duration-300`}
+      >
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -86,9 +139,7 @@ useEffect(() => {
               <div className="flex gap-6 border-b border-[#E6F4EC]">
                 <button
                   className={`pb-2 text-sm font-medium ${
-                    activeTab === "all"
-                      ? "text-[#009846] border-b-2 border-[#009846]"
-                      : "text-[#5B7065]"
+                    activeTab === "all" ? "text-[#009846] border-b-2 border-[#009846]" : "text-[#5B7065]"
                   }`}
                   onClick={() => setActiveTab("all")}
                 >
@@ -101,9 +152,7 @@ useEffect(() => {
               <button
                 onClick={() => setMode("online")}
                 className={`px-5 py-1.5 text-sm font-medium transition-all ${
-                  mode === "online"
-                    ? "bg-[#009846] text-white"
-                    : "text-[#124734] hover:bg-[#DFF3E6]"
+                  mode === "online" ? "bg-[#009846] text-white" : "text-[#124734] hover:bg-[#DFF3E6]"
                 }`}
               >
                 Online
@@ -111,9 +160,7 @@ useEffect(() => {
               <button
                 onClick={() => setMode("offline")}
                 className={`px-5 py-1.5 text-sm font-medium transition-all ${
-                  mode === "offline"
-                    ? "bg-[#009846] text-white"
-                    : "text-[#124734] hover:bg-[#DFF3E6]"
+                  mode === "offline" ? "bg-[#009846] text-white" : "text-[#124734] hover:bg-[#DFF3E6]"
                 }`}
               >
                 Offline
@@ -122,10 +169,7 @@ useEffect(() => {
           </div>
         </nav>
 
-        <main
-          className="flex-1 overflow-y-auto px-4 md:px-6 py-8"
-          style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}
-        >
+        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-8" style={{ marginTop: "128px", height: "calc(100vh - 128px)" }}>
           <div className="max-w-6xl mx-auto w-full">
             {loading ? (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E6F4EC]">Loading...</div>
@@ -143,6 +187,8 @@ useEffect(() => {
                         src={t.imageUrl || "/src/assets/test1.webp"}
                         alt={t.title}
                         className="w-full h-44 object-contain bg-[#F9FAFB]"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <span
                         className={`absolute top-2 right-2 text-xs font-semibold px-3 py-1 rounded-md text-white ${
@@ -158,14 +204,22 @@ useEffect(() => {
                       <hr className="my-3 border-gray-200" />
 
                       <div className="grid grid-cols-2 gap-y-1 text-sm text-gray-700">
-                        <p><strong>Total Test:</strong> {t.totalTest}</p>
-                        <p><strong>Language:</strong> {t.language}</p>
-                        <p><strong>Total Question:</strong> {t.totalQuestion}</p>
+                        <p>
+                          <strong>Total Test:</strong> {t.totalTest}
+                        </p>
+                        <p>
+                          <strong>Language:</strong> {t.language}
+                        </p>
+                        <p>
+                          <strong>Total Question:</strong> {t.totalQuestion}
+                        </p>
                         <p>
                           <strong>Amount:</strong>{" "}
                           <b className="text-red-600">{Number(t.price || 0) === 0 ? "Free" : `₹${t.price}`}</b>
                         </p>
-                        <p className="col-span-2"><strong>Question Type:</strong> {t.questionType}</p>
+                        <p className="col-span-2">
+                          <strong>Question Type:</strong> {t.questionType}
+                        </p>
                       </div>
 
                       <div className="mt-6 text-center">

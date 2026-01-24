@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { api } from "../../../lib/api";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
@@ -13,7 +14,6 @@ function buildDescription(responsibilities, requirements) {
   const resp = clean(responsibilities);
   const reqs = clean(requirements);
 
-  // IMPORTANT: keep same headings + bullet format for your JobDetail parser
   const lines = [
     "Responsibilities:",
     ...(resp.length ? resp.map((t) => `• ${t}`) : ["• "]),
@@ -28,12 +28,21 @@ export default function AdminCareerJobs() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarWidth = isCollapsed ? 80 : 256;
 
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Post Job | ProspectEdu Admin";
+  const pageDescription =
+    "Create and manage career job postings, set responsibilities and requirements, and toggle job visibility in ProspectEdu Admin.";
+
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState([]);
 
   const [saving, setSaving] = useState(false);
 
-  // ✅ Form state (responsibilities & requirements separate)
   const [form, setForm] = useState({
     title: "",
     vacancy: 1,
@@ -148,6 +157,21 @@ export default function AdminCareerJobs() {
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
       {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 h-full transition-all duration-300 ${
@@ -158,12 +182,10 @@ export default function AdminCareerJobs() {
       </div>
 
       {/* Main */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
-        style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth}px)`,
-        }}
+        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        aria-label="Career post job admin page"
       >
         {/* Topbar */}
         <div
@@ -177,6 +199,7 @@ export default function AdminCareerJobs() {
           {/* Header row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-6">
             <div className="text-left">
+              {/* Keep your visible H1 as-is (layout unchanged) */}
               <h1 className="text-2xl font-bold text-[#124734]">Create a New Job</h1>
               <p className="text-sm text-gray-600">
                 Add responsibilities & requirements with proper numbering. This will show on the Career page.
@@ -190,22 +213,17 @@ export default function AdminCareerJobs() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search jobs (title / location / type)"
                   className="w-full border bg-white rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#A7E1B2]"
+                  aria-label="Search job postings"
                 />
               </div>
-              <button
-                onClick={load}
-                className="border rounded-xl px-4 py-2.5 bg-white hover:bg-gray-50"
-              >
+              <button onClick={load} className="border rounded-xl px-4 py-2.5 bg-white hover:bg-gray-50">
                 Refresh
               </button>
             </div>
           </div>
 
           {/* Form Card */}
-          <form
-            onSubmit={createJob}
-            className="bg-white rounded-2xl shadow p-5 md:p-6 grid gap-5"
-          >
+          <form onSubmit={createJob} className="bg-white rounded-2xl shadow p-5 md:p-6 grid gap-5">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="text-left">
                 <label className="block mb-1 font-semibold text-[#124734]">Job Title</label>
@@ -266,7 +284,7 @@ export default function AdminCareerJobs() {
               </div>
             </div>
 
-            {/* Responsibilities & Requirements */}
+            {/* Responsibilities & Requirements (unchanged layout) */}
             <div className="grid lg:grid-cols-2 gap-5">
               {/* Responsibilities */}
               <div className="rounded-2xl border bg-[#F9FAFB] p-4 md:p-5">
@@ -277,7 +295,7 @@ export default function AdminCareerJobs() {
                   </div>
                   <button
                     type="button"
-                    onClick={addResp}
+                    onClick={() => setResponsibilities((p) => [...p, ""])}
                     className="inline-flex items-center gap-2 bg-[#124734] text-white px-4 py-2 rounded-xl hover:bg-[#0f3a23]"
                   >
                     <Plus className="w-4 h-4" /> Add
@@ -304,6 +322,7 @@ export default function AdminCareerJobs() {
                         onClick={() => removeResp(idx)}
                         className="p-2.5 rounded-xl border bg-white hover:bg-gray-50"
                         title="Remove"
+                        aria-label={`Remove responsibility ${idx + 1}`}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
@@ -321,7 +340,7 @@ export default function AdminCareerJobs() {
                   </div>
                   <button
                     type="button"
-                    onClick={addReq}
+                    onClick={() => setRequirements((p) => [...p, ""])}
                     className="inline-flex items-center gap-2 bg-[#124734] text-white px-4 py-2 rounded-xl hover:bg-[#0f3a23]"
                   >
                     <Plus className="w-4 h-4" /> Add
@@ -348,6 +367,7 @@ export default function AdminCareerJobs() {
                         onClick={() => removeReq(idx)}
                         className="p-2.5 rounded-xl border bg-white hover:bg-gray-50"
                         title="Remove"
+                        aria-label={`Remove requirement ${idx + 1}`}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
@@ -437,6 +457,7 @@ export default function AdminCareerJobs() {
                       <button
                         onClick={() => toggleActive(j)}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border bg-white hover:bg-gray-50"
+                        aria-label={`${j.isActive ? "Deactivate" : "Activate"} job ${j.title}`}
                       >
                         {j.isActive ? (
                           <>
@@ -452,6 +473,7 @@ export default function AdminCareerJobs() {
                       <button
                         onClick={() => removeJob(j._id)}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700"
+                        aria-label={`Delete job ${j.title}`}
                       >
                         <Trash2 className="w-5 h-5" /> Delete
                       </button>
@@ -462,12 +484,11 @@ export default function AdminCareerJobs() {
             )}
           </div>
 
-          {/* Small preview note */}
           <div className="mt-8 text-left text-xs text-gray-500">
             Tip: Responsibilities & Requirements are stored as bullets for your Career frontend (JobDetail parsing remains correct).
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

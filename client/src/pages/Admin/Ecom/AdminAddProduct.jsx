@@ -1,5 +1,6 @@
 // src/pages/Admin/Ecom/AddProduct.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
@@ -28,6 +29,19 @@ export default function AdminAddProduct() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const pageTitle = "Add Product | ProspectEdu Admin";
+  const pageDescription =
+    "Add a new e-commerce product with images, category, price, offer price, and quantity in ProspectEdu Admin.";
+
+  const canonicalUrl = useMemo(() => {
+    // Works in dev + prod (no hardcoding)
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
 
   const handleImageChange = (e, index) => {
     const file = e.target.files?.[0];
@@ -122,6 +136,26 @@ export default function AdminAddProduct() {
 
   return (
     <div className="bg-[#F9FAFB] min-h-screen">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        {/* Open Graph */}
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO/accessibility (no layout change) */}
+      <h1 className="sr-only">Add Product</h1>
+
       {/* FIXED SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-screen bg-[#124734] transition-all duration-300 z-40 ${
@@ -132,7 +166,11 @@ export default function AdminAddProduct() {
       </div>
 
       {/* MAIN AREA */}
-      <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth, minHeight: "100vh" }}>
+      <main
+        className="flex-1 flex flex-col"
+        style={{ marginLeft: sidebarWidth, minHeight: "100vh" }}
+        aria-label="Add product page"
+      >
         {/* TOPBAR (fixed) */}
         <div className="fixed top-0 right-0 left-0 z-30" style={{ left: sidebarWidth }}>
           <AdminTopbar pageTitle="Add Product" isCollapsed={isCollapsed} />
@@ -142,20 +180,28 @@ export default function AdminAddProduct() {
         <div className="pt-[80px] p-8 pb-16" style={{ minHeight: "calc(100vh - 80px)" }}>
           <div className="bg-white shadow-lg rounded-xl p-8 border border-[#A7E1B2]/60 max-w-3xl">
             {error ? (
-              <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+              <div
+                className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700"
+                role="alert"
+                aria-live="polite"
+              >
                 {error}
               </div>
             ) : null}
 
             {success ? (
-              <div className="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800">
+              <div
+                className="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800"
+                role="status"
+                aria-live="polite"
+              >
                 {success}
               </div>
             ) : null}
 
             <form className="space-y-6" onSubmit={onSubmit}>
               {/* PRODUCT IMAGES */}
-              <div>
+              <section aria-label="Product images">
                 <p className="text-base font-semibold text-[#124734]">Product Images</p>
                 <div className="flex flex-wrap items-center gap-3 mt-3">
                   {previews.map((img, index) => (
@@ -166,15 +212,17 @@ export default function AdminAddProduct() {
                         id={`image${index}`}
                         hidden
                         onChange={(e) => handleImageChange(e, index)}
+                        aria-label={`Upload product image ${index + 1}`}
                       />
                       <img
                         src={
                           img ||
                           "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/e-commerce/uploadArea.png"
                         }
-                        alt="upload"
+                        alt={img ? `Selected product image ${index + 1}` : `Upload area for product image ${index + 1}`}
                         width={100}
                         height={100}
+                        loading="lazy"
                         className="cursor-pointer rounded-lg hover:scale-105 transition shadow"
                       />
                     </label>
@@ -183,7 +231,7 @@ export default function AdminAddProduct() {
                 <p className="text-xs text-gray-500 mt-2">
                   Upload up to 4 images. Images will be uploaded to Cloudinary and URLs saved in DB.
                 </p>
-              </div>
+              </section>
 
               {/* PRODUCT NAME */}
               <div className="flex flex-col gap-1">
@@ -220,9 +268,7 @@ export default function AdminAddProduct() {
                   disabled={loadingCats}
                   required
                 >
-                  <option value="">
-                    {loadingCats ? "Loading Categories..." : "Select Category"}
-                  </option>
+                  <option value="">{loadingCats ? "Loading Categories..." : "Select Category"}</option>
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
@@ -281,7 +327,7 @@ export default function AdminAddProduct() {
             </form>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

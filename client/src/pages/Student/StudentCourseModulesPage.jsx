@@ -16,6 +16,29 @@ function minutesToHuman(m) {
   return h > 0 ? `${h}h ${r}m` : `${r}m`;
 }
 
+// ✅ SEO helpers (no layout impact)
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 export default function StudentCourseModulesPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -27,16 +50,21 @@ export default function StudentCourseModulesPage() {
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [q, setQ] = useState("");
-const toCloudinaryThumb = (url, w = 480) => {
-  if (!url || !url.includes("res.cloudinary.com") || url.includes("/upload/") === false) return url;
 
-  // Insert transformations after /upload/
-  // f_auto = best format (webp/avif), q_auto = best quality, w_ = resize, c_fill = crop, dpr_auto = retina
-  return url.replace(
-    "/upload/",
-    `/upload/f_auto,q_auto,w_${w},c_fill,dpr_auto/`
-  );
-};
+  const toCloudinaryThumb = (url, w = 480) => {
+    if (!url || !url.includes("res.cloudinary.com") || url.includes("/upload/") === false) return url;
+    return url.replace("/upload/", `/upload/f_auto,q_auto,w_${w},c_fill,dpr_auto/`);
+  };
+
+  // ✅ SEO (student private page: noindex)
+  useEffect(() => {
+    const titleBase = course?.title ? `${course.title} Modules` : "Course Modules";
+    document.title = `${titleBase} | ProspectEdu Student`;
+
+    upsertMeta("description", "Browse course modules and lessons in your ProspectEdu student dashboard.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, [course?.title]);
 
   useEffect(() => {
     const run = async () => {
@@ -69,9 +97,7 @@ const toCloudinaryThumb = (url, w = 480) => {
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
       {/* Sidebar */}
-      <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}
-      >
+      <aside className={`${isCollapsed ? "w-20" : "w-64"} fixed top-0 left-0 h-full z-40 transition-all duration-300`}>
         <StudentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
@@ -86,20 +112,14 @@ const toCloudinaryThumb = (url, w = 480) => {
         </header>
 
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-6" style={{ marginTop: "70px" }}>
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-6xl mx-auto text-left">
             {/* Breadcrumb */}
             <div className="text-sm text-[#5B7065] mb-4">
-              <span
-                className="hover:underline hover:text-[#009846] cursor-pointer"
-                onClick={() => navigate("/student-dashboard")}
-              >
+              <span className="hover:underline hover:text-[#009846] cursor-pointer" onClick={() => navigate("/student-dashboard")}>
                 Home
               </span>{" "}
               /{" "}
-              <span
-                className="hover:underline hover:text-[#009846] cursor-pointer"
-                onClick={() => navigate("/student/my-courses")}
-              >
+              <span className="hover:underline hover:text-[#009846] cursor-pointer" onClick={() => navigate("/student/my-courses")}>
                 My Courses
               </span>{" "}
               / <span className="text-[#124734] font-medium">{course?.title || "Modules"}</span>
@@ -109,27 +129,25 @@ const toCloudinaryThumb = (url, w = 480) => {
             <div className="bg-white rounded-2xl border border-[#E6F4EC] shadow-sm p-5 mb-6">
               <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
                 <div className="w-full md:w-[160px] bg-[#ECF5EE] border border-[#A7E1B2] rounded-xl p-3 flex justify-center">
-       {course?.img ? (
-  <img
-   src={toCloudinaryThumb(course?.img, 480)}
-    srcSet={[
-       `${toCloudinaryThumb(course?.img, 320)} 320w`,
-    `${toCloudinaryThumb(course?.img, 480)} 480w`,
-    `${toCloudinaryThumb(course?.img, 768)} 768w`,
-    ].join(", ")}
-    sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 768px"
-    alt={course?.title || "Course image"}
-    className="w-100 h-30 object-contain rounded-xl"
-    loading="lazy"
-  />
-) : (
-  <div className="w-full h-40 rounded-xl bg-[#F2FBF4] border border-[#E6F4EC] flex items-center justify-center text-sm text-[#5B7065]">
-    No image
-  </div>
-)}
-
-
-
+                  {course?.img ? (
+                    <img
+                      src={toCloudinaryThumb(course?.img, 480)}
+                      srcSet={[
+                        `${toCloudinaryThumb(course?.img, 320)} 320w`,
+                        `${toCloudinaryThumb(course?.img, 480)} 480w`,
+                        `${toCloudinaryThumb(course?.img, 768)} 768w`,
+                      ].join(", ")}
+                      sizes="(max-width: 640px) 320px, (max-width: 1024px) 480px, 768px"
+                      alt={course?.title || "Course image"}
+                      className="w-100 h-30 object-contain rounded-xl"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="w-full h-40 rounded-xl bg-[#F2FBF4] border border-[#E6F4EC] flex items-center justify-center text-sm text-[#5B7065]">
+                      No image
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1">

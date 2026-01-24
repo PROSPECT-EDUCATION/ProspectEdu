@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
@@ -10,7 +11,11 @@ const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const prettyDate = (iso) => {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   } catch {
     return iso;
   }
@@ -27,7 +32,7 @@ const pillStyle = (label) => {
 };
 
 export default function OrderDetailsPage() {
-  const { id } = useParams(); // ✅ now this is orderId string
+  const { id } = useParams(); // orderId string
   const navigate = useNavigate();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -37,6 +42,12 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState(null);
   const [savingItemId, setSavingItemId] = useState(null);
   const [localStatuses, setLocalStatuses] = useState({}); // itemId -> status
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
 
   const load = async () => {
     try {
@@ -99,15 +110,37 @@ export default function OrderDetailsPage() {
     };
   }, [order]);
 
-  if (loading) {
-    return <p className="p-6 text-gray-600">Loading order...</p>;
-  }
-  if (!view) {
-    return <p className="text-red-500 p-6">Order not found.</p>;
-  }
+  const pageTitle = view?.orderId
+    ? `Order ${view.orderId} | ProspectEdu Admin`
+    : "Order Details | ProspectEdu Admin";
+
+  const pageDescription = view?.orderId
+    ? `View order details, items, totals, and customer information for Order ${view.orderId} in ProspectEdu Admin.`
+    : "View order details, items, totals, and customer information in ProspectEdu Admin.";
+
+  if (loading) return <p className="p-6 text-gray-600">Loading order...</p>;
+  if (!view) return <p className="text-red-500 p-6">Order not found.</p>;
 
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO (no layout change) */}
+      <h1 className="sr-only">{`Order Details ${view.orderId}`}</h1>
+
       {/* SIDEBAR */}
       <div
         className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
@@ -118,7 +151,11 @@ export default function OrderDetailsPage() {
       </div>
 
       {/* MAIN */}
-      <div className="flex flex-col flex-1 transition-all duration-300" style={{ marginLeft: sidebarWidth }}>
+      <main
+        className="flex flex-col flex-1 transition-all duration-300"
+        style={{ marginLeft: sidebarWidth }}
+        aria-label={`Order details for ${view.orderId}`}
+      >
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
           style={{ left: sidebarWidth, right: 0 }}
@@ -127,10 +164,7 @@ export default function OrderDetailsPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto text-left">
-          <button
-            onClick={() => navigate("/admin/ecom/orders")}
-            className="mb-4 text-[#124734] underline"
-          >
+          <button onClick={() => navigate("/admin/ecom/orders")} className="mb-4 text-[#124734] underline">
             ← Back to Orders
           </button>
 
@@ -140,10 +174,14 @@ export default function OrderDetailsPage() {
               <div>
                 <p className="text-gray-600 text-sm">Order ID</p>
                 <h1 className="text-xl font-extrabold text-[#124734]">{view.orderId}</h1>
-                <p className="text-sm text-gray-600 mt-1">Date: <b>{view.date}</b></p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Date: <b>{view.date}</b>
+                </p>
               </div>
               <div className="text-sm text-gray-700">
-                <p><b>Total:</b> {money(view.totals.grandTotal)}</p>
+                <p>
+                  <b>Total:</b> {money(view.totals.grandTotal)}
+                </p>
               </div>
             </div>
           </div>
@@ -151,23 +189,31 @@ export default function OrderDetailsPage() {
           {/* Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Customer/Address */}
-            <div className="bg-white rounded-xl shadow p-6">
+            <section className="bg-white rounded-xl shadow p-6" aria-label="Customer information">
               <h2 className="text-lg font-semibold text-[#124734] mb-4">Customer Information</h2>
               <div className="space-y-2 text-sm text-gray-700">
-                <p><b>Name:</b> {view.address?.name || "-"}</p>
-                <p><b>Phone:</b> {view.address?.phone || "-"}</p>
-                <p><b>Email:</b> {view.address?.email || "-"}</p>
-                <p><b>Address:</b></p>
+                <p>
+                  <b>Name:</b> {view.address?.name || "-"}
+                </p>
+                <p>
+                  <b>Phone:</b> {view.address?.phone || "-"}
+                </p>
+                <p>
+                  <b>Email:</b> {view.address?.email || "-"}
+                </p>
+                <p>
+                  <b>Address:</b>
+                </p>
                 <p className="text-gray-600">
                   {view.address?.address || ""} {view.address?.city ? `, ${view.address.city}` : ""}{" "}
                   {view.address?.state ? `, ${view.address.state}` : ""}{" "}
                   {view.address?.pincode ? ` - ${view.address.pincode}` : ""}
                 </p>
               </div>
-            </div>
+            </section>
 
             {/* Items + Update only admin items */}
-            <div className="bg-white rounded-xl shadow p-6 lg:col-span-2">
+            <section className="bg-white rounded-xl shadow p-6 lg:col-span-2" aria-label="Order items">
               <h2 className="text-lg font-semibold text-[#124734] mb-4">Items</h2>
 
               <div className="space-y-4">
@@ -176,8 +222,12 @@ export default function OrderDetailsPage() {
                     <div className="flex gap-4 items-center">
                       <img
                         src={it.img || "https://via.placeholder.com/60"}
-                        alt=""
+                        alt={it.title ? `${it.title} image` : "Order item image"}
                         className="w-14 h-14 rounded object-cover bg-gray-100"
+                        width={56}
+                        height={56}
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="min-w-0">
                         <p className="font-semibold text-[#124734] truncate">{it.title}</p>
@@ -186,16 +236,20 @@ export default function OrderDetailsPage() {
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           <span className={pillStyle(it.uiStatus)}>{it.uiStatus}</span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            it.productOwner === "SUPPLIER" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
-                          }`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              it.productOwner === "SUPPLIER"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
                             {it.typeLabel}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* ✅ Update option only if ADMIN product */}
+                    {/* Update option only if ADMIN product */}
                     {canUpdateItem(it) && (
                       <div className="sm:ml-auto sm:w-64">
                         <p className="text-xs font-semibold text-gray-600 mb-2">Update Status (Admin Product)</p>
@@ -205,12 +259,15 @@ export default function OrderDetailsPage() {
                           onChange={(e) =>
                             setLocalStatuses((p) => ({ ...p, [it._id]: e.target.value }))
                           }
+                          aria-label={`Update status for ${it.title}`}
                         >
-                          {["ORDER_RECEIVED", "CONFIRMED", "ON_THE_WAY", "DELIVERED", "CANCELED", "REJECTED"].map((s) => (
-                            <option key={s} value={s}>
-                              {uiStatus(s)}
-                            </option>
-                          ))}
+                          {["ORDER_RECEIVED", "CONFIRMED", "ON_THE_WAY", "DELIVERED", "CANCELED", "REJECTED"].map(
+                            (s) => (
+                              <option key={s} value={s}>
+                                {uiStatus(s)}
+                              </option>
+                            )
+                          )}
                         </select>
 
                         <button
@@ -229,21 +286,32 @@ export default function OrderDetailsPage() {
               </div>
 
               {/* Totals */}
-              <div className="mt-6 border-t pt-4 text-sm text-gray-700">
-                <div className="flex justify-between"><span>Total MRP</span><b>{money(view.totals.totalMRP)}</b></div>
-                <div className="flex justify-between"><span>Items Total</span><b>{money(view.totals.totalPrice)}</b></div>
-                <div className="flex justify-between"><span>Discount</span><b className="text-green-700">- {money(view.totals.discount)}</b></div>
-                <div className="flex justify-between"><span>Shipping</span><b>{view.totals.shipping === 0 ? "Free" : money(view.totals.shipping)}</b></div>
+              <div className="mt-6 border-t pt-4 text-sm text-gray-700" aria-label="Order totals">
+                <div className="flex justify-between">
+                  <span>Total MRP</span>
+                  <b>{money(view.totals.totalMRP)}</b>
+                </div>
+                <div className="flex justify-between">
+                  <span>Items Total</span>
+                  <b>{money(view.totals.totalPrice)}</b>
+                </div>
+                <div className="flex justify-between">
+                  <span>Discount</span>
+                  <b className="text-green-700">- {money(view.totals.discount)}</b>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <b>{view.totals.shipping === 0 ? "Free" : money(view.totals.shipping)}</b>
+                </div>
                 <div className="flex justify-between mt-2 p-3 rounded-xl bg-[#ECF5EE]">
                   <span className="text-[#124734] font-extrabold">Grand Total</span>
                   <span className="text-[#124734] font-extrabold">{money(view.totals.grandTotal)}</span>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
-
         </div>
-      </div>
+      </main>
     </div>
   );
 }

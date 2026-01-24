@@ -7,6 +7,28 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import { quizzesApi } from "../../services/quizzes";
 import { useToast } from "../../context/ToastContext";
 
+// ✅ SEO helpers
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 export default function StudentQuizStartPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
@@ -17,9 +39,17 @@ export default function StudentQuizStartPage() {
 
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState(null);
-  const [answers, setAnswers] = useState({}); // { questionId: selectedIndex }
+  const [answers, setAnswers] = useState({});
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  // ✅ SEO (quiz/exam page should NOT be indexed)
+  useEffect(() => {
+    document.title = "Quiz | ProspectEdu Student";
+    upsertMeta("description", "Attempt your quiz in ProspectEdu student dashboard.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -44,17 +74,15 @@ export default function StudentQuizStartPage() {
 
   const totalSeconds = useMemo(() => Math.max(0, Number(quiz?.durationMinutes || 0) * 60), [quiz]);
 
-  // timer
   useEffect(() => {
     if (!quiz) return;
-    if (totalSeconds <= 0) return; // no timer
+    if (totalSeconds <= 0) return;
     if (secondsLeft <= 0) return;
 
     const t = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
   }, [quiz, secondsLeft, totalSeconds]);
 
-  // auto submit when time hits zero
   useEffect(() => {
     if (!quiz) return;
     if (totalSeconds <= 0) return;
@@ -83,11 +111,10 @@ export default function StudentQuizStartPage() {
           questionId: q._id,
           selectedIndex: Number(answers?.[q._id] ?? -1),
         })),
-        timeTakenSeconds: totalSeconds > 0 ? (totalSeconds - secondsLeft) : 0,
+        timeTakenSeconds: totalSeconds > 0 ? totalSeconds - secondsLeft : 0,
       };
 
       const res = await quizzesApi.submitAttempt(quizId, payload);
-      const attemptId = res.data.attempt?._id;
 
       showToast?.(auto ? "Time up! Submitted." : "Submitted!", "success");
       navigate(`/student/quizzes/${quizId}/result`, { state: { attempt: res.data.attempt, quizTitle: quiz.title } });
@@ -121,9 +148,7 @@ export default function StudentQuizStartPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h1 className="text-xl font-semibold text-[#124734]">{quiz.title}</h1>
-                    {quiz.instructions ? (
-                      <p className="text-sm text-[#5B7065] mt-1">{quiz.instructions}</p>
-                    ) : null}
+                    {quiz.instructions ? <p className="text-sm text-[#5B7065] mt-1">{quiz.instructions}</p> : null}
                   </div>
 
                   {totalSeconds > 0 ? (
@@ -150,9 +175,7 @@ export default function StudentQuizStartPage() {
                               key={oIdx}
                               onClick={() => pick(q._id, oIdx)}
                               className={`text-left px-3 py-2 rounded-lg border transition ${
-                                checked
-                                  ? "border-[#009846] bg-[#ECF5EE]"
-                                  : "border-[#E6F4EC] hover:bg-[#F9FAFB]"
+                                checked ? "border-[#009846] bg-[#ECF5EE]" : "border-[#E6F4EC] hover:bg-[#F9FAFB]"
                               }`}
                             >
                               <span className="text-sm text-[#124734]">

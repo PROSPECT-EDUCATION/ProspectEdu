@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
@@ -6,6 +7,7 @@ import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
 import { uploadsApi } from "../../services/uploads";
+
 export default function AddCoursePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -13,6 +15,7 @@ export default function AddCoursePage() {
   const [selectedTeacherIds, setSelectedTeacherIds] = useState([""]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
+
   // All form states
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -20,58 +23,67 @@ export default function AddCoursePage() {
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
   const [info, setInfo] = useState("");
-  const [professors, setProfessors] = useState([""]);
+  const [professors, setProfessors] = useState([""]); // kept (existing)
   const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("");
   const [tax, setTax] = useState("");
   const [date, setDate] = useState("");
   const [img, setImg] = useState("");
   const [uploadingImg, setUploadingImg] = useState(false);
+
   // Tags
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
 
   const sidebarWidth = isCollapsed ? 80 : 256;
- useEffect(() => {
-  (async () => {
+
+  const canonicalUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const pathname =
+      typeof window !== "undefined" ? window.location.pathname : "";
+    return origin && pathname ? `${origin}${pathname}` : "";
+  }, []);
+
+  const pageTitle = "Add New Course | ProspectEdu Admin";
+  const pageDescription =
+    "Create a new course with title, category, professors, pricing, tags, and image in ProspectEdu Admin.";
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await usersApi.listTeachers();
+        setTeacherOptions(res.data.teachers || []);
+      } catch (err) {
+        showToast(
+          err?.response?.data?.message || "Failed to load teachers",
+          "error"
+        );
+      }
+    })();
+  }, []);
+
+  const handlePickImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      const res = await usersApi.listTeachers();
-      setTeacherOptions(res.data.teachers || []);
+      setUploadingImg(true);
+      const res = await uploadsApi.uploadCourseImage(file);
+      setImg(res.data.url); // saved in DB
+      showToast("Image uploaded!", "success");
     } catch (err) {
-      showToast(err?.response?.data?.message || "Failed to load teachers", "error");
+      showToast(err?.response?.data?.message || "Image upload failed", "error");
+    } finally {
+      setUploadingImg(false);
     }
-  })();
-}, []);
-
-  const handleAddProfessor = () => {
-    setProfessors([...professors, ""]);
-  };
-const handlePickImage = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  try {
-    setUploadingImg(true);
-    const res = await uploadsApi.uploadCourseImage(file);
-    setImg(res.data.url); // ✅ this is what will be saved in DB
-    showToast("Image uploaded!", "success");
-  } catch (err) {
-    showToast(err?.response?.data?.message || "Image upload failed", "error");
-  } finally {
-    setUploadingImg(false);
-  }
-};
-  const handleProfessorChange = (index, value) => {
-    const updated = [...professors];
-    updated[index] = value;
-    setProfessors(updated);
   };
 
   const handleAddTag = () => setShowTagInput(true);
 
   const handleTagKeyPress = (e) => {
     if (e.key === "Enter" && tagInput.trim() !== "") {
+      e.preventDefault();
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
       setShowTagInput(false);
@@ -90,41 +102,59 @@ const handlePickImage = async (e) => {
 
       const teacherIds = selectedTeacherIds.filter(Boolean);
 
-const professorNames = teacherIds
-  .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
-  .filter(Boolean);
+      const professorNames = teacherIds
+        .map((id) => teacherOptions.find((t) => t._id === id)?.fullName)
+        .filter(Boolean);
 
-const payload = {
-  title,
-  category,
-  short,
-  description,
-  duration,
-  info,
-  professors: professorNames,        // optional display
-  assignedTeachers: teacherIds,      // ✅ real linkage
-  price: Number(price || 0),
-  discount: Number(discount || 0),
-  tax: Number(tax || 0),
-  date,
-  img,
-  tags,
-};
+      const payload = {
+        title,
+        category,
+        short,
+        description,
+        duration,
+        info,
+        professors: professorNames, // optional display
+        assignedTeachers: teacherIds, // linkage
+        price: Number(price || 0),
+        discount: Number(discount || 0),
+        tax: Number(tax || 0),
+        date,
+        img,
+        tags,
+      };
 
-
-       await coursesApi.create(payload);
+      await coursesApi.create(payload);
 
       showToast("Course added successfully!", "success");
       navigate("/admin/courses");
     } catch (err) {
-      const msg = err?.response?.data?.message || err.message || "Failed to add course";
+      const msg =
+        err?.response?.data?.message || err.message || "Failed to add course";
       showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
+
+      {/* Hidden H1 for SEO (no layout change) */}
+      <h1 className="sr-only">Add New Course</h1>
 
       {/* SIDEBAR */}
       <div
@@ -139,9 +169,13 @@ const payload = {
       </div>
 
       {/* MAIN */}
-      <div
+      <main
         className="flex flex-col flex-1 transition-all duration-300"
-        style={{ marginLeft: sidebarWidth, width: `calc(100vw - ${sidebarWidth}px)` }}
+        style={{
+          marginLeft: sidebarWidth,
+          width: `calc(100vw - ${sidebarWidth}px)`,
+        }}
+        aria-label="Add course admin page"
       >
         {/* TOPBAR */}
         <div
@@ -154,10 +188,11 @@ const payload = {
         {/* CONTENT */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
           <div className="w-full max-w-5xl mx-auto bg-white rounded-xl shadow p-6">
-            <h2 className="text-2xl font-semibold text-[#124734] mb-6">Add Course</h2>
+            <h2 className="text-2xl font-semibold text-[#124734] mb-6">
+              Add Course
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-
               {/* Title */}
               <div>
                 <label className="font-medium text-gray-700">Course Title</label>
@@ -182,7 +217,9 @@ const payload = {
 
               {/* Short */}
               <div>
-                <label className="font-medium text-gray-700">Short Description</label>
+                <label className="font-medium text-gray-700">
+                  Short Description
+                </label>
                 <input
                   type="text"
                   value={short}
@@ -193,7 +230,9 @@ const payload = {
 
               {/* Full Info */}
               <div>
-                <label className="font-medium text-gray-700">Course Information</label>
+                <label className="font-medium text-gray-700">
+                  Course Information
+                </label>
                 <textarea
                   value={info}
                   onChange={(e) => setInfo(e.target.value)}
@@ -204,7 +243,9 @@ const payload = {
 
               {/* Description */}
               <div>
-                <label className="font-medium text-gray-700">Course Description</label>
+                <label className="font-medium text-gray-700">
+                  Course Description
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -212,8 +253,11 @@ const payload = {
                   className="w-full mt-2 p-2 border rounded"
                 />
               </div>
+
               <div>
-                <label className="font-medium text-gray-700">Course Duration</label>
+                <label className="font-medium text-gray-700">
+                  Course Duration
+                </label>
                 <textarea
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
@@ -223,39 +267,39 @@ const payload = {
               </div>
 
               {/* Professors */}
-              {/* Professors */}
-<div>
-  <label className="font-medium text-gray-700">Professors</label>
+              <div>
+                <label className="font-medium text-gray-700">Professors</label>
 
-  {selectedTeacherIds.map((tid, i) => (
-    <select
-      key={i}
-      value={tid}
-      onChange={(e) => {
-        const updated = [...selectedTeacherIds];
-        updated[i] = e.target.value;
-        setSelectedTeacherIds(updated);
-      }}
-      className="w-full mt-2 p-2 border rounded"
-    >
-      <option value="">Select Teacher</option>
-      {teacherOptions.map((t) => (
-        <option key={t._id} value={t._id}>
-          {t.fullName}
-        </option>
-      ))}
-    </select>
-  ))}
+                {selectedTeacherIds.map((tid, i) => (
+                  <select
+                    key={i}
+                    value={tid}
+                    onChange={(e) => {
+                      const updated = [...selectedTeacherIds];
+                      updated[i] = e.target.value;
+                      setSelectedTeacherIds(updated);
+                    }}
+                    className="w-full mt-2 p-2 border rounded"
+                  >
+                    <option value="">Select Teacher</option>
+                    {teacherOptions.map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.fullName}
+                      </option>
+                    ))}
+                  </select>
+                ))}
 
-  <button
-    type="button"
-    onClick={() => setSelectedTeacherIds([...selectedTeacherIds, ""])}
-    className="mt-2 text-sm text-[#124734] underline"
-  >
-    + Add another professor
-  </button>
-</div>
-
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedTeacherIds([...selectedTeacherIds, ""])
+                  }
+                  className="mt-2 text-sm text-[#124734] underline"
+                >
+                  + Add another professor
+                </button>
+              </div>
 
               {/* Pricing */}
               <div>
@@ -270,7 +314,9 @@ const payload = {
 
               {/* Discount */}
               <div>
-                <label className="font-medium text-gray-700">Discount (%)</label>
+                <label className="font-medium text-gray-700">
+                  Discount (%)
+                </label>
                 <input
                   type="number"
                   value={discount}
@@ -338,43 +384,46 @@ const payload = {
                 )}
               </div>
 
-              {/* Image URL */}
               {/* Image Upload */}
-<div>
-  <label className="font-medium text-gray-700">Course Image</label>
+              <div>
+                <label className="font-medium text-gray-700">Course Image</label>
 
-  <div className="mt-2 flex items-center gap-3">
-    <input type="file" accept="image/*" onChange={handlePickImage} />
-    {uploadingImg && <span className="text-sm text-gray-500">Uploading...</span>}
-  </div>
+                <div className="mt-2 flex items-center gap-3">
+                  <input type="file" accept="image/*" onChange={handlePickImage} />
+                  {uploadingImg && (
+                    <span className="text-sm text-gray-500">Uploading...</span>
+                  )}
+                </div>
 
-  {/* Preview */}
-  <div className="mt-3">
-    <img
-      src={img || "/placeholder-course.png"}
-      alt="course"
-      className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
-    />
-  </div>
+                {/* Preview */}
+                <div className="mt-3">
+                  <img
+                    src={img || "/placeholder-course.png"}
+                    alt={title ? `${title} course image` : "Course image preview"}
+                    className="w-full max-w-sm h-40 object-contain bg-[#F0F5F2] rounded"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
 
-  {/* Optional: keep URL visible (debug) */}
-  <input
-    type="text"
-    value={img}
-    onChange={(e) => setImg(e.target.value)}
-    className="w-full mt-3 p-2 border rounded"
-    placeholder="Image URL will appear here after upload"
-  />
-</div>
-
+                {/* URL visible */}
+                <input
+                  type="text"
+                  value={img}
+                  onChange={(e) => setImg(e.target.value)}
+                  className="w-full mt-3 p-2 border rounded"
+                  placeholder="Image URL will appear here after upload"
+                />
+              </div>
 
               {/* BUTTONS */}
               <div className="flex gap-4 mt-6">
                 <button
                   type="submit"
                   className="bg-[#124734] text-white px-6 py-2 rounded-md hover:bg-[#0E3A2B]"
+                  disabled={loading}
                 >
-                  Add Course
+                  {loading ? "Saving..." : "Add Course"}
                 </button>
 
                 <button
@@ -385,12 +434,10 @@ const payload = {
                   Cancel
                 </button>
               </div>
-
             </form>
-
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

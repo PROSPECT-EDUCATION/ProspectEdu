@@ -3,9 +3,35 @@ import { useNavigate, useParams } from "react-router-dom";
 import { quizzesApi } from "../../services/quizzes";
 import { useToast } from "../../context/ToastContext";
 
+// ✅ SEO helpers
+function upsertMeta(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+function upsertLink(rel, href) {
+  if (!href) return;
+  let el = document.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 function fmtDate(d) {
   if (!d) return "—";
-  try { return new Date(d).toLocaleString(); } catch { return "—"; }
+  try {
+    return new Date(d).toLocaleString();
+  } catch {
+    return "—";
+  }
 }
 
 export default function StudentQuizAttemptsPage() {
@@ -15,6 +41,14 @@ export default function StudentQuizAttemptsPage() {
 
   const [loading, setLoading] = useState(true);
   const [attempts, setAttempts] = useState([]);
+
+  // ✅ SEO
+  useEffect(() => {
+    document.title = "My Quiz Attempts | ProspectEdu Student";
+    upsertMeta("description", "View your previous quiz attempts and scores in ProspectEdu student dashboard.");
+    upsertMeta("robots", "noindex, follow");
+    upsertLink("canonical", window.location.href);
+  }, []);
 
   useEffect(() => {
     const load = async () => {

@@ -8,6 +8,38 @@ import {
   updateMyStudentProfile,
 } from "../../services/student.service";
 
+/** ✅ tiny SEO helper (no extra deps) */
+function upsertMetaByName(name, content) {
+  let el = document.querySelector(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return el;
+}
+function upsertMetaByProperty(property, content) {
+  let el = document.querySelector(`meta[property="${property}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("property", property);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+  return el;
+}
+function upsertCanonical(href) {
+  let el = document.querySelector(`link[rel="canonical"]`);
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+  return el;
+}
+
 export default function EditProfile() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
@@ -35,6 +67,41 @@ export default function EditProfile() {
     lastExamYear: "",
     preparingSince: "",
   });
+
+  // ✅ SEO (private page => noindex,follow)
+  useEffect(() => {
+    const title =
+      activeTab === "basic"
+        ? "My Profile – Basic Details | ProspectEdu"
+        : "My Profile – Education Details | ProspectEdu";
+    const desc =
+      "Update your ProspectEdu student profile details including basic information and education details.";
+
+    document.title = title;
+
+    const robots = upsertMetaByName("robots", "noindex, follow");
+    const description = upsertMetaByName("description", desc);
+
+    // OG/Twitter (helps sharing + rich previews)
+    const ogTitle = upsertMetaByProperty("og:title", title);
+    const ogDesc = upsertMetaByProperty("og:description", desc);
+    const ogType = upsertMetaByProperty("og:type", "website");
+
+    const twCard = upsertMetaByName("twitter:card", "summary");
+    const twTitle = upsertMetaByName("twitter:title", title);
+    const twDesc = upsertMetaByName("twitter:description", desc);
+
+    // Canonical (strip query/hash)
+    const canonicalUrl = `${window.location.origin}${window.location.pathname}`;
+    const canonical = upsertCanonical(canonicalUrl);
+
+    return () => {
+      // cleanup only what we add/update here (safe)
+      [robots, description, ogTitle, ogDesc, ogType, twCard, twTitle, twDesc, canonical].forEach(
+        (el) => el && el.remove()
+      );
+    };
+  }, [activeTab]);
 
   // ✅ load profile on mount
   useEffect(() => {
@@ -226,7 +293,16 @@ export default function EditProfile() {
         </div>
 
         {/* Main Form Area */}
-        <main className="flex-1 overflow-y-auto px-1 py-0" style={{ marginTop: "80px" }}>
+        <main
+          className="flex-1 overflow-y-auto px-1 py-0"
+          style={{ marginTop: "80px" }}
+          aria-labelledby="student-profile-heading"
+        >
+          {/* ✅ semantic H1 without layout change */}
+          <h1 id="student-profile-heading" className="sr-only">
+            Student Profile Editor
+          </h1>
+
           {activeTab === "basic" && (
             <div className="max-w-3xl bg-white p-5 rounded-xl shadow-sm border border-[#E6F4EC] ml-4">
               <h2 className="text-2xl font-heading text-[#124734] mb-2">
@@ -238,7 +314,9 @@ export default function EditProfile() {
 
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm mb-1 text-[#124734]">* Name</label>
+                  <label className="block text-sm mb-1 text-[#124734]">
+                    * Name
+                  </label>
                   <input
                     type="text"
                     value={basic.fullName}
@@ -248,7 +326,9 @@ export default function EditProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 text-[#124734]">* Select Gender</label>
+                  <label className="block text-sm mb-1 text-[#124734]">
+                    * Select Gender
+                  </label>
                   <select
                     value={basic.gender}
                     onChange={onChangeBasic("gender")}
@@ -262,7 +342,9 @@ export default function EditProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 text-[#124734]">* Interested</label>
+                  <label className="block text-sm mb-1 text-[#124734]">
+                    * Interested
+                  </label>
                   <input
                     value={basic.interested}
                     onChange={onChangeBasic("interested")}
@@ -284,7 +366,9 @@ export default function EditProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 text-[#124734]">* Email Address</label>
+                  <label className="block text-sm mb-1 text-[#124734]">
+                    * Email Address
+                  </label>
                   <input
                     type="email"
                     value={basic.email}
@@ -294,7 +378,9 @@ export default function EditProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 text-[#124734]">* Phone Number</label>
+                  <label className="block text-sm mb-1 text-[#124734]">
+                    * Phone Number
+                  </label>
                   <input
                     type="text"
                     value={basic.phone}
