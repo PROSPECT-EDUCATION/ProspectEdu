@@ -7,6 +7,7 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 import RefreshComponent from "../../components/RefreshComponent";
 
 import { courseContentApi } from "../../services/courseContent";
+import { activityApi } from "../../services/activity";
 
 function iconForType(type) {
   if (type === "video") return <Film size={16} />;
@@ -86,6 +87,8 @@ export default function StudentModuleLessonsPage() {
   const openLesson = async (l) => {
     try {
       // ✅ VIDEO
+      await activityApi.markLessonWatched(l._id);
+
       if (String(l.type) === "video") {
         if (l.contentUrl) {
           setViewerKind("video");

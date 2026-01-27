@@ -7,7 +7,7 @@ import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
 import { uploadsApi } from "../../services/uploads";
-
+import { categoriesApi } from "../../services/categories";
 export default function AddCoursePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -15,6 +15,7 @@ export default function AddCoursePage() {
   const [selectedTeacherIds, setSelectedTeacherIds] = useState([""]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   // All form states
   const [title, setTitle] = useState("");
@@ -49,19 +50,24 @@ export default function AddCoursePage() {
   const pageDescription =
     "Create a new course with title, category, professors, pricing, tags, and image in ProspectEdu Admin.";
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await usersApi.listTeachers();
-        setTeacherOptions(res.data.teachers || []);
-      } catch (err) {
-        showToast(
-          err?.response?.data?.message || "Failed to load teachers",
-          "error"
-        );
-      }
-    })();
-  }, []);
+    useEffect(() => {
+  (async () => {
+    try {
+      const [teachersRes, categoriesRes] = await Promise.all([
+        usersApi.listTeachers(),
+        categoriesApi.list(),
+      ]);
+
+      setTeacherOptions(teachersRes.data.teachers || []);
+      setCategoryOptions(categoriesRes.data.categories || []);
+    } catch (err) {
+      showToast(
+        err?.response?.data?.message || "Failed to load dropdown data",
+        "error"
+      );
+    }
+  })();
+}, []);
 
   const handlePickImage = async (e) => {
     const file = e.target.files?.[0];
@@ -205,15 +211,24 @@ export default function AddCoursePage() {
               </div>
 
               {/* Category */}
-              <div>
-                <label className="font-medium text-gray-700">Category</label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full mt-2 p-2 border rounded"
-                />
-              </div>
+              {/* Category */}
+<div>
+  <label className="font-medium text-gray-700">Category</label>
+
+  <select
+    value={category}
+    onChange={(e) => setCategory(e.target.value)}
+    className="w-full mt-2 p-2 border rounded"
+  >
+    <option value="">Select Category</option>
+
+    {categoryOptions.map((c) => (
+      <option key={c._id} value={c.name}>
+        {c.name}
+      </option>
+    ))}
+  </select>
+</div>
 
               {/* Short */}
               <div>

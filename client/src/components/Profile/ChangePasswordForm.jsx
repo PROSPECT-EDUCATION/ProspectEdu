@@ -50,6 +50,7 @@ export default function ChangePasswordForm() {
       await authApi.changePassword({
         oldPassword: passwords.old,
         newPassword: passwords.new,
+        confirmPassword: passwords.confirm,
       });
 
       showToast(

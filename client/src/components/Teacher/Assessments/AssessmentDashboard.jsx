@@ -19,13 +19,6 @@ export default function AssessmentDashboard({ course }) {
       desc: "Add MCQs, short answers, timer.",
       icon: <HelpCircle size={30} />,
      path: `/teacher/assessment/quiz/${courseId}`
-
-    },
-    {
-      title: "View Submissions",
-      desc: "Track submissions & evaluate.",
-      icon: <Inbox size={30} />,
-      path: "/teacher/assessment/submissions",
     },
   ];
 

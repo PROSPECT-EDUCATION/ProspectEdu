@@ -109,7 +109,7 @@ export default function StudentQuizAttemptsPage() {
           )}
         </div>
 
-        <button onClick={() => navigate(-1)} className="mt-4 text-sm underline text-[#124734]">
+        <button onClick={() => navigate('/student/practice')} className="mt-4 text-sm underline text-[#124734]">
           ← Back
         </button>
       </div>

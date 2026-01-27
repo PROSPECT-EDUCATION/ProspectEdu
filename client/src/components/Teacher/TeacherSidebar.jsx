@@ -4,6 +4,7 @@ import {
   Layers,
   FilePlus2,
   Users,
+  FileText,
   MessageSquareReply,
   Upload,
   FolderKanban,
@@ -12,8 +13,8 @@ import {
   ClipboardList,
   Boxes,
   Newspaper,
- PenTool,
- Bell,
+  PenTool,
+  Bell,
   Library,
   CreditCard,
 } from "lucide-react";
@@ -23,51 +24,36 @@ import { Link, useLocation } from "react-router-dom";
 export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
   const location = useLocation();
 
-  // =====================
-  // TEACHER MENU STRUCTURE
-  // =====================
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/teacher-dashboard" },
-    
-   
 
-    {
-      label: "Students",
-      icon: Users,
-      path: "/teacher/students/performance",
-    },
-    {
-      label: "Payments",
-      icon: CreditCard,
-      path: "/teacher/payments",
-    },
+    { label: "Students", icon: Users, path: "/teacher/students/performance" },
+    { label: "Payments", icon: CreditCard, path: "/teacher/payments" },
 
-    {
-      label: "Reply to Doubts",
-      icon: MessageSquareReply,
-      path: "/teacher/queries/doubts",
-    },
-    
+    { label: "Reply to Doubts", icon: MessageSquareReply, path: "/teacher/queries/doubts" },
+
     { label: "Research", icon: Boxes, path: "/teacher/research" },
     { label: "Blog", icon: PenTool, path: "/teacher/blogs" },
     { label: "News", icon: Newspaper, path: "/teacher/news" },
-    {
-      label: "Reply to Parents Doubts",
-      icon: MessageSquareReply,
-      path: "/teacher/doubts",
-    },
+
+    { label: "Reply to Parents Doubts", icon: MessageSquareReply, path: "/teacher/doubts" },
     { label: "Test & Learning", icon: ClipboardList, path: "/teacher/test-learning" },
     { label: "Announcements", icon: Bell, path: "/teacher/announcements" },
 
+    {
+      label: "Individual Reports & Certifications",
+      icon: FileText,
+      path: "/teacher/reports-certifications",
+    },
 
     { label: "Study Materials", icon: Library, path: "/teacher/studymaterials" },
   ];
 
   return (
     <aside
-      className={`bg-[#124734] text-white h-screen flex flex-col justify-between shadow-lg transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
+      className={`bg-[#124734] text-white h-screen flex flex-col justify-between shadow-lg transition-all duration-300
+      overflow-y-auto scrollbar-thin scrollbar-thumb-[#0B2F23] scrollbar-track-[#124734]
+      ${isCollapsed ? "w-20" : "w-64"}`}
     >
       {/* Logo */}
       <div>
@@ -90,7 +76,10 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
         </div>
 
         {/* MENU */}
-        <nav className="mt-4 space-y-1 flex-1 overflow-y-auto">
+        <nav
+          className="mt-4 space-y-1 flex-1 overflow-y-auto
+          scrollbar-thin scrollbar-thumb-[#0B2F23] scrollbar-track-[#124734]"
+        >
           {menuItems.map(({ label, icon: Icon, path }) => (
             <Link
               key={label}
@@ -114,14 +103,9 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-2 rounded-full bg-[#009846]/80 hover:bg-[#009846] transition-all duration-300"
         >
-          {isCollapsed ? (
-            <ArrowRight size={20} color="#fff" />
-          ) : (
-            <ArrowLeft size={20} color="#fff" />
-          )}
+          {isCollapsed ? <ArrowRight size={20} color="#fff" /> : <ArrowLeft size={20} color="#fff" />}
         </button>
       </div>
     </aside>
   );
 }
-

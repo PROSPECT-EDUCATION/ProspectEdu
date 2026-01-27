@@ -61,10 +61,10 @@ export default function AskDoubtModal({ open, onClose, onSuccess }) {
               <p className="text-sm text-[#5B7065] mb-4">Get your question Answered</p>
               <div className="space-y-3">
                 <button className="flex items-center gap-2 mx-auto px-4 py-2 rounded-full bg-[#E6F4EC] text-[#124734] hover:bg-[#D4EFE0] transition">
-                  📞 +91 8757354880
+                  📞 +91 9752812898
                 </button>
                 <button className="flex items-center gap-2 mx-auto px-4 py-2 rounded-full bg-[#E6F4EC] text-[#124734] hover:bg-[#D4EFE0] transition">
-                  ✉ enquiry@khanglobalstudies.com
+                  ✉ prospectbpl@gmail.com
                 </button>
               </div>
             </div>

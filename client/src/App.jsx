@@ -1,4 +1,4 @@
-import './App.css'
+import './App.css';
 import Home from "./pages/home";
 import {Routes, Route} from "react-router-dom";
 import Courses from "./pages/Courses";
@@ -43,11 +43,11 @@ import ChangePasswordTeacher from './pages/Teacher/ChangePasswordTeacher'
 import EditProfilePage from './pages/Teacher/EditProfilePage';
 import TeacherModuleContentPage from './pages/Teacher/TeacherModuleContentPage';
 import TeacherPaymentsPage from './pages/Teacher/TeacherPaymentsPage';
-
+import TeacherReportsCertificationsPage from './pages/Teacher/TeacherReportsCertificationsPage';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentStudentsPage from './pages/Parent/ParentStudentPage';
 import StudentDetailsPage from './pages/Parent/StudentDetailsPage';
-
+import ParentReportsCertificationsPage from './pages/Parent/ParentReportsCertificationsPage';
 import ParentAnnouncementsPage from './pages/Parent/ParentAnnouncementsPage';
 import ParentPaymentsPage from './pages/Parent/ParentPaymentsPage';
 import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
@@ -196,7 +196,7 @@ function App() {
       <Route path="/teacher/assessment/quiz/:courseId" element={<CreateQuizPage />} />
       <Route path="/teacher/assessment/quizzes/:courseId" element={<TeacherQuizzesPage />} />
       <Route path="/teacher/assessment/quizzes/view/:quizId" element={<TeacherQuizDetailsPage />} />
-
+      <Route path="/teacher/reports-certifications" element={<TeacherReportsCertificationsPage/>}/>
       <Route path="/teacher/assessment/submissions" element={<ViewSubmissionsPage />} />
       <Route path="/teacher/assessments/review" element={<ReviewSubmissionsPageWrapper />} />
       <Route path="/teacher/students/performance" element={<StudentsPerformancePage />} />
@@ -210,7 +210,8 @@ function App() {
       <Route path="/parent-dashboard" element = {<ParentDashboard/>}/>
       <Route path="/parent/students" element = {<ParentStudentsPage/>}/>
       <Route path="/parent/students/:id" element={<StudentDetailsPage />} />
-      
+      <Route path="/parent/reports-certifications" element={<ParentReportsCertificationsPage />}/>
+
       <Route path="/parent/announcements" element={<ParentAnnouncementsPage/>}/>
       <Route path="/parent/payments" element={<ParentPaymentsPage/>}/>
       <Route path="/parent/settings" element={<ParentSettingsPage/>}/>

@@ -9,6 +9,7 @@ import {
   LogOut,
   ArrowLeft,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -43,11 +44,17 @@ export default function ParentSidebar({ isCollapsed, setIsCollapsed }) {
       icon: CreditCard,
       path: "/parent/payments",
     },
+     {
+      label: "Individual Reports",
+      icon: FileText,
+      path: "/parent/reports-certifications",
+    },
     {
       label: "Settings",
       icon: Settings,
       path: "/parent/settings",
     },
+
   ];
 
   return (

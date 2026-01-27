@@ -1,17 +1,44 @@
 // src/components/Student/DashboardStats.jsx
+import { useEffect, useState } from "react";
 import { BookOpen, PlayCircle, FileText, MonitorPlay } from "lucide-react";
+import { api } from "../../lib/api";
 
 export default function DashboardStats() {
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  const [lectureWatchedCount, setLectureWatchedCount] = useState(0);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    // ✅ Enrolled Courses count
+    api
+      .get("/courses/me/enrollments")
+      .then((res) => {
+        const rows = res?.data?.courses || [];
+        setEnrolledCount(rows.length);
+      })
+      .catch(() => setEnrolledCount(0));
+
+    // ✅ Lecture Watch count
+    api
+      .get("/activity/lesson-watch/count")
+      .then((res) => {
+        setLectureWatchedCount(res?.data?.count || 0);
+      })
+      .catch(() => setLectureWatchedCount(0));
+  }, []);
+
   const stats = [
     {
       title: "Enrolled Courses",
-      value: 0,
+      value: enrolledCount, // ✅ dynamic
       icon: <BookOpen size={22} className="text-[#2C2E8A]" />,
       bg: "bg-[#E6E8FA]",
     },
     {
       title: "Lecture Watch",
-      value: 0,
+      value: lectureWatchedCount, // ✅ dynamic
       icon: <PlayCircle size={22} className="text-[#009846]" />,
       bg: "bg-[#E8F8EF]",
     },
@@ -47,11 +74,12 @@ export default function DashboardStats() {
                 {s.value}
               </h3>
             </div>
-            <div className="p-3 bg-white rounded-full shadow-sm">{s.icon}</div>
+            <div className="p-3 bg-white rounded-full shadow-sm">
+              {s.icon}
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
 }
-
