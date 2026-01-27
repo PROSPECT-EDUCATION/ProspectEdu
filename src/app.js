@@ -48,8 +48,8 @@ import careerRoutes from "./modules/careers/career.routes.js";
 
 
 
-
-
+import reportsRoutes from "./modules/reports/reports.routes.js";
+import activityRoutesstudentdashboard from "./modules/studentdashboard/activity.routes.js";
 import coursesRoutes from "./modules/courses/courses.routes.js";
 import contentRoutes from "./modules/courses/content.routes.js";
 import CoursecategoryRoutes from "./modules/courseCategories/category.routes.js";
@@ -125,6 +125,8 @@ app.use("/uploads", express.static("uploads"));
   app.use("/api/v1/performance", overallPerformanceRoutes);
   app.use("/api/v1/parents", parentsRoutes);
   app.use("/api/v1/payments", paymentsRoutes);
+  app.use("/api/v1/activity", activityRoutesstudentdashboard);
+  app.use("/api/v1/reports", reportsRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;
