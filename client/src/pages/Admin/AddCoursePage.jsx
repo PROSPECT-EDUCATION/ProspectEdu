@@ -6,6 +6,7 @@ import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
+import Breadcrumb from "../../components/Breadcrumb";
 import { uploadsApi } from "../../services/uploads";
 import { categoriesApi } from "../../services/categories";
 export default function AddCoursePage() {
@@ -173,6 +174,7 @@ export default function AddCoursePage() {
           setIsCollapsed={setIsCollapsed}
         />
       </div>
+      
 
       {/* MAIN */}
       <main
@@ -183,6 +185,7 @@ export default function AddCoursePage() {
         }}
         aria-label="Add course admin page"
       >
+
         {/* TOPBAR */}
         <div
           className="fixed top-0 bg-white shadow-sm h-[64px] flex items-center z-[999]"
@@ -190,9 +193,16 @@ export default function AddCoursePage() {
         >
           <AdminTopbar pageTitle="Add New Course" />
         </div>
+          
 
         {/* CONTENT */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Add Courses" },
+        ]}
+      />
           <div className="w-full max-w-5xl mx-auto bg-white rounded-xl shadow p-6">
             <h2 className="text-2xl font-semibold text-[#124734] mb-6">
               Add Course

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 export default function EcomProductList() {
@@ -140,13 +141,14 @@ export default function EcomProductList() {
           setIsCollapsed={setIsCollapsed}
         />
       </div>
-
+      
       {/* MAIN CONTENT AREA */}
       <main
         className="flex-1 flex flex-col"
         style={{ marginLeft: sidebarWidth }}
         aria-label="Admin products page"
       >
+        
         {/* Hidden H1 for SEO (no layout change) */}
         <h1 className="sr-only">Admin Products</h1>
 
@@ -157,9 +159,18 @@ export default function EcomProductList() {
         >
           <AdminTopbar isCollapsed={isCollapsed} pageTitle="Product List" />
         </div>
+        
 
         {/* PAGE CONTENT */}
         <div className="p-8 mt-[80px]">
+          <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Admin Products" },
+        ]}
+      />
+        </div>
           {/* Keeping your visible H1 exactly as-is (layout unchanged) */}
           <h1 className="text-3xl font-bold text-[#124734] mb-6">
             Admin Products

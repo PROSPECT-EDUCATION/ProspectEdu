@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 export default function AdminAddProduct() {
@@ -175,9 +176,16 @@ export default function AdminAddProduct() {
         <div className="fixed top-0 right-0 left-0 z-30" style={{ left: sidebarWidth }}>
           <AdminTopbar pageTitle="Add Product" isCollapsed={isCollapsed} />
         </div>
+        
 
         {/* PAGE CONTENT */}
         <div className="pt-[80px] p-8 pb-16" style={{ minHeight: "calc(100vh - 80px)" }}>
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Add Product" },
+        ]}
+      />
           <div className="bg-white shadow-lg rounded-xl p-8 border border-[#A7E1B2]/60 max-w-3xl">
             {error ? (
               <div

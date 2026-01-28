@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../../components/Teacher/TeacherTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { Plus, Pencil, Trash2, Image as ImageIcon, X } from "lucide-react";
 import {
   createTeacherBlog,
@@ -195,8 +196,15 @@ export default function TeacherBlogs() {
         >
           <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Blogs" />
         </header>
+       
 
         <main className="flex-1 overflow-y-auto px-6 py-8" style={{ marginTop: "64px" }}>
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Blogs" },
+        ]}
+      />
           <div className="max-w-6xl mx-auto text-left">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div>

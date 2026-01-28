@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { api } from "../../../lib/api";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { FileText, Mail, Phone, User, Filter, RefreshCw } from "lucide-react";
 
 function Badge({ status }) {
@@ -155,6 +156,14 @@ export default function AdminCareerApplications() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+           <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Job Applications" },
+        ]}
+      />
+        </div>
           {/* Filters */}
           <div className="bg-white rounded-2xl shadow p-4 md:p-5 mb-5">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

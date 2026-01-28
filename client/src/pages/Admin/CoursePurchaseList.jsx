@@ -4,6 +4,7 @@ import { Search, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { adminPurchasesApi } from "../../services/adminPurchases";
 
 function pill(status) {
@@ -179,9 +180,19 @@ export default function PurchaseList() {
         >
           <AdminTopbar isCollapsed={isCollapsed} pageTitle="Course Purchases" />
         </div>
+        
 
         {/* CONTENT */}
         <div className="px-6 py-8 mt-[64px]">
+          <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Course Purchases" },
+        ]}
+      />
+        </div>
+          
           {/* STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
             <div className="bg-white rounded-xl border border-[#A7E1B2]/50 p-5 shadow-sm">

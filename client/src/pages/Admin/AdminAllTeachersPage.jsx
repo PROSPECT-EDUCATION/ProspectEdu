@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { usersApi } from "../../services/users";
 import { useToast } from "../../context/ToastContext";
+import Breadcrumb from "../../components/Breadcrumb";
 import Pagination from "../../components/Admin/Ecom/Pagination";
 
 export default function AdminAllTeachersPage() {
@@ -251,9 +252,18 @@ export default function AdminAllTeachersPage() {
         >
           <AdminTopbar pageTitle="Teachers" />
         </div>
+         
 
         {/* CONTENT */}
         <div className="px-6 pt-[80px] pb-10 overflow-y-auto">
+        <div className="ml=-1"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "All Teachers" },
+        ]}
+      />
+        </div>
           {/* Header Row */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
             <div>

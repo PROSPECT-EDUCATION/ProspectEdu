@@ -7,6 +7,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { usersApi } from "../../services/users";
 import { useToast } from "../../context/ToastContext";
 import Pagination from "../../components/Admin/Ecom/Pagination";
+import Breadcrumb from "../../components/Breadcrumb";
 import { getStudentByIdAdmin } from "../../services/student.service";
 
 export default function AdminStudentsPage() {
@@ -127,7 +128,9 @@ export default function AdminStudentsPage() {
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
         />
+        
       </div>
+       
 
       {/* MAIN */}
       <main
@@ -142,9 +145,18 @@ export default function AdminStudentsPage() {
         >
           <AdminTopbar pageTitle="Students" />
         </div>
-
+         
+ 
         {/* CONTENT */}
         <div className="px-6 pt-[80px] pb-10 overflow-y-auto">
+        <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Students" },
+        ]}
+      />
+        </div>
           {/* HEADER */}
           <div className="flex justify-between mb-5">
             <h2 className="text-2xl font-bold text-[#124734]">

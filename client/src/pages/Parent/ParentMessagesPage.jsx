@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { parentDoubtsApi } from "../../lib/parentDoubtsApi";
+import Breadcrumb from "../../components/Breadcrumb";
 import {
   Plus,
   Search,
@@ -270,7 +271,13 @@ export default function ParentDoubt() {
 
       <div className="flex-1 flex flex-col">
         <ParentTopbar title="Messages" />
-
+      
+       <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Messages" },
+        ]}
+      />
         <div className="p-5 ">
           {/* Header */}
           <div className="rounded-3xl border bg-white shadow-sm p-5 mb-4 text-left">

@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../../../lib/api";
 
 export default function OrderStats() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
+  // prevent overlapping requests on slow networks
+  const inFlight = useRef(false);
+
   const load = async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+
     try {
       setLoading(true);
       const res = await api.get("/orders/admin/stats");
@@ -14,13 +20,14 @@ export default function OrderStats() {
       setStats(null);
     } finally {
       setLoading(false);
+      inFlight.current = false;
     }
   };
 
   useEffect(() => {
     load();
 
-    // ✅ auto refresh (new orders day-by-day / live)
+    // ✅ auto refresh (live updates)
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps

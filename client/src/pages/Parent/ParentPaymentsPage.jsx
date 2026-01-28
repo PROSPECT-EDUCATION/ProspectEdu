@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
 import { paymentsApi } from "../../services/payments";
+import Breadcrumb from "../../components/Breadcrumb";
 import { Wallet, CheckCircle, Clock, CreditCard } from "lucide-react";
 
 function fmtMoney(n) {
@@ -98,6 +99,12 @@ export default function ParentPaymentsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <ParentTopbar pageTitle="Payments" showStudentSwitcher={false} />
+         <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Payments" },
+        ]}
+      />
 
         <div className="p-6 space-y-6 overflow-y-auto">
           {/* SUMMARY CARDS */}

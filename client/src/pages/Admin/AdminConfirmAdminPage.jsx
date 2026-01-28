@@ -4,6 +4,7 @@ import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import ErrorToast from "../../components/ui/ErrorToast";
+import Breadcrumb from "../../components/Breadcrumb";
 import { usersApi } from "../../services/users";
 
 export default function AdminConfirmAdminPage() {
@@ -122,6 +123,14 @@ export default function AdminConfirmAdminPage() {
 
       <main className="flex-1" aria-label="Confirm admins page">
         <AdminTopbar />
+         <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Confirm Admins" },
+        ]}
+      />
+        </div>
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-5">

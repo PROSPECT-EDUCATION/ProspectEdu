@@ -3,6 +3,7 @@ import { FileText, PenLine, Plus, Search, Trash2, UploadCloud, X } from "lucide-
 import { Helmet } from "react-helmet-async";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
+import Breadcrumb from "../../components/Breadcrumb";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 
 import { uploadsApi } from "../../services/uploads";
@@ -216,6 +217,7 @@ export default function TeacherStudyMaterials() {
         <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
+
       {/* Main */}
       <div
         className="flex flex-col flex-1 h-screen transition-all duration-300"
@@ -231,9 +233,15 @@ export default function TeacherStudyMaterials() {
         >
           <TeacherTopbar pageTitle="Study Materials" />
         </header>
-
+        
         {/* Toolbar */}
         <div className="sticky top-[64px] z-[998] bg-[#F9FAFB] border-b border-[#E6F4EC] px-6 py-4">
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Study Materials" },
+        ]}
+      />
           <div className="max-w-6xl mx-auto flex flex-col gap-3">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>

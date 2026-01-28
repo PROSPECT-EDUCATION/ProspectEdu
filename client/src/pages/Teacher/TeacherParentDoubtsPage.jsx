@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { teacherDoubtsApi } from "../../lib/parentDoubtsApi";
+import Breadcrumb from "../../components/Breadcrumb";
 import { Search, Inbox, Clock, Send, UserRound, BadgeCheck } from "lucide-react";
 
 function Badge({ status }) {
@@ -146,6 +147,12 @@ export default function TeacherParentDoubtsPage() {
       <TeacherSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 flex flex-col">
         <TeacherTopbar title="Parent Doubts" />
+         <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Parents Doubts" },
+        ]}
+      />
 
         <div className="p-5">
           {/* Header */}

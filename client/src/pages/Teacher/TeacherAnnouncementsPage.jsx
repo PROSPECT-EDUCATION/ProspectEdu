@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 
 import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
@@ -85,8 +86,14 @@ export default function TeacherAnnouncementsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
-
+          <Breadcrumb 
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Announcements" },
+        ]}
+      />
         <main className="p-6 space-y-4 overflow-y-auto text-left">
+          
           {loading ? (
             <p className="text-gray-500">Loading...</p>
           ) : items.length === 0 ? (

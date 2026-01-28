@@ -4,6 +4,7 @@ import { Search, Upload, Download, Trash2, FileText } from "lucide-react";
 
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { useToast } from "../../context/ToastContext";
 import { reportsApi } from "../../services/reports";
 
@@ -165,6 +166,12 @@ const handleDownload = async (f) => {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <TeacherTopbar pageTitle="Reports & Certifications" />
+        <Breadcrumb 
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Reports & Certifications" },
+        ]}
+      />
 
         <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-y-auto">
           {/* LEFT: Students */}

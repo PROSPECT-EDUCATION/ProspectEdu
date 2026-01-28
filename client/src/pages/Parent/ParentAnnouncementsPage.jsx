@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 
 import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
@@ -102,6 +103,12 @@ export default function ParentAnnouncementsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <ParentTopbar pageTitle="Announcements" showStudentSwitcher={false} />
+         <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Announcements" },
+        ]}
+      />
 
         <div className="p-6 space-y-4 overflow-y-auto text-left">
           {loading ? (

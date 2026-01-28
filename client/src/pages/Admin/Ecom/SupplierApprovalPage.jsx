@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 import {
   Search,
@@ -168,8 +169,17 @@ export default function SupplierApprovalPage() {
         >
           <AdminTopbar pageTitle="Supplier Approval" />
         </div>
+        
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+           <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Supplier Approval" },
+        ]}
+      />
+        </div>
           {/* Header */}
           <section className="bg-white rounded-xl shadow p-5 flex flex-col gap-4" aria-label="Supplier approval header">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">

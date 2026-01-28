@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import StudentSidebar from "../../components/Student/StudentSidebar";
 import StudentTopbar from "../../components/Student/StudentTopbar";
 import AskDoubtModal from "../../components/Student/AskDoubtModal";
+import Breadcrumb from "../../components/Breadcrumb";
 import { api } from "../../lib/api";
 
 function upsertHeadMeta({ name, property, content }) {
@@ -219,17 +220,24 @@ export default function Doubts() {
           style={{ left: sidebarWidthPx, right: 0 }}
         >
           <StudentTopbar isCollapsed={isCollapsed} pageTitle="Doubts" />
+          
         </header>
-
+       
+        
         {/* Main content */}
+        
         <main
           className="flex-1 mt-[64px] flex overflow-hidden text-left"
           aria-labelledby="doubts-page-heading"
         >
+          
+          
           {/* Hidden semantic H1 */}
           <h1 id="doubts-page-heading" className="sr-only">
             Student Doubts and Replies
           </h1>
+          
+          
 
           {/* LEFT LIST */}
           <section

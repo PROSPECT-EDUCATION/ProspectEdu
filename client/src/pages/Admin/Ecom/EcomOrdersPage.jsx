@@ -4,6 +4,7 @@ import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import OrderStats from "../../../components/Admin/Ecom/OrderStats";
 import OrderTabs from "../../../components/Admin/Ecom/OrderTabs";
+import Breadcrumb from "../../../components/Breadcrumb";
 import OrderTable from "../../../components/Admin/Ecom/OrderTable";
 import Pagination from "../../../components/Admin/Ecom/Pagination";
 
@@ -73,9 +74,15 @@ export default function EcomOrdersPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
-          <section aria-label="Order analytics">
-            <OrderStats />
-          </section>
+          <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "All Orders" },
+        ]}
+      />
+        </div>
+        
 
           <section aria-label="Order filters and search">
             <OrderTabs

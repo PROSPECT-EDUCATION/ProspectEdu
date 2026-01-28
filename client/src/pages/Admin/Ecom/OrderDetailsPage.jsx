@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 const uiStatus = (s) => String(s || "").replaceAll("_", " ").toUpperCase();
@@ -164,9 +165,15 @@ export default function OrderDetailsPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto text-left">
-          <button onClick={() => navigate("/admin/ecom/orders")} className="mb-4 text-[#124734] underline">
-            ← Back to Orders
-          </button>
+         <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "All Orders", to: "/admin/ecom/orders" },
+          { label: "Order Details" },
+        ]}
+      />
+        </div>
 
           {/* Header card */}
           <div className="bg-white rounded-xl shadow p-6 mb-6">

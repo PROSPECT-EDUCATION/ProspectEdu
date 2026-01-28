@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { useToast } from "../../context/ToastContext";
 import { coursesApi } from "../../services/courses";
 import { usersApi } from "../../services/users";
@@ -224,6 +225,7 @@ export default function EditCoursePage() {
         >
           <AdminTopbar pageTitle="Edit Course" />
         </div>
+       
 
         {/* Page Content */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">

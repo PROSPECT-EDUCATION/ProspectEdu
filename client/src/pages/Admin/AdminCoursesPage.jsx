@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import CoursesList from "../../components/Admin/Courses/CoursesList";
+import Breadcrumb from "../../components/Breadcrumb";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminCoursesPage() {
@@ -61,6 +62,9 @@ export default function AdminCoursesPage() {
         >
           <AdminTopbar pageTitle="All Courses" />
         </div>
+        
+        
+        
 
         {/* CONTENT */}
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">

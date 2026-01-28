@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../../components/Teacher/TeacherTopbar";
-
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 const AdminResearchPage = () => {
@@ -222,8 +222,15 @@ const AdminResearchPage = () => {
         >
           <TeacherTopbar pageTitle="Research" />
         </div>
+         
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto text-left">
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Research Report" },
+        ]}
+      />
           {/* CATEGORY CARD */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

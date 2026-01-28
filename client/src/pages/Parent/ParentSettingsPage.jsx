@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { useToast } from "../../context/ToastContext";
 
 import AddChildModal from "../../components/Parent/Settings/AddChildModal";
@@ -191,6 +192,12 @@ export default function ParentSettingsPage() {
         style={{ marginLeft: sidebarWidth }}
       >
         <ParentTopbar pageTitle="Settings" showStudentSwitcher={false} />
+        <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Settings" },
+        ]}
+      />
 
         <div className="p-4 md:p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">

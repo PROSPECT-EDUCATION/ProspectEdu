@@ -5,6 +5,7 @@ import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import CourseCard from "../../components/Teacher/CourseCard";
 import { useNavigate } from "react-router-dom";
 import { coursesApi } from "../../services/courses";
+import Breadcrumb from "../../components/Breadcrumb";
 
 export default function TeacherCoursesPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -76,15 +77,12 @@ export default function TeacherCoursesPage() {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <p className="text-sm text-[#5B7065]">
-                <span
-                  className="hover:text-[#009846] cursor-pointer hover:underline"
-                  onClick={() => navigate("/teacher-dashboard")}
-                >
-                  Dashboard
-                </span>{" "}
-                / Courses
-              </p>
+                <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Courses" },
+        ]}
+      />
 
               <h2 className="text-2xl font-semibold text-[#124734]">My Courses</h2>
             </div>

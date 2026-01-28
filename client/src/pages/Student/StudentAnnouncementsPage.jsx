@@ -4,6 +4,7 @@ import StudentTopbar from "../../components/Student/StudentTopbar";
 
 import AnnouncementCard from "../../components/Parent/Announcements/AnnouncementCard";
 import AnnouncementModal from "../../components/Parent/Announcements/AnnouncementModal";
+import Breadcrumb from "../../components/Breadcrumb";
 import { api } from "../../lib/api";
 
 function upsertMeta(name, content) {
@@ -81,8 +82,16 @@ export default function StudentAnnouncementsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <StudentTopbar isCollapsed={isCollapsed} pageTitle="Announcements" />
+        
+        <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/student-dashboard" },
+          { label: "Announcements" },
+        ]}
+      />
 
         <main className="p-6 space-y-4 overflow-y-auto text-left">
+          
           {loading ? (
             <p className="text-gray-500">Loading...</p>
           ) : items.length === 0 ? (

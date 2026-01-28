@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import { useToast } from "../../context/ToastContext";
+import Breadcrumb from "../../components/Breadcrumb";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
@@ -113,6 +114,14 @@ export default function AdminAnnouncementsPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+              <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "All Announcements" },
+        ]}
+      />
+        </div>
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">All Announcements</h2>

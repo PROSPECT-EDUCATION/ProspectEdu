@@ -4,6 +4,7 @@ import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 
 import CategoryHeader from "../../../components/Admin/Ecom/Categories/CategoryHeader";
+import Breadcrumb from "../../../components/Breadcrumb";
 import CategorySlider from "../../../components/Admin/Ecom/Categories/CategorySlider";
 import CategoryTabs from "../../../components/Admin/Ecom/Categories/CategoryTabs";
 import ProductTable from "../../../components/Admin/Ecom/Categories/ProductTable";
@@ -104,8 +105,17 @@ export default function CategoriesPage() {
         >
           <AdminTopbar pageTitle="E-Commerce Categories" />
         </div>
+        
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto h-[calc(100vh-64px)]">
+          <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Categories" },
+        ]}
+      />
+        </div>
           {/* Header */}
           <section aria-label="Category actions and overview">
             <CategoryHeader

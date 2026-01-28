@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../../components/Teacher/TeacherTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 const fmtToday = () =>
@@ -228,6 +229,12 @@ export default function TeacherNewsPage() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto text-left">
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "News" },
+        ]}
+      />
           {/* Top cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white border rounded-2xl shadow-sm p-5">

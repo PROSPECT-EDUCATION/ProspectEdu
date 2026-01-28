@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { Search, Save, Loader2, RefreshCcw } from "lucide-react";
-
+import Breadcrumb from "../../components/Breadcrumb";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { performanceApi } from "../../services/performance";
@@ -191,8 +191,14 @@ export default function StudentsPerformancePage() {
         style={{ marginLeft: sidebarWidth }}
       >
         <TeacherTopbar pageTitle="Students · Overall Performance" />
-
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Student Overall Performance" },
+        ]}
+      />
         <div className="p-6 overflow-y-auto max-h-screen">
+           
           <h2 className="text-lg font-semibold text-[#124734] text-left">Overall Report Card</h2>
           <p className="text-sm text-[#5B7065] mt-1 text-left">
             Update Assignment Avg, Quiz Avg, Attendance, Progress (0–100).

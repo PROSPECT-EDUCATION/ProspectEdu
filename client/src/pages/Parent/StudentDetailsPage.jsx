@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation, useParams } from "react-router-dom";
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { getStudentDetails } from "../../services/student.service";
 
 export default function StudentDetailsPage() {
@@ -100,6 +101,7 @@ export default function StudentDetailsPage() {
       >
         <ParentSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
+      
 
       {/* MAIN */}
       <div
@@ -107,6 +109,14 @@ export default function StudentDetailsPage() {
         style={{ marginLeft: sidebarWidth }}
       >
         <ParentTopbar pageTitle="Student Profile" showStudentSwitcher={false} />
+
+        <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "My Students", to: "/parent/students" },
+          { label: "Student Profile" },
+        ]}
+      />
 
         <div className="p-6 overflow-y-auto space-y-6">
           {/* STUDENT HEADER */}

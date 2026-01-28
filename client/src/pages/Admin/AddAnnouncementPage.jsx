@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../components/Admin/Layout/AdminTopbar";
 import AddAnnouncementForm from "../../components/Admin/Announcements/AddAnnouncementForm";
+import Breadcrumb from "../../components/Breadcrumb";
 
 export default function AddAnnouncementPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -65,7 +66,16 @@ export default function AddAnnouncementPage() {
           <AdminTopbar pageTitle="Create Announcement" />
         </div>
 
+       
+         
+        
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+            <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Add Announcement" },
+        ]}
+      />
           <AddAnnouncementForm />
         </div>
       </main>

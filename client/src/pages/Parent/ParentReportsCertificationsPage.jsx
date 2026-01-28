@@ -5,6 +5,7 @@ import { Search, Download, FileText } from "lucide-react";
 
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 import { parentsApi } from "../../services/parents";
 import { reportsApi } from "../../services/reports";
 import { useToast } from "../../context/ToastContext";
@@ -149,6 +150,12 @@ const handleDownload = async (f) => {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <ParentTopbar pageTitle="Reports & Certifications" showStudentSwitcher={false} />
+         <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Reports & Certifications" },
+        ]}
+      />
 
         <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-y-auto">
           {/* LEFT: Linked children */}

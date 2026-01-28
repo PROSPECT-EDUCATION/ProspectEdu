@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import ParentSidebar from "../../components/Parent/ParentSidebar";
 import ParentTopbar from "../../components/Parent/ParentTopbar";
+import Breadcrumb from "../../components/Breadcrumb";
 
 import ChangePasswordForm from "../../components/Profile/ChangePasswordForm";
 
@@ -81,6 +82,13 @@ export default function ParentChangePasswordPage() {
         >
           <ParentTopbar pageTitle="Change Password" showStudentSwitcher={false} />
         </div>
+
+        <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "Change Password" },
+        ]}
+      />
 
         {/* Sub-header */}
         <div

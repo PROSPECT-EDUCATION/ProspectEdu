@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { parentsApi } from "../../services/parents";
 import { useToast } from "../../context/ToastContext";
+import Breadcrumb from "../../components/Breadcrumb";
 
 function clampPct(v) {
   const n = Number(v);
@@ -105,6 +106,12 @@ export default function ParentStudentsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <ParentTopbar pageTitle="My Students" showStudentSwitcher={false} />
+        <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/parent-dashboard" },
+          { label: "My Students" },
+        ]}
+      />
 
         {/* CONTENT */}
         <div className="px-6 pt-5 pb-10 overflow-y-auto">

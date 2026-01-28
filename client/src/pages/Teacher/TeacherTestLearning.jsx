@@ -1,6 +1,7 @@
 // src/pages/Teacher/TeacherTestLearning.jsx
 import { useEffect, useMemo, useState } from "react";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
+import Breadcrumb from "../../components/Breadcrumb";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import {
   createTeacherSeries,
@@ -218,8 +219,15 @@ export default function TeacherTestLearning() {
         <header className="fixed top-0 z-[999] bg-white shadow-sm h-[64px]" style={{ left: sidebarWidthPx, right: 0 }}>
           <TeacherTopbar isCollapsed={isCollapsed} pageTitle="Test & Learning" />
         </header>
+         
 
         <main className="flex-1 overflow-y-auto px-6 py-8" style={{ marginTop: "64px" }}>
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Test & Learning" },
+        ]}
+      />
           <div className="max-w-6xl mx-auto">
             <div className="bg-white border border-[#E6F4EC] rounded-2xl shadow-sm overflow-hidden mb-6">
               <div className="p-6 md:p-8 bg-gradient-to-r from-[#E6F4EC] to-white">

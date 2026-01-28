@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { Search, Plus, CheckCircle2, Clock, Trash2 } from "lucide-react";
-
+import Breadcrumb from "../../components/Breadcrumb";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
 import { paymentsApi } from "../../services/payments";
@@ -158,9 +158,17 @@ export default function TeacherPaymentsPage() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col" style={{ marginLeft: sidebarWidth }}>
         <TeacherTopbar pageTitle="Payments" />
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Payments" },
+        ]}
+      />
 
         <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-y-auto">
+         
           {/* LEFT: Parents list */}
+
           <div className="lg:col-span-4 bg-white border border-[#E6F4EC] rounded-xl shadow-sm">
             <div className="p-4 border-b border-[#E6F4EC]">
               <div className="flex items-center gap-2 bg-[#F8FFFA] border border-[#E6F4EC] rounded-lg px-3 py-2">

@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import TeacherSidebar from "../../components/Teacher/TeacherSidebar";
 import TeacherTopbar from "../../components/Teacher/TeacherTopbar";
-
+import Breadcrumb from "../../components/Breadcrumb";
 import DoubtsList from "../../components/Teacher/Queries/DoubtsList";
 import ChatWindow from "../../components/Teacher/Queries/ChatWindow";
 
@@ -73,6 +73,12 @@ export default function QueriesDoubtsPage() {
         style={{ marginLeft: sidebarWidth }}
       >
         <TeacherTopbar pageTitle="Reply to Doubts" />
+         <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/teacher-dashboard" },
+          { label: "Doubts" },
+        ]}
+      />
 
         <div className="flex h-full text-left">
           {/* LEFT SIDE = DOUBTS LIST */}

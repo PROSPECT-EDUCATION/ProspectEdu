@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { api } from "../../../lib/api";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { Plus, Trash2, Briefcase, MapPin, Users, ToggleLeft, ToggleRight } from "lucide-react";
 
 function buildDescription(responsibilities, requirements) {
@@ -196,6 +197,14 @@ export default function AdminCareerJobs() {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+          <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Post Jobs" },
+        ]}
+      />
+        </div>
           {/* Header row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-6">
             <div className="text-left">

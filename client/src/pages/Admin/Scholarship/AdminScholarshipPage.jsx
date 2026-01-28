@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
 import { api } from "../../../lib/api";
 
@@ -193,8 +194,15 @@ const AdminScholarshipPage = () => {
         <div className="fixed top-0 bg-white shadow-sm h-[64px] z-[999]" style={{ left: sidebarWidthPx, right: 0 }}>
           <AdminTopbar pageTitle="Scholarship" />
         </div>
+          
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto">
+          <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Scholarship" },
+        ]}
+      />
           {toast && (
             <div className="fixed right-6 top-[86px] z-[9999]">
               <div

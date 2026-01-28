@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminSidebar from "../../../components/Admin/Layout/AdminSidebar";
 import AdminTopbar from "../../../components/Admin/Layout/AdminTopbar";
+import Breadcrumb from "../../../components/Breadcrumb";
 import { api } from "../../../lib/api";
 
 const fmt = (iso) => {
@@ -102,6 +103,14 @@ const AdminDonationsPage = () => {
         </div>
 
         <div className="px-6 pt-[90px] pb-10 overflow-y-auto text-left">
+           <div className="ml=-3"> 
+           <Breadcrumb
+        items={[
+          { label: "Dashboard", to: "/admin-dashboard" },
+          { label: "Donations" },
+        ]}
+      />
+        </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white rounded-2xl border p-5 shadow-sm">
               <div className="text-xs text-gray-500">Total Donations</div>
