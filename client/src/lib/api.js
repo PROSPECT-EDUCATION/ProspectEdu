@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:5000/api/v1",
+  baseURL: "https://api.prospectedu.org/api/v1",
   withCredentials: true,
 });
 
@@ -28,7 +28,7 @@ api.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          "http://localhost:5000/api/v1/auth/refresh",
+          "https://api.prospectedu.org/api/v1/auth/refresh",
           {},
           { withCredentials: true }
         );
