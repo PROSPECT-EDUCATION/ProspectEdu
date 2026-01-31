@@ -89,10 +89,10 @@ export async function createCourse(req, res, next) {
       date: data.date || "",
       img: data.img || "",
 
-      tags: normalizeTags(data.tags),
+      tags: normalizeTags(data.tags), 
 
       // ===== AUTOMATION FIELDS =====
-      status: "draft",
+      status: "published",
       createdBy: req.user.id,
 
       // keep if your schema allows these
@@ -319,7 +319,7 @@ export async function listPublishedCourses(req, res, next) {
     const p = Math.max(1, Number(page));
     const l = Math.min(50, Math.max(1, Number(limit)));
 
-    const filter = {};
+    const filter = { status: "published" };
 
     if (category) {
       filter.category = String(category).trim().toLowerCase();
