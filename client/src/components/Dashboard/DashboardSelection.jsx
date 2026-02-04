@@ -1,5 +1,7 @@
 import RoleCard from "./RoleCard";
 import { useNavigate } from "react-router-dom";
+import dashboardImg from "../../assets/dashboard-banner.webp";
+
 
 export default function DashboardSelection() {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function DashboardSelection() {
         <article className="flex flex-col items-center text-center">
 
           <img
-            src="/src/assets/dashboard-banner.webp"
+            src={dashboardImg}
             alt="Learning Illustration"
             width="500"
             height="400"

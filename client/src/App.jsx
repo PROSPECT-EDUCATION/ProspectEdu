@@ -54,6 +54,11 @@ import ParentSettingsPage from './pages/Parent/ParentSettingsPage';
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
 import ParentChangePasswordPage from './pages/Parent/ParentChangePasswordPage';
+import TermsAndCondition from "./pages/Terms&Conditions/Terms&Conditions";
+import PrivacyPolicy from "./pages/Terms&Conditions/PrivacyPolicy";
+import RefundPolicy from "./pages/Terms&Conditions/RefundPolicy";
+import ShippingAndDeliveryPolicy from "./pages/Terms&Conditions/Shipping&DeliveryPolicy";
+
 
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage';
 import AdminAllStudentsPage from './pages/Admin/AdminAllStudentsPage';
@@ -184,6 +189,14 @@ function App() {
       <Route path="/student/doubts" element={<Doubts/>}/>
       <Route path="/student/courses/:courseId/modules" element={<StudentCourseModulesPage />} />
       <Route path="/student/courses/:courseId/modules/:moduleId" element={<StudentModuleLessonsPage />} />
+      <Route path="/terms-condition" element={<TermsAndCondition />} />
+<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+<Route path="/refund-policy" element={<RefundPolicy />} />
+<Route
+  path="/shipping-delivery-policy"
+  element={<ShippingAndDeliveryPolicy />}
+/>
+
 
       <Route path="/teacher-dashboard" element={<TeacherCoursesPage />} />
       <Route path="/teacher/add-modules" element={<AddModulesPage />} />

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import EcomHeader from "../../components/EcomHeader";
-import img1 from "../../assets/EcommerceHome-carousel/c1.webp";
-import img2 from "../../assets/EcommerceHome-carousel/c1.webp";
-import img3 from "../../assets/EcommerceHome-carousel/c1.webp";
+import img1 from "../../assets/EcommerceHome-carousel/law.png";
+import img2 from "../../assets/EcommerceHome-carousel/engg.png";
+import img3 from "../../assets/EcommerceHome-carousel/medical.png";
 import contact from "../../assets/contact.webp";
 import ProductSlider from "../../components/EcommerceHomeSlider/ProductSlider";
 import Footer from "../../components/Footer";

@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import SignupForm from "../../components/Signup/SignupForm";
 import SignupIllustration from "../../components/Signup/SignupIllustration";
+import logoImg from "../../assets/logo.png.webp";
 import { Helmet } from "react-helmet-async";
 
 export default function SignupPage() {
@@ -41,7 +42,7 @@ export default function SignupPage() {
       <div className="flex flex-col justify-center items-center bg-white px-10 py-16">
         <div className="max-w-md w-full">
           <img
-            src="/src/assets/logo.png.webp"
+            src={logoImg}
             alt="ProspectEdu Logo"
             className="h-12 mb-4 mx-auto"
             loading="lazy"

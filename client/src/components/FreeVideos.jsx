@@ -83,7 +83,6 @@ export default function FreeVideos() {
             <SwiperSlide key={index}>
               <article className="bg-white border border-[#A7E1B2] rounded-xl shadow-sm hover:shadow-md transition-transform duration-300 hover:scale-[1.03] overflow-hidden">
 
-                <Link to={`/videos/${video.slug}`} aria-label={`Watch ${video.title}`}>
                   <div className="relative">
                     <img
                       src={video.img}
@@ -104,7 +103,7 @@ export default function FreeVideos() {
                       </span>
                     </div>
                   </div>
-                </Link>
+               
 
                 {/* Text */}
                 <div className="p-4">

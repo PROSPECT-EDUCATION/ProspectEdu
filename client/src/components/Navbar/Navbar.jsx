@@ -16,7 +16,7 @@ useEffect(() => {
   const fetchCategories = async () => {
     try {
       const res = await publicCategoriesApi.list();
-      setCourseCategories(res.data.categories || []);
+      setCourseCategories(Array.isArray(res?.data?.categories) ? res.data.categories : []);
     } catch (err) {
       console.error("Failed to load course categories", err);
       setCourseCategories([]); // fallback
@@ -35,7 +35,7 @@ useEffect(() => {
   label: "Courses",
   dropdown: courseCategories.map((cat) => ({
     label: cat.name,
-  to: `/categories/${cat.name.trim().toLowerCase()}`,
+ to: `/courses?category=${cat.name.trim().toLowerCase()}`,
   })),
 },
    

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { activityApi } from "../../services/activity";
+import logoImg from "../../assets/logo.png.webp";
+
 
 export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
   const location = useLocation();
@@ -41,7 +43,7 @@ export default function StudentSidebar({ isCollapsed, setIsCollapsed }) {
           }`}
         >
           <img
-            src="/src/assets/logo.png.webp"
+            src={logoImg}
             alt="ProspectEdu Logo"
             className="h-10 w-10 rounded-full object-cover border border-[#A7E1B2]/50"
           />

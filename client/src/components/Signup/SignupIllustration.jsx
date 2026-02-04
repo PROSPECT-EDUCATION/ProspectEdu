@@ -1,3 +1,4 @@
+import loginImg from "../../assets/login-illustration.webp";
 export default function SignupIllustration() {
   return (
     <aside
@@ -5,7 +6,7 @@ export default function SignupIllustration() {
       aria-labelledby="signup-illustration-heading"
     >
       <img
-        src="/src/assets/login-illustration.webp"
+       src={loginImg}
         alt="ProspectEdu signup illustration showing online learning"
         loading="lazy"
         width="320"

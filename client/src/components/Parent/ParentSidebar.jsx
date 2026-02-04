@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate, useLocation } from "react-router-dom";
-
+import logoImg from "../../assets/logo.png.webp";
 export default function ParentSidebar({ isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,7 +71,7 @@ export default function ParentSidebar({ isCollapsed, setIsCollapsed }) {
           }`}
         >
           <img
-            src="/src/assets/logo.png.webp"
+            src={logoImg}
             alt="ProspectEdu Logo"
             className="h-10 w-10 rounded-full object-cover border border-[#A7E1B2]/50"
           />

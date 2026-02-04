@@ -18,7 +18,7 @@ import {
   Library,
   CreditCard,
 } from "lucide-react";
-
+import logoImg from "../../assets/logo.png.webp";
 import { Link, useLocation } from "react-router-dom";
 
 export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
@@ -63,7 +63,7 @@ export default function TeacherSidebar({ isCollapsed, setIsCollapsed }) {
           }`}
         >
           <img
-            src="/src/assets/logo.png.webp"
+            src={logoImg}
             alt="ProspectEdu Logo"
             className="h-10 w-10 rounded-full object-cover border border-[#A7E1B2]/50"
           />

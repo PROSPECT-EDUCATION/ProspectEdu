@@ -1,28 +1,30 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
+import bannerImg from "../../assets/EcommerceHome-carousel/law.png";
+
 import "swiper/css";
 import "swiper/css/pagination";
 
 export default function BannerCarousel() {
   const banners = [
     {
-      img: "/src/assets/banner.webp",
+      img: bannerImg,
       alt: "RRB JE 2025-26 Batch",
     },
     {
-      img: "/src/assets/banner.webp",
+      img: bannerImg,
       alt: "UPSC Civil Services Online Course",
     },
     {
-      img: "/src/assets/banner.webp",
+      img: bannerImg,
       alt: "SSC JE Mechanical 2025 Batch",
     },
     {
-      img: "/src/assets/banner.webp",
+      img: bannerImg,
       alt: "GATE Preparation 2025",
     },
     {
-      img: "/src/assets/banner.webp",
+      img: bannerImg,
       alt: "Bilingual Courses for College Students",
     },
   ];

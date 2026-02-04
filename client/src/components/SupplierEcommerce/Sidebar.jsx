@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import logoImg from "../../assets/logo.png.webp";
+
 
 // Icons
 import { FaBoxOpen, FaListAlt, FaShoppingBag } from "react-icons/fa";
@@ -36,7 +38,7 @@ export default function SupplierSidebar({ isCollapsed, setIsCollapsed }) {
   `}
 >
   <img
-    src="/src/assets/logo.webp"
+    src={logoImg}
     className="h-10 w-10 rounded-full"
   />
 

@@ -1,5 +1,7 @@
 // src/components/RefreshComponent.jsx
 import { RotateCw } from "lucide-react";
+import emptyStateImg from "../assets/empty-state.webp";
+
 
 export default function RefreshComponent({ message, onRefresh }) {
   return (
@@ -7,7 +9,7 @@ export default function RefreshComponent({ message, onRefresh }) {
       {/* Illustration */}
       <div className="mb-6">
         <img
-          src="/src/assets/empty-state.webp"
+          src={emptyStateImg}
           alt="Empty State"
           className="w-40 h-40 mx-auto"
         />

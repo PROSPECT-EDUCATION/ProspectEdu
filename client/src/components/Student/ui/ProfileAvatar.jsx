@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import LogoutModal from "../../Profile/LogoutModal";
 import { activityApi } from "../../../services/activity";
+import profileImg from "../../../assets/profile.webp";
 import { authApi } from "../../../services/auth"; 
 export default function ProfileAvatar({ role = "student" }) {
   const [open, setOpen] = useState(false);
@@ -158,7 +159,7 @@ const handleNavigate = async (path, title) => {
           className="p-[2px] rounded-full bg-[#A7E1B2]/40 hover:bg-[#009846]/30 cursor-pointer transition inline-block"
         >
           <img
-            src="/src/assets/profile.webp"
+            src={profileImg}
             alt="User Avatar"
             className="h-8 w-8 rounded-full object-cover"
           />

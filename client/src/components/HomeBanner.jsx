@@ -1,3 +1,5 @@
+
+import bannerImg from "../assets/banner.webp";
 export default function HomeBanner() {
   return (
     <section
@@ -8,7 +10,7 @@ export default function HomeBanner() {
         flex items-center justify-center
       "
       style={{
-        backgroundImage: "url('/src/assets/banner.webp')",
+        backgroundImage: `url(${bannerImg})`,
       }}
     >
       {/* Optional overlay for readability */}
